@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MicroPymes</title>
+    <script>
+      // Redirigir si la URL contiene access_token y estamos en localhost:3000
+      if (window.location.hash.includes('access_token=') && window.location.hostname === 'localhost' && window.location.port === '3000') {
+        const redirectUrl = 'http://localhost:5173/confirm-email' + window.location.hash;
+        window.location.href = redirectUrl;
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
