@@ -2,15 +2,32 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../utils/api';
 
+/**
+ * Login component. Handles user authentication by collecting email and password,
+ * submitting them to the login API, and navigating the user upon success or
+ * displaying an error message upon failure.
+ */
 function Login() {
+  /**
+   * @type {[object, function]} formData - State for storing user input (email and password).
+   * @property {string} email - The user's email address.
+   * @property {string} password - The user's password.
+   */
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+  /** @type {[string | JSX.Element, function]} error - State for storing and displaying error messages. Can be a string or JSX for richer error display. */
   const [error, setError] = useState('');
+  /** @type {[boolean, function]} loading - State to indicate if a login request is in progress. Used to disable form elements. */
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  /**
+   * Handles changes in form input fields.
+   * Updates the `formData` state with the new value for the changed field.
+   * @param {React.ChangeEvent<HTMLInputElement>} e - The input change event.
+   */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -19,6 +36,16 @@ function Login() {
     }));
   };
 
+  /**
+   * Handles the login form submission.
+   * Prevents default form submission, sets loading state, and calls `authAPI.login`.
+   * On success, it stores the received access token in localStorage and navigates
+   * the user to the home page ('/').
+   * On failure, it extracts an error message from the API response or uses a generic
+   * error message, and updates the `error` state. It also provides specific UI
+   * for "Email not confirmed" errors, including a development-only button to activate the account.
+   * @param {React.FormEvent<HTMLFormElement>} e - The form submission event.
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -67,7 +94,13 @@ function Login() {
     }
   };
 
-  // Función para activar la cuenta (solo en desarrollo)
+  /**
+   * Activates a user account directly by making a GET request to a development-only endpoint.
+   * This function is intended for use during development to bypass email confirmation.
+   * Sets loading state during the activation attempt and displays success or error messages
+   * in the `error` state area.
+   * @param {string} email - The email of the account to activate.
+   */
   const activateAccount = async (email) => {
     try {
       setLoading(true);

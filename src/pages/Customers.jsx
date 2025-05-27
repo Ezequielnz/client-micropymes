@@ -1,23 +1,64 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { customerAPI } from '../utils/api'; // Import customerAPI
 
+/**
+ * @typedef {object} Customer
+ * @property {string|number} id_cliente - The unique identifier for the customer.
+ * @property {string} nombre - The customer's full name.
+ * @property {string} email - The customer's email address.
+ * @property {string} [telefono] - The customer's phone number (optional).
+ * @property {string} [direccion] - The customer's physical address (optional).
+ */
+
+/**
+ * @typedef {object} FormDataCustomer
+ * @property {string} nombre - Customer's name.
+ * @property {string} email - Customer's email.
+ * @property {string} telefono - Customer's phone number.
+ * @property {string} direccion - Customer's address.
+ */
+
+/**
+ * Customers component for managing customer data.
+ * Allows users to view a list of customers, search for specific customers,
+ * add new customers, edit existing ones, and delete customers.
+ * Handles API interactions for these CRUD operations and manages related state
+ * (loading, errors, form data).
+ */
 function Customers() {
+  /** @type {[Array<Customer>, function]} customers - State for the list of customers displayed in the table. */
   const [customers, setCustomers] = useState([]);
+  /** @type {[boolean, function]} loading - State to indicate if data is being loaded (e.g., fetching customers, deleting a customer). */
   const [loading, setLoading] = useState(true);
+  /** @type {[string, function]} error - State for storing general page errors (e.g., failed to fetch, failed to delete). */
   const [error, setError] = useState('');
+  /** @type {[string, function]} searchQuery - State for the value currently in the search input field. */
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchTerm, setSearchTerm] = useState(''); // To trigger fetch on actual search submission
+  /** @type {[string, function]} searchTerm - State for the actual search term submitted and used for fetching filtered customers. */
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Form State
+  /** @type {FormDataCustomer} */
   const initialFormState = { nombre: '', email: '', telefono: '', direccion: '' };
+  /** @type {[FormDataCustomer, function]} formData - State for the add/edit customer form inputs. */
   const [formData, setFormData] = useState(initialFormState);
+  /** @type {[boolean, function]} showForm - State to control the visibility of the add/edit customer form. */
   const [showForm, setShowForm] = useState(false);
+  /** @type {[boolean, function]} isEditing - State to determine if the form is in 'edit' mode (true) or 'add' mode (false). */
   const [isEditing, setIsEditing] = useState(false);
-  const [currentCustomer, setCurrentCustomer] = useState(null); // For storing ID during edit
+  /** @type {[Customer|null, function]} currentCustomer - State to store the customer object currently being edited. Null when adding. */
+  const [currentCustomer, setCurrentCustomer] = useState(null);
+  /** @type {[string, function]} formError - State for storing errors specific to the add/edit customer form (e.g., validation errors). */
   const [formError, setFormError] = useState('');
+  /** @type {[boolean, function]} submittingForm - State to indicate if the add/edit customer form is currently being submitted. */
   const [submittingForm, setSubmittingForm] = useState(false);
 
-  // Define fetchCustomers using useCallback
+  /**
+   * Fetches customers from the API using `customerAPI.getCustomers`.
+   * Can be filtered by a search `query`.
+   * Updates `customers` state and handles loading/error states for customer fetching.
+   * @param {string} [query] - Optional search query to filter customers.
+   */
   const fetchCustomers = useCallback(async (query) => {
     setLoading(true);
     setError('');
@@ -39,20 +80,41 @@ function Customers() {
     fetchCustomers(searchTerm);
   }, [searchTerm, fetchCustomers]);
 
+  /**
+   * Handles changes to the search input field.
+   * Updates the `searchQuery` state with the current input value.
+   * @param {React.ChangeEvent<HTMLInputElement>} e - The input change event.
+   */
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
 
+  /**
+   * Handles the submission of the search form.
+   * Sets the `searchTerm` state with the current `searchQuery`, which in turn
+   * triggers the `useEffect` hook to fetch filtered customers.
+   * @param {React.FormEvent<HTMLFormElement>} e - The form submission event.
+   */
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     setSearchTerm(searchQuery); // Update searchTerm to trigger useEffect
   };
 
+  /**
+   * Handles input changes for the add/edit customer form.
+   * Updates the corresponding field in the `formData` state.
+   * @param {React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement>} e - The input change event.
+   */
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  /**
+   * Shows the add customer form.
+   * Resets form state (`isEditing` to false, `currentCustomer` to null, `formData` to initial),
+   * clears any form or general errors, and displays the form.
+   */
   const handleShowAddForm = () => {
     setIsEditing(false);
     setCurrentCustomer(null);
@@ -62,6 +124,12 @@ function Customers() {
     setError(''); // Clear general errors when showing form
   };
 
+  /**
+   * Prepares the form for editing an existing customer.
+   * Sets `isEditing` to true, stores the `customer` data in `currentCustomer` and `formData`,
+   * clears errors, and shows the form.
+   * @param {Customer} customer - The customer object to be edited.
+   */
   const handleEditClick = (customer) => {
     setIsEditing(true);
     setCurrentCustomer(customer);
@@ -76,6 +144,15 @@ function Customers() {
     setError(''); // Clear general errors
   };
 
+  /**
+   * Handles submission of the add/edit customer form.
+   * Performs validation (name and email required, valid email format).
+   * If valid, it calls either `customerAPI.createCustomer` (for adding)
+   * or `customerAPI.updateCustomer` (for editing).
+   * On success, it hides the form, resets form data, and refreshes the customer list.
+   * Manages loading and error states specific to form submission.
+   * @param {React.FormEvent<HTMLFormElement>} e - The form submission event.
+   */
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
@@ -109,6 +186,12 @@ function Customers() {
     }
   };
 
+  /**
+   * Handles the deletion of a customer after user confirmation.
+   * Calls `customerAPI.deleteCustomer` and refreshes the customer list using the current `searchTerm`.
+   * Manages loading and error states for the delete operation.
+   * @param {string|number} customerId - The ID of the customer to delete.
+   */
   const handleDelete = async (customerId) => {
     if (window.confirm('Are you sure you want to delete this customer?')) {
       setLoading(true); // Indicate loading state for delete operation

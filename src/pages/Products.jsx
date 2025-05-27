@@ -1,6 +1,32 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { productAPI, categoryAPI } from '../utils/api';
 
+/**
+ * @typedef {object} Product
+ * @property {string|number} id_producto - The unique identifier for the product.
+ * @property {string} nombre - The name of the product.
+ * @property {string} [descripcion] - The description of the product.
+ * @property {number} precio - The price of the product.
+ * @property {number} stock - The current stock quantity of the product.
+ * @property {string|number} id_categoria - The ID of the category this product belongs to.
+ */
+
+/**
+ * @typedef {object} Category
+ * @property {string|number} id_categoria - The unique identifier for the category.
+ * @property {string} nombre - The name of the category.
+ */
+
+/**
+ * @typedef {object} FormDataProduct
+ * @property {string} nombre - Name of the product.
+ * @property {string} descripcion - Description of the product.
+ * @property {string} precio - Price of the product (as string, will be parsed).
+ * @property {string} stock - Stock quantity of the product (as string, will be parsed).
+ * @property {string} id_categoria - Selected category ID for the product.
+ */
+
+
 const initialFormState = {
   nombre: '',
   descripcion: '',
@@ -11,31 +37,58 @@ const initialFormState = {
 
 const LOW_STOCK_THRESHOLD = 10; // Define the threshold
 
+/**
+ * Products component for managing inventory.
+ * Allows users to view, add, edit, delete, and filter products.
+ * Also supports importing products from an Excel file and displays low stock alerts.
+ */
 function Products() {
+  /** @type {[Array<Product>, function]} products - State for the list of all products currently displayed. */
   const [products, setProducts] = useState([]);
-  const [lowStockProducts, setLowStockProducts] = useState([]); // New state for low stock products
+  /** @type {[Array<Product>, function]} lowStockProducts - State for products that are below the low stock threshold. */
+  const [lowStockProducts, setLowStockProducts] = useState([]);
+  /** @type {[Array<Category>, function]} categories - State for the list of available categories, used for filtering and in the product form. */
   const [categories, setCategories] = useState([]);
+  
+  /** @type {[boolean, function]} loadingProducts - State to indicate if products are being fetched. */
   const [loadingProducts, setLoadingProducts] = useState(true);
+  /** @type {[boolean, function]} loadingCategories - State to indicate if categories are being fetched. */
   const [loadingCategories, setLoadingCategories] = useState(true);
+  /** @type {[string, function]} error - State for storing general page errors (e.g., failed to load initial data, delete errors). */
   const [error, setError] = useState('');
+  /** @type {[string, function]} formError - State for storing errors specific to the add/edit product form. */
   const [formError, setFormError] = useState('');
-  const [selectedCategoryIdFilter, setSelectedCategoryIdFilter] = useState(''); // For filtering
+  /** @type {[string, function]} selectedCategoryIdFilter - State for the currently selected category ID used to filter the product list. Empty string means all categories. */
+  const [selectedCategoryIdFilter, setSelectedCategoryIdFilter] = useState('');
 
+  // Form states for Add/Edit Product
+  /** @type {[boolean, function]} showForm - State to control the visibility of the add/edit product form. */
   const [showForm, setShowForm] = useState(false);
+  /** @type {[boolean, function]} isEditing - State to determine if the form is in 'edit' mode (true) or 'add' mode (false). */
   const [isEditing, setIsEditing] = useState(false);
-  const [currentProduct, setCurrentProduct] = useState(null); // Product being edited
+  /** @type {[Product|null, function]} currentProduct - State to store the product object currently being edited. Null when adding. */
+  const [currentProduct, setCurrentProduct] = useState(null);
+  /** @type {[FormDataProduct, function]} formData - State for the add/edit product form inputs. */
   const [formData, setFormData] = useState(initialFormState);
+  /** @type {[boolean, function]} submittingForm - State to indicate if the add/edit product form is currently being submitted. */
   const [submittingForm, setSubmittingForm] = useState(false);
 
-  // State for Excel import
+  // States for Excel Import
+  /** @type {[File|null, function]} selectedFile - State for the Excel file selected by the user for import. */
   const [selectedFile, setSelectedFile] = useState(null);
+  /** @type {[boolean, function]} importing - State to indicate if an Excel file import is in progress. */
   const [importing, setImporting] = useState(false);
+  /** @type {[string, function]} importError - State for storing errors related to the Excel import process. */
   const [importError, setImportError] = useState('');
+  /** @type {[string, function]} importSuccessMessage - State for storing success messages from the Excel import process. */
   const [importSuccessMessage, setImportSuccessMessage] = useState('');
+  /** @type {[boolean, function]} showImportForm - State to control the visibility of the Excel import form. */
   const [showImportForm, setShowImportForm] = useState(false);
 
-
-  // Fetch categories
+  /**
+   * Fetches categories from the API using `categoryAPI.getCategories`.
+   * Updates `categories` state and handles loading/error states for category fetching.
+   */
   const fetchCategories = useCallback(async () => {
     setLoadingCategories(true);
     try {
@@ -50,7 +103,12 @@ function Products() {
     }
   }, []);
 
-  // Fetch products
+  /**
+   * Fetches products from the API using `productAPI.getProducts`.
+   * Can be filtered by `categoryId`. Also identifies and sets low stock products.
+   * Updates `products`, `lowStockProducts` states and handles loading/error states for product fetching.
+   * @param {string} [categoryId] - Optional category ID to filter products by.
+   */
   const fetchProducts = useCallback(async (categoryId) => {
     setLoadingProducts(true);
     setLowStockProducts([]); // Reset low stock products on new fetch
@@ -85,23 +143,41 @@ function Products() {
     fetchProducts(selectedCategoryIdFilter); // Fetch products based on current filter
   }, [fetchCategories, fetchProducts, selectedCategoryIdFilter]);
 
-  // Handle category filter change
+  /**
+   * Handles changes to the category filter dropdown.
+   * Updates `selectedCategoryIdFilter` state, which triggers `useEffect` to refetch products.
+   * @param {React.ChangeEvent<HTMLSelectElement>} e - The select change event.
+   */
   const handleCategoryFilterChange = (e) => {
     setSelectedCategoryIdFilter(e.target.value);
     // Products will be refetched by useEffect due to selectedCategoryIdFilter change
   };
 
+  /**
+   * Retrieves the name of a category based on its ID.
+   * @param {string|number} categoryId - The ID of the category.
+   * @returns {string} The name of the category, or 'N/A' if categories are not loaded, 
+   *                   or 'Unknown Category' if the ID is not found.
+   */
   const getCategoryName = (categoryId) => {
     if (!categories || categories.length === 0) return 'N/A';
     const category = categories.find(cat => cat.id_categoria === categoryId);
     return category ? category.nombre : 'Unknown Category';
   };
 
+  /**
+   * Handles input changes for the add/edit product form.
+   * Updates the corresponding field in the `formData` state.
+   * @param {React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement>} e - The input change event.
+   */
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  /**
+   * Shows the add product form and resets form state for adding a new product.
+   */
   const handleShowAddForm = () => {
     setIsEditing(false);
     setCurrentProduct(null);
@@ -110,6 +186,12 @@ function Products() {
     setFormError('');
   };
 
+  /**
+   * Prepares the form for editing an existing product.
+   * Sets `isEditing` to true, stores the `product` data in `currentProduct` and `formData`,
+   * and shows the form.
+   * @param {Product} product - The product object to be edited.
+   */
   const handleEdit = (product) => {
     setIsEditing(true);
     setCurrentProduct(product);
@@ -124,6 +206,12 @@ function Products() {
     setFormError('');
   };
 
+  /**
+   * Handles the deletion of a product after user confirmation.
+   * Calls `productAPI.deleteProduct` and refreshes the product list.
+   * Manages loading and error states for the delete operation.
+   * @param {string|number} productId - The ID of the product to delete.
+   */
   const handleDelete = async (productId) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       setSubmittingForm(true); // Use submittingForm for general CUD operation loading
@@ -140,6 +228,14 @@ function Products() {
     }
   };
 
+  /**
+   * Handles submission of the add/edit product form.
+   * Validates required fields. If valid, it calls either `productAPI.createProduct` (for add)
+   * or `productAPI.updateProduct` (for edit).
+   * On success, it hides the form, resets form data, and refreshes the product list.
+   * Manages loading and error states specific to form submission.
+   * @param {React.FormEvent<HTMLFormElement>} e - The form submission event.
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
@@ -177,12 +273,24 @@ function Products() {
   
   const isLoadingInitialData = loadingProducts && loadingCategories;
 
+  /**
+   * Handles the change event for the file input in the Excel import form.
+   * Updates `selectedFile` state and clears previous import messages.
+   * @param {React.ChangeEvent<HTMLInputElement>} e - The file input change event.
+   */
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0]);
     setImportError('');
     setImportSuccessMessage('');
   };
 
+  /**
+   * Handles the submission of the Excel import form.
+   * Validates if a file is selected. If so, creates `FormData`, calls `productAPI.importProducts`.
+   * Manages loading, success, and error states for the import process.
+   * Refreshes the product list on successful import.
+   * @param {React.FormEvent<HTMLFormElement>} e - The form submission event.
+   */
   const handleImportSubmit = async (e) => {
     e.preventDefault();
     if (!selectedFile) {

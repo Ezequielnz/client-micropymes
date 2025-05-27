@@ -1,18 +1,29 @@
+/*
+  src/index.css
+  This file contains global styles and CSS variable definitions for the application.
+  It sets up the base font, color scheme (light/dark mode support), and default styles
+  for common HTML elements like links, buttons, and body layout.
+  It also includes specific utility classes for form elements and messages.
+*/
+
 :root {
+  /* Base font stack for the application */
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background-color: #242424; /* Default dark background */
 
+  /* Font rendering optimizations */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Default link styles */
 a {
   font-weight: 500;
   color: #646cff;
@@ -22,19 +33,22 @@ a:hover {
   color: #535bf2;
 }
 
+/* Body base styles */
 body {
   margin: 0;
   display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  place-items: center; /* Centers content for simple layouts, may be overridden by page components */
+  min-width: 320px;   /* Minimum width for responsiveness */
+  min-height: 100vh;  /* Ensures the body takes at least the full viewport height */
 }
 
+/* Default heading styles */
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
 }
 
+/* Default button styles */
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -51,13 +65,15 @@ button:hover {
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 4px auto -webkit-focus-ring-color; /* Focus indicator */
 }
 
+/* General card style (used on Home page, etc.) */
 .card {
   padding: 2em;
 }
 
+/* Styles for form containers (used in Login, Register, etc.) */
 .form-container {
   display: flex;
   flex-direction: column;
@@ -67,14 +83,15 @@ button:focus-visible {
   margin: 0 auto;
   padding: 20px;
   border-radius: 8px;
-  background-color: #1a1a1a;
+  background-color: #1a1a1a; /* Darker background for forms in dark mode */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+/* Styles for groups of form elements (label + input) */
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 5px; /* Space between label and input */
 }
 
 .form-group label {
@@ -86,16 +103,18 @@ button:focus-visible {
   padding: 10px;
   border-radius: 4px;
   border: 1px solid #3a3a3a;
-  background-color: #242424;
-  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424; /* Input background in dark mode */
+  color: rgba(255, 255, 255, 0.87); /* Input text color in dark mode */
 }
 
+/* Style for displaying error messages */
 .error-message {
   color: red;
   margin-bottom: 1rem;
   text-align: center;
 }
 
+/* Style for displaying success messages */
 .success-message {
   color: #4caf50;
   background-color: rgba(76, 175, 80, 0.1);
@@ -106,6 +125,7 @@ button:focus-visible {
   text-align: center;
 }
 
+/* Style for less prominent help text within forms or messages */
 .help-text {
   font-size: 0.9rem;
   color: #666;
@@ -113,10 +133,11 @@ button:focus-visible {
   font-style: italic;
 }
 
+/* Styles for development-specific tools/buttons (e.g., activate account button) */
 .dev-tools {
   margin-top: 1rem;
   padding-top: 0.5rem;
-  border-top: 1px dashed #666;
+  border-top: 1px dashed #666; /* Separator for dev tools section */
 }
 
 .dev-button {
@@ -128,29 +149,31 @@ button:focus-visible {
   cursor: pointer;
   border-radius: 4px;
 }
+/* Hover state for the development button */
 
 .dev-button:hover {
   background-color: #f57c00;
 }
 
+/* Light color scheme adjustments */
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    color: #213547; /* Default text color for light mode */
+    background-color: #ffffff; /* Default background for light mode */
   }
   a:hover {
     color: #747bff;
   }
   button {
-    background-color: #f9f9f9;
+    background-color: #f9f9f9; /* Light mode button background */
   }
   .form-container {
-    background-color: #f9f9f9;
+    background-color: #f9f9f9; /* Light mode form container background */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   }
   .form-group input {
-    border: 1px solid #e0e0e0;
-    background-color: #ffffff;
-    color: #213547;
+    border: 1px solid #e0e0e0; /* Light mode input border */
+    background-color: #ffffff; /* Light mode input background */
+    color: #213547; /* Light mode input text color */
   }
 }

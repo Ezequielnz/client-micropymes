@@ -1,23 +1,78 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { productAPI, customerAPI, salesAPI } from '../utils/api'; // Import salesAPI
 
+/**
+ * @typedef {object} ProductInPOS
+ * @property {string|number} id_producto - The unique identifier for the product.
+ * @property {string} nombre - The name of the product.
+ * @property {number} precio - The selling price of the product.
+ * @property {number} stock - The current available stock of the product.
+ * @property {string|number} id_categoria - The ID of the category this product belongs to.
+ * @property {string} [descripcion] - Optional description of the product.
+ */
+
+/**
+ * @typedef {object} CustomerInPOS
+ * @property {string|number} id_cliente - The unique identifier for the customer.
+ * @property {string} nombre - The customer's full name.
+ * @property {string} email - The customer's email address.
+ */
+
+/**
+ * @typedef {object} CartItem
+ * @property {string|number} id_producto - The ID of the product in the cart.
+ * @property {string} nombre - The name of the product.
+ * @property {number} precio_at_sale - The price of the product at the time it was added to the cart.
+ * @property {number} quantity - The quantity of this product in the cart.
+ * @property {number} stock_original - The original stock of the product when it was first added or fetched, used for validation.
+ * @property {number} item_total - The total price for this cart item (quantity * precio_at_sale).
+ */
+
+
+/**
+ * Point of Sale (POS) component.
+ * This component provides an interface for creating sales transactions. It allows users to:
+ * - View and search available products.
+ * - Add products to a shopping cart.
+ * - Manage quantities of items in the cart.
+ * - Select a customer for the sale (optional).
+ * - Calculate the total sale amount.
+ * - Finalize and record the sale.
+ * It interacts with product, customer, and sales APIs to fetch data and submit sales.
+ */
 function POS() {
-  const [allProducts, setAllProducts] = useState([]); // All fetched products
-  const [availableProducts, setAvailableProducts] = useState([]); // Products filtered by search
+  /** @type {[Array<ProductInPOS>, function]} allProducts - State for storing all products fetched from the API. */
+  const [allProducts, setAllProducts] = useState([]);
+  /** @type {[Array<ProductInPOS>, function]} availableProducts - State for products currently displayed to the user, potentially filtered by search. */
+  const [availableProducts, setAvailableProducts] = useState([]);
+  /** @type {[Array<CartItem>, function]} cart - State representing the current shopping cart, an array of CartItem objects. */
   const [cart, setCart] = useState([]);
+  /** @type {[Array<CustomerInPOS>, function]} customers - State for the list of customers available for selection. */
   const [customers, setCustomers] = useState([]);
+  /** @type {[string, function]} selectedCustomer - State for the ID of the customer selected for the current sale. Empty string if no customer is selected. */
   const [selectedCustomer, setSelectedCustomer] = useState('');
   
+  /** @type {[string, function]} productSearchTerm - State for the search term entered by the user to filter products. */
   const [productSearchTerm, setProductSearchTerm] = useState('');
   
+  /** @type {[boolean, function]} loadingProducts - State to indicate if product data is currently being fetched. */
   const [loadingProducts, setLoadingProducts] = useState(true);
+  /** @type {[boolean, function]} loadingCustomers - State to indicate if customer data is currently being fetched. */
   const [loadingCustomers, setLoadingCustomers] = useState(true);
+  /** @type {[boolean, function]} submittingSale - State to indicate if a sale is currently being submitted to the API. */
   const [submittingSale, setSubmittingSale] = useState(false);
+  /** @type {[string, function]} error - State for storing general page-level error messages (e.g., initial data load failure, sale submission failure). */
   const [error, setError] = useState('');
-  const [cartError, setCartError] = useState(''); // For cart-specific errors like stock issues
-  const [saleSuccessMessage, setSaleSuccessMessage] = useState(''); // For success message
+  /** @type {[string, function]} cartError - State for storing errors specific to cart operations (e.g., insufficient stock). */
+  const [cartError, setCartError] = useState('');
+  /** @type {[string, function]} saleSuccessMessage - State for displaying a success message after a sale is completed. */
+  const [saleSuccessMessage, setSaleSuccessMessage] = useState('');
 
-  // Fetch initial data (products and customers)
+  /**
+   * Fetches initial data required for the POS system, including all products
+   * and a list of customers. This function is called on component mount.
+   * It updates loading states and handles potential errors during data fetching.
+   */
   const fetchInitialData = useCallback(async () => {
     setLoadingProducts(true);
     setLoadingCustomers(true);
@@ -48,7 +103,10 @@ function POS() {
     fetchInitialData();
   }, [fetchInitialData]);
 
-  // Product search/filter logic
+  /**
+   * useEffect hook to filter `availableProducts` based on `productSearchTerm`.
+   * This runs whenever `productSearchTerm` or the master `allProducts` list changes.
+   */
   useEffect(() => {
     if (!productSearchTerm) {
       setAvailableProducts(allProducts);
@@ -61,6 +119,12 @@ function POS() {
     }
   }, [productSearchTerm, allProducts]);
 
+  /**
+   * Adds a product to the cart or updates its quantity if already present.
+   * Performs stock validation before adding/updating.
+   * @param {ProductInPOS} product - The product object to add to the cart.
+   * @param {number} [quantity=1] - The quantity of the product to add. Defaults to 1.
+   */
   const handleAddToCart = (product, quantity = 1) => {
     setCartError('');
     if (quantity <= 0) return;
@@ -91,6 +155,12 @@ function POS() {
     }
   };
 
+  /**
+   * Updates the quantity of an item in the cart.
+   * Performs stock validation. If the new quantity is 0, the item is removed.
+   * @param {string|number} productId - The ID of the product in the cart to update.
+   * @param {number} newQuantity - The new quantity for the item.
+   */
   const handleUpdateCartQuantity = (productId, newQuantity) => {
     setCartError('');
     const itemToUpdate = cart.find(item => item.id_producto === productId);
@@ -121,15 +191,30 @@ function POS() {
     ));
   };
 
+  /**
+   * Removes an item completely from the cart.
+   * @param {string|number} productId - The ID of the product to remove from the cart.
+   */
   const handleRemoveFromCart = (productId) => {
     setCartError('');
     setCart(cart.filter(item => item.id_producto !== productId));
   };
 
+  /**
+   * Calculates the total amount for the current cart.
+   * @type {number}
+   */
   const cartTotal = useMemo(() => {
     return cart.reduce((total, item) => total + item.item_total, 0);
   }, [cart]);
 
+  /**
+   * Handles the completion of the sale.
+   * Constructs the sale data object and submits it to the `salesAPI.recordSale`.
+   * On success, it clears the cart, resets selected customer and search terms,
+   * displays a success message, and re-fetches initial data (to update stock levels).
+   * On failure, it displays an error message.
+   */
   const handleCompleteSale = async () => {
     if (cart.length === 0) {
       setError('Cannot complete sale with an empty cart.');

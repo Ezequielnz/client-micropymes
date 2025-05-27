@@ -1,18 +1,34 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { categoryAPI } from '../utils/api';
 
+/**
+ * Categories component for managing product categories.
+ * Allows users to view, add, edit, and delete categories.
+ * It fetches category data from the API and handles form submissions for CRUD operations.
+ */
 function Categories() {
+  /** @type {[Array<object>, function]} categories - State for storing the list of categories. Each category object typically has `id_categoria` and `nombre`. */
   const [categories, setCategories] = useState([]);
+  /** @type {[boolean, function]} loading - State to indicate if data is being loaded (e.g., fetching categories, submitting form). */
   const [loading, setLoading] = useState(true);
+  /** @type {[string, function]} error - State for storing general error messages (e.g., failed to fetch categories, failed to delete). */
   const [error, setError] = useState('');
   
   // State for form inputs
+  /** @type {[string, function]} categoryName - State for the category name input field. */
   const [categoryName, setCategoryName] = useState('');
+  /** @type {[boolean, function]} isEditing - State to toggle between add and edit mode for the form. */
   const [isEditing, setIsEditing] = useState(false);
-  const [currentCategory, setCurrentCategory] = useState(null); // Stores category being edited
-  const [formError, setFormError] = useState(''); // Error specific to the form
+  /** @type {[object|null, function]} currentCategory - State to store the category object currently being edited. Null when adding a new category. */
+  const [currentCategory, setCurrentCategory] = useState(null);
+  /** @type {[string, function]} formError - State for storing error messages specific to the add/edit form (e.g., validation errors, create/update API errors). */
+  const [formError, setFormError] = useState('');
 
-  // Fetch categories function
+  /**
+   * Fetches categories from the server using `categoryAPI.getCategories`
+   * and updates the component's state (`categories`, `loading`, `error`).
+   * Ensures that the `categories` state is always an array.
+   */
   const fetchCategories = useCallback(async () => {
     try {
       setLoading(true);
@@ -33,7 +49,14 @@ function Categories() {
     fetchCategories();
   }, [fetchCategories]);
 
-  // Handle form submission (for both add and edit)
+  /**
+   * Handles the submission of the category form (for both adding and editing).
+   * Prevents default form action, validates input, and calls the appropriate
+   * API function (`createCategory` or `updateCategory`).
+   * Resets form state and refreshes the category list upon successful submission.
+   * Displays errors in `formError` state if validation or API call fails.
+   * @param {React.FormEvent<HTMLFormElement>} e - The form submission event.
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
@@ -66,7 +89,13 @@ function Categories() {
     }
   };
 
-  // Handle edit button click
+  /**
+   * Sets the form to edit mode when an "Edit" button is clicked.
+   * Populates the form with the selected category's data.
+   * @param {object} category - The category object to be edited.
+   * @param {string|number} category.id_categoria - The ID of the category.
+   * @param {string} category.nombre - The name of the category.
+   */
   const handleEdit = (category) => {
     setIsEditing(true);
     setCurrentCategory(category);
@@ -74,7 +103,13 @@ function Categories() {
     setFormError('');
   };
 
-  // Handle delete button click
+  /**
+   * Handles the deletion of a category.
+   * Shows a confirmation dialog before proceeding. If confirmed,
+   * calls `categoryAPI.deleteCategory` and refreshes the category list.
+   * Displays errors in the main `error` state if deletion fails.
+   * @param {string|number} categoryId - The ID of the category to be deleted.
+   */
   const handleDelete = async (categoryId) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
       setLoading(true);
@@ -90,7 +125,10 @@ function Categories() {
     }
   };
   
-  // Cancel editing
+  /**
+   * Cancels the editing mode.
+   * Resets the form fields and related state (`isEditing`, `currentCategory`, `categoryName`, `formError`).
+   */
   const cancelEdit = () => {
     setIsEditing(false);
     setCurrentCategory(null);
