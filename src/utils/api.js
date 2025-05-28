@@ -15,25 +15,71 @@
 import axios from 'axios';
 
 /** @const {string} API_URL - The base URL for all API requests. */
-const API_URL = 'http://localhost:8000/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 // Create a pre-configured Axios instance for API communication.
-// This instance will be used for all API calls, ensuring consistent base URL and headers.
 const api = axios.create({
   baseURL: API_URL,
   headers: {
-    'Content-Type': 'application/json', // Default content type for requests.
+    'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 seconds timeout
 });
 
-// Axios request interceptor to automatically add the JWT token to requests.
-/**
- * Axios request interceptor.
- * Attaches the JWT token from localStorage to the Authorization header (Bearer token)
- * for all outgoing requests made through this `api` instance.
- * @param {import('axios').AxiosRequestConfig} config - The Axios request configuration object.
- * @returns {import('axios').AxiosRequestConfig} The modified config object.
- */
+// Error handling interceptor
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const { response } = error;
+    
+    // Handle network errors
+    if (!response) {
+      console.error('Network Error:', error.message);
+      return Promise.reject({
+        message: 'Error de conexión. Por favor, verifica tu conexión a internet.',
+        originalError: error
+      });
+    }
+
+    // Handle specific error cases
+    switch (response.status) {
+      case 401:
+        // Handle unauthorized access
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+        return Promise.reject({
+          message: 'Sesión expirada. Por favor, inicia sesión nuevamente.',
+          originalError: error
+        });
+      
+      case 403:
+        return Promise.reject({
+          message: 'No tienes permisos para realizar esta acción.',
+          originalError: error
+        });
+      
+      case 404:
+        return Promise.reject({
+          message: 'El recurso solicitado no fue encontrado.',
+          originalError: error
+        });
+      
+      case 500:
+        return Promise.reject({
+          message: 'Error interno del servidor. Por favor, intenta más tarde.',
+          originalError: error
+        });
+      
+      default:
+        return Promise.reject({
+          message: response.data?.detail || 'Ha ocurrido un error inesperado.',
+          originalError: error
+        });
+    }
+  }
+);
+
+// Axios request interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
