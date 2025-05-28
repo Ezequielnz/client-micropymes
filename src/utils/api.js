@@ -110,7 +110,7 @@ export const authAPI = {
     formData.append('username', email);
     formData.append('password', password);
     
-    const response = await axios.post(`${API_URL}/auth/login`, formData, {
+    const response = await api.post('/auth/login', formData, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
@@ -316,49 +316,54 @@ export const productAPI = {
  */
 export const categoryAPI = {
   /**
-   * Fetches all categories from the API.
+   * Fetches all categories for a specific business from the API.
+   * @param {string} businessId - The ID of the business.
    * @returns {Promise<Array<object>>} A promise that resolves to an array of category objects. 
-   * Each object typically contains `id_categoria` and `nombre`.
+   * Each object typically contains `id` and `nombre`.
    * @throws {Error} If the API request fails.
    */
-  getCategories: async () => {
-    const response = await api.get('/categorias');
+  getCategories: async (businessId) => {
+    const response = await api.get(`/businesses/${businessId}/categories/`);
     return response.data;
   },
 
   /**
-   * Creates a new category.
+   * Creates a new category for a specific business.
+   * @param {string} businessId - The ID of the business.
    * @param {object} categoryData - Data for the new category.
    * @param {string} categoryData.nombre - The name of the new category.
+   * @param {string} [categoryData.descripcion] - The description of the new category.
    * @returns {Promise<object>} A promise that resolves to the newly created category object.
    * @throws {Error} If the API request fails.
    */
-  createCategory: async (categoryData) => {
-    const response = await api.post('/categorias', categoryData);
+  createCategory: async (businessId, categoryData) => {
+    const response = await api.post(`/businesses/${businessId}/categories/`, categoryData);
     return response.data;
   },
 
   /**
-   * Updates an existing category.
+   * Updates an existing category within a specific business.
+   * @param {string} businessId - The ID of the business.
    * @param {string|number} categoryId - The ID of the category to update.
    * @param {object} categoryData - Data to update the category with.
-   * @param {string} categoryData.nombre - The new name for the category.
+   * Can include `nombre`, `descripcion`.
    * @returns {Promise<object>} A promise that resolves to the updated category object.
    * @throws {Error} If the API request fails.
    */
-  updateCategory: async (categoryId, categoryData) => {
-    const response = await api.put(`/categorias/${categoryId}`, categoryData);
+  updateCategory: async (businessId, categoryId, categoryData) => {
+    const response = await api.put(`/businesses/${businessId}/categories/${categoryId}`, categoryData);
     return response.data;
   },
 
   /**
-   * Deletes a category.
+   * Deletes a category within a specific business.
+   * @param {string} businessId - The ID of the business.
    * @param {string|number} categoryId - The ID of the category to delete.
    * @returns {Promise<object>} A promise that resolves to a confirmation message or an empty object from the API.
    * @throws {Error} If the API request fails.
    */
-  deleteCategory: async (categoryId) => {
-    const response = await api.delete(`/categorias/${categoryId}`);
+  deleteCategory: async (businessId, categoryId) => {
+    const response = await api.delete(`/businesses/${businessId}/categories/${categoryId}`);
     return response.data;
   },
 };
@@ -408,6 +413,45 @@ export const salesAPI = {
   // If a specific endpoint or different data structure is needed for POS products,
   // a new function like getProductsForSale can be added here.
   // For now, productAPI.getProducts will be used in the POS component.
+};
+
+/**
+ * @namespace businessAPI
+ * @description Contains functions for managing business data.
+ */
+export const businessAPI = {
+  /**
+   * Creates a new business.
+   * @param {object} businessData - Data for the new business.
+   * @param {string} businessData.nombre - Business name.
+   * @returns {Promise<object>} A promise that resolves to the newly created business object.
+   * @throws {Error} If the API request fails.
+   */
+  createBusiness: async (businessData) => {
+    const response = await api.post('/businesses/', businessData);
+    return response.data;
+  },
+
+  /**
+   * Fetches businesses associated with the current user.
+   * @returns {Promise<Array<object>>} A promise that resolves to an array of business objects.
+   * @throws {Error} If the API request fails.
+   */
+  getBusinesses: async () => {
+    const response = await api.get('/businesses/');
+    return response.data;
+  },
+
+  /**
+   * Fetches a single business by ID.
+   * @param {string} businessId - The ID of the business to fetch.
+   * @returns {Promise<object>} A promise that resolves to the business object.
+   * @throws {Error} If the API request fails or the business is not found.
+   */
+  getBusinessById: async (businessId) => {
+    const response = await api.get(`/businesses/${businessId}`);
+    return response.data;
+  }
 };
 
 export default api; 

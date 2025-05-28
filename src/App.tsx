@@ -3,6 +3,9 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ConfirmEmail from './pages/ConfirmEmail';
+import CreateBusiness from './pages/CreateBusiness';
+import Categories from './pages/Categories';
+import Products from './pages/Products';
 
 /**
  * The main application component.
@@ -22,6 +25,9 @@ const App: React.FC = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/confirm-email" element={<ConfirmEmail />} />
+        <Route path="/create-business" element={<CreateBusiness />} />
+        <Route path="/businesses/:businessId/categories" element={<Categories />} />
+        <Route path="/businesses/:businessId/products" element={<Products />} />
         {/* Catch-all route: If no other route matches, navigate to the home page. */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
