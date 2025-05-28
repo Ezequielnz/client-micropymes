@@ -2,7 +2,21 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../utils/api';
 
+/**
+ * Register component. Handles new user registration by collecting user details,
+ * submitting them to the registration API, and providing feedback to the user.
+ * It also handles the redirection logic post-registration, which might involve
+ * immediate login or prompting for email confirmation.
+ */
 function Register() {
+  /**
+   * @type {[object, function]} formData - State for storing user registration input.
+   * @property {string} email - The user's email address.
+   * @property {string} password - The user's chosen password.
+   * @property {string} nombre - The user's first name.
+   * @property {string} apellido - The user's last name.
+   * @property {string} rol - The user's role, defaults to 'usuario'.
+   */
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -10,10 +24,17 @@ function Register() {
     apellido: '',
     rol: 'usuario'
   });
+  /** @type {[string | JSX.Element, function]} error - State for storing and displaying error messages. Can be a string or JSX. */
   const [error, setError] = useState('');
+  /** @type {[boolean, function]} loading - State to indicate if a registration request is in progress. */
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  /**
+   * Handles changes in form input fields.
+   * Updates the `formData` state with the new value for the changed field.
+   * @param {React.ChangeEvent<HTMLInputElement>} e - The input change event.
+   */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -22,6 +43,17 @@ function Register() {
     }));
   };
 
+  /**
+   * Handles the registration form submission.
+   * Prevents default form submission, sets loading state, and calls `authAPI.register`.
+   * If registration is successful and an access token is returned, it stores the token
+   * and navigates to the home page.
+   * If no token is returned (common for flows requiring email confirmation), it displays
+   * a success message prompting the user to check their email and then redirects to the
+   * login page after a delay.
+   * On failure, it extracts an error message and updates the `error` state.
+   * @param {React.FormEvent<HTMLFormElement>} e - The form submission event.
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
