@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /*
   src/index.css
   This file contains global styles and CSS variable definitions for the application.
@@ -6,16 +10,68 @@
   It also includes specific utility classes for form elements and messages.
 */
 
-:root {
-  /* Base font stack for the application */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
+  }
+}
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424; /* Default dark background */
-
+  color: #213547;
+  background-color: #ffffff;
+  
   /* Font rendering optimizations */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -33,39 +89,31 @@ a:hover {
   color: #535bf2;
 }
 
-/* Body base styles */
-body {
-  margin: 0;
-  display: flex;
-  place-items: center; /* Centers content for simple layouts, may be overridden by page components */
-  min-width: 320px;   /* Minimum width for responsiveness */
-  min-height: 100vh;  /* Ensures the body takes at least the full viewport height */
-}
-
 /* Default heading styles */
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
 }
 
-/* Default button styles */
-button {
+/* Default button styles - only apply to buttons without Tailwind classes */
+button:not([class*="bg-"]):not([class*="text-"]):not([class*="border-"]) {
   border-radius: 8px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: #f9f9f9;
+  color: #213547;
   cursor: pointer;
   transition: border-color 0.25s;
 }
-button:hover {
+button:not([class*="bg-"]):not([class*="text-"]):not([class*="border-"]):hover {
   border-color: #646cff;
 }
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color; /* Focus indicator */
+button:not([class*="bg-"]):not([class*="text-"]):not([class*="border-"]):focus,
+button:not([class*="bg-"]):not([class*="text-"]):not([class*="border-"]):focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
 }
 
 /* General card style (used on Home page, etc.) */
@@ -83,15 +131,15 @@ button:focus-visible {
   margin: 0 auto;
   padding: 20px;
   border-radius: 8px;
-  background-color: #1a1a1a; /* Darker background for forms in dark mode */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 /* Styles for groups of form elements (label + input) */
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 5px; /* Space between label and input */
+  gap: 5px;
 }
 
 .form-group label {
@@ -102,9 +150,9 @@ button:focus-visible {
 .form-group input {
   padding: 10px;
   border-radius: 4px;
-  border: 1px solid #3a3a3a;
-  background-color: #242424; /* Input background in dark mode */
-  color: rgba(255, 255, 255, 0.87); /* Input text color in dark mode */
+  border: 1px solid #e0e0e0;
+  background-color: #ffffff;
+  color: #213547;
 }
 
 /* Style for displaying error messages */
@@ -137,7 +185,7 @@ button:focus-visible {
 .dev-tools {
   margin-top: 1rem;
   padding-top: 0.5rem;
-  border-top: 1px dashed #666; /* Separator for dev tools section */
+  border-top: 1px dashed #666;
 }
 
 .dev-button {
@@ -149,31 +197,68 @@ button:focus-visible {
   cursor: pointer;
   border-radius: 4px;
 }
-/* Hover state for the development button */
 
 .dev-button:hover {
   background-color: #f57c00;
 }
 
-/* Light color scheme adjustments */
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547; /* Default text color for light mode */
-    background-color: #ffffff; /* Default background for light mode */
+/* Dark color scheme adjustments - only apply when explicitly requested */
+@media (prefers-color-scheme: dark) {
+  body {
+    color: rgba(255, 255, 255, 0.87);
+    background-color: #242424;
   }
   a:hover {
     color: #747bff;
   }
   button {
-    background-color: #f9f9f9; /* Light mode button background */
+    background-color: #1a1a1a;
   }
   .form-container {
-    background-color: #f9f9f9; /* Light mode form container background */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    background-color: #1a1a1a;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
   .form-group input {
-    border: 1px solid #e0e0e0; /* Light mode input border */
-    background-color: #ffffff; /* Light mode input background */
-    color: #213547; /* Light mode input text color */
+    border: 1px solid #3a3a3a;
+    background-color: #242424;
+    color: rgba(255, 255, 255, 0.87);
   }
+}
+
+/* Updated root styles - removed centering and width restrictions for full page layouts */
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.read-the-docs {
+  color: #888;
 }

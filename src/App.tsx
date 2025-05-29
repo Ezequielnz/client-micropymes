@@ -1,11 +1,11 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ConfirmEmail from './pages/ConfirmEmail';
 import CreateBusiness from './pages/CreateBusiness';
 import Categories from './pages/Categories';
 import Products from './pages/Products';
+import LandingPage from './pages/LandingPage.tsx';
 
 /**
  * The main application component.
@@ -21,7 +21,7 @@ const App: React.FC = () => {
       {/* Routes component is a container for all individual Route definitions. */}
       <Routes>
         {/* Each Route maps a URL path to a specific React component. */}
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/confirm-email" element={<ConfirmEmail />} />
