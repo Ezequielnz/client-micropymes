@@ -1,6 +1,20 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { authAPI } from '../utils/api';
+import { 
+  ArrowRight, 
+  Mail, 
+  Lock, 
+  AlertCircle, 
+  CheckCircle,
+  Menu,
+  X
+} from 'lucide-react';
 
 /**
  * Login component. Handles user authentication by collecting email and password,
@@ -8,6 +22,7 @@ import { authAPI } from '../utils/api';
  * displaying an error message upon failure.
  */
 function Login() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   /**
    * @type {[object, function]} formData - State for storing user input (email and password).
    * @property {string} email - The user's email address.
@@ -58,7 +73,7 @@ function Login() {
       localStorage.setItem('token', data.access_token);
 
       // Redireccionar a la página de inicio
-      navigate('/');
+      navigate('/home');
     } catch (err) {
       console.error('Error completo:', err);
       
@@ -69,22 +84,24 @@ function Login() {
       // Mostrar instrucciones adicionales para errores específicos
       if (errorMessage.includes('Email no confirmado') || errorMessage.includes('correo electrónico')) {
         setError(
-          <div>
+          <div className="space-y-2">
             <p>{errorMessage}</p>
-            <p className="help-text">
+            <p className="text-sm text-gray-600">
               Revisa tu bandeja de entrada y haz clic en el enlace de confirmación. 
               Si no lo encuentras, revisa tu carpeta de spam.
             </p>
             {process.env.NODE_ENV !== 'production' && (
-              <p className="dev-tools">
-                <button 
+              <div className="pt-2 border-t border-gray-200">
+                <Button 
                   type="button" 
-                  className="dev-button"
+                  variant="outline"
+                  size="sm"
                   onClick={() => activateAccount(formData.email)}
+                  className="text-orange-600 border-orange-300 hover:bg-orange-50"
                 >
                   Activar cuenta (solo desarrollo)
-                </button>
-              </p>
+                </Button>
+              </div>
             )}
           </div>
         );
@@ -109,16 +126,19 @@ function Login() {
       
       if (response.ok) {
         setError(
-          <div className="success-message">
-            <p>{data.detail}</p>
-            <p className="help-text">Ahora puedes intentar iniciar sesión nuevamente.</p>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-green-600">
+              <CheckCircle className="h-4 w-4" />
+              <p className="font-medium">{data.detail}</p>
+            </div>
+            <p className="text-sm text-gray-600">Ahora puedes intentar iniciar sesión nuevamente.</p>
           </div>
         );
       } else {
         setError(
-          <div>
+          <div className="space-y-2">
             <p>No se pudo activar la cuenta: {data.detail}</p>
-            <p className="help-text">{data.instrucciones || ''}</p>
+            <p className="text-sm text-gray-600">{data.instrucciones || ''}</p>
           </div>
         );
       }
@@ -130,39 +150,188 @@ function Login() {
   };
 
   return (
-    <div className="form-container">
-      <h1>Iniciar Sesión</h1>
-      {error && <div className="error-message">{error}</div>}
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
+    <div className="min-h-screen bg-white">
+      {/* Navigation */}
+      <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Link to="/" className="flex-shrink-0 flex items-center">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg mr-3"></div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  BizFlow Pro
+                </h1>
+              </Link>
+            </div>
+            
+            {/* Desktop Navigation */}
+            <div className="hidden md:block">
+              <div className="ml-10 flex items-baseline space-x-8">
+                <Link to="/">
+                  <Button variant="outline" size="sm" className="text-gray-700 hover:text-blue-600 hover:bg-gray-50">
+                    Inicio
+                  </Button>
+                </Link>
+                <Link to="/register">
+                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                    Registrarse
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="text-gray-600 hover:text-gray-900 focus:outline-none focus:text-gray-900"
+              >
+                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="form-group">
-          <label htmlFor="password">Contraseña</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
+
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden bg-white border-t border-gray-100">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+              <div className="flex flex-col space-y-2 px-3 py-2">
+                <Link to="/">
+                  <Button variant="outline" size="sm" className="w-full text-gray-700">
+                    Inicio
+                  </Button>
+                </Link>
+                <Link to="/register">
+                  <Button size="sm" className="w-full bg-blue-600 text-white">
+                    Registrarse
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+      </nav>
+
+      {/* Main Content */}
+      <section className="bg-gray-50 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-md mx-auto">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Iniciar Sesión
+              </h1>
+              <p className="text-lg text-gray-600">
+                Accede a tu cuenta de BizFlow Pro
+              </p>
+            </div>
+
+            <Card className="border border-gray-200 shadow-sm">
+              <CardHeader className="space-y-1">
+                <CardTitle className="text-2xl font-semibold text-center text-gray-900">
+                  Bienvenido de vuelta
+                </CardTitle>
+                <CardDescription className="text-center text-gray-600">
+                  Ingresa tus credenciales para continuar
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {error && (
+                  <Alert variant={typeof error === 'string' && error.includes('activar') ? 'default' : 'destructive'}>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      {error}
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                      Email
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                        className="pl-10"
+                        placeholder="tu@email.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                      Contraseña
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        type="password"
+                        id="password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                        className="pl-10"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    disabled={loading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                    size="lg"
+                  >
+                    {loading ? (
+                      'Iniciando sesión...'
+                    ) : (
+                      <>
+                        Iniciar Sesión
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </>
+                    )}
+                  </Button>
+                </form>
+
+                <div className="text-center">
+                  <p className="text-sm text-gray-600">
+                    ¿No tienes una cuenta?{' '}
+                    <Link 
+                      to="/register" 
+                      className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                    >
+                      Regístrate aquí
+                    </Link>
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-        <button type="submit" disabled={loading}>
-          {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-        </button>
-      </form>
-      <p>
-        ¿No tienes una cuenta? <Link to="/register">Regístrate</Link>
-      </p>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="flex items-center justify-center mb-4">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg mr-3"></div>
+              <h3 className="text-2xl font-bold">BizFlow Pro</h3>
+            </div>
+            <p className="text-gray-400 max-w-md mx-auto">
+              La plataforma de gestión empresarial más avanzada para micro y pequeñas empresas.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

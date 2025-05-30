@@ -35,10 +35,7 @@ api.interceptors.response.use(
     // Handle network errors
     if (!response) {
       console.error('Network Error:', error.message);
-      return Promise.reject({
-        message: 'Error de conexión. Por favor, verifica tu conexión a internet.',
-        originalError: error
-      });
+      return Promise.reject(error);
     }
 
     // Handle specific error cases
@@ -47,35 +44,27 @@ api.interceptors.response.use(
         // Handle unauthorized access
         localStorage.removeItem('token');
         window.location.href = '/login';
-        return Promise.reject({
-          message: 'Sesión expirada. Por favor, inicia sesión nuevamente.',
-          originalError: error
-        });
+        break;
       
       case 403:
-        return Promise.reject({
-          message: 'No tienes permisos para realizar esta acción.',
-          originalError: error
-        });
+        console.error('Permission denied:', response.data?.detail);
+        break;
       
       case 404:
-        return Promise.reject({
-          message: 'El recurso solicitado no fue encontrado.',
-          originalError: error
-        });
+        console.error('Resource not found:', response.data?.detail);
+        break;
       
       case 500:
-        return Promise.reject({
-          message: 'Error interno del servidor. Por favor, intenta más tarde.',
-          originalError: error
-        });
+        console.error('Server error:', response.data?.detail);
+        break;
       
       default:
-        return Promise.reject({
-          message: response.data?.detail || 'Ha ocurrido un error inesperado.',
-          originalError: error
-        });
+        console.error('API Error:', response.data?.detail || 'Unknown error');
+        break;
     }
+    
+    // Always return the original error to maintain compatibility
+    return Promise.reject(error);
   }
 );
 
@@ -83,8 +72,13 @@ api.interceptors.response.use(
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
+    console.log('API Request:', config.method?.toUpperCase(), config.url);
+    console.log('Token present:', !!token);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('Authorization header set');
+    } else {
+      console.log('No token found in localStorage');
     }
     return config;
   },
@@ -225,83 +219,93 @@ export const customerAPI = {
  */
 export const productAPI = {
   /**
-   * Fetches products from the API. Can be filtered using parameters.
+   * Fetches products from the API for a specific business. Can be filtered using parameters.
+   * @param {string} businessId - The ID of the business.
    * @param {object} [params] - Optional parameters for filtering products.
-   * @param {string|number} [params.id_categoria] - Category ID to filter products by.
+   * @param {string|number} [params.category_id] - Category ID to filter products by.
    * @param {string} [params.search] - Search term to filter products by name, etc. (if backend supports).
    * @returns {Promise<Array<object>>} A promise that resolves to an array of product objects.
-   * Each product object typically includes `id_producto`, `nombre`, `descripcion`, `precio`, `stock`, `id_categoria`.
+   * Each product object typically includes `id`, `nombre`, `descripcion`, `precio_venta`, `stock_actual`, `categoria_id`.
    * @throws {Error} If the API request fails.
    */
-  getProducts: async (params) => {
-    const response = await api.get('/productos', { params });
+  getProducts: async (businessId, params) => {
+    const response = await api.get(`/businesses/${businessId}/products`, { params });
     return response.data;
   },
 
   /**
-   * Fetches a single product by its ID.
+   * Fetches a single product by its ID for a specific business.
+   * @param {string} businessId - The ID of the business.
    * @param {string|number} productId - The ID of the product to fetch.
    * @returns {Promise<object>} A promise that resolves to the product object.
    * @throws {Error} If the API request fails or the product is not found.
    */
-  getProductById: async (productId) => {
-    const response = await api.get(`/productos/${productId}`);
+  getProductById: async (businessId, productId) => {
+    const response = await api.get(`/businesses/${businessId}/products/${productId}`);
     return response.data;
   },
 
   /**
-   * Creates a new product.
+   * Creates a new product for a specific business.
+   * @param {string} businessId - The ID of the business.
    * @param {object} productData - Data for the new product.
    * @param {string} productData.nombre - Name of the product.
    * @param {string} [productData.descripcion] - Description of the product.
-   * @param {number} productData.precio - Price of the product.
-   * @param {number} productData.stock - Stock quantity of the product.
-   * @param {string|number} productData.id_categoria - ID of the category the product belongs to.
+   * @param {number} productData.precio_venta - Sale price of the product.
+   * @param {number} [productData.precio_compra] - Purchase price of the product.
+   * @param {number} productData.stock_actual - Current stock quantity of the product.
+   * @param {number} [productData.stock_minimo] - Minimum stock quantity of the product.
+   * @param {string|number} productData.categoria_id - ID of the category the product belongs to.
+   * @param {string} [productData.codigo] - Product code/SKU.
+   * @param {boolean} [productData.activo] - Whether the product is active.
    * @returns {Promise<object>} A promise that resolves to the newly created product object.
    * @throws {Error} If the API request fails.
    */
-  createProduct: async (productData) => {
-    const response = await api.post('/productos', productData);
+  createProduct: async (businessId, productData) => {
+    const response = await api.post(`/businesses/${businessId}/products`, productData);
     return response.data;
   },
 
   /**
-   * Updates an existing product.
+   * Updates an existing product for a specific business.
+   * @param {string} businessId - The ID of the business.
    * @param {string|number} productId - The ID of the product to update.
    * @param {object} productData - Data to update the product with.
-   * Can include `nombre`, `descripcion`, `precio`, `stock`, `id_categoria`.
+   * Can include `nombre`, `descripcion`, `precio_venta`, `precio_compra`, `stock_actual`, `stock_minimo`, `categoria_id`, `codigo`, `activo`.
    * @returns {Promise<object>} A promise that resolves to the updated product object.
    * @throws {Error} If the API request fails.
    */
-  updateProduct: async (productId, productData) => {
-    const response = await api.put(`/productos/${productId}`, productData);
+  updateProduct: async (businessId, productId, productData) => {
+    const response = await api.put(`/businesses/${businessId}/products/${productId}`, productData);
     return response.data;
   },
 
   /**
-   * Deletes a product.
+   * Deletes a product for a specific business.
+   * @param {string} businessId - The ID of the business.
    * @param {string|number} productId - The ID of the product to delete.
    * @returns {Promise<object>} A promise that resolves to a confirmation message or an empty object from the API.
    * @throws {Error} If the API request fails.
    */
-  deleteProduct: async (productId) => {
-    const response = await api.delete(`/productos/${productId}`);
+  deleteProduct: async (businessId, productId) => {
+    const response = await api.delete(`/businesses/${businessId}/products/${productId}`);
     return response.data;
   },
 
   /**
-   * Imports products from an Excel file.
+   * Imports products from an Excel file for a specific business.
    * The server is expected to handle the Excel file parsing and product creation/update.
+   * @param {string} businessId - The ID of the business.
    * @param {FormData} formData - The FormData object containing the Excel file.
    * The file should be appended with the key 'file' (e.g., `formData.append('file', excelFile)`).
    * @returns {Promise<object>} A promise that resolves to the API response, which might include
    * details like the number of products imported, any errors, or a success message.
    * @throws {Error} If the API request fails.
    */
-  importProducts: async (formData) => {
+  importProducts: async (businessId, formData) => {
     // For file uploads, Content-Type needs to be multipart/form-data
     // Axios handles this automatically when FormData is passed as data
-    const response = await api.post('/productos/importar-excel', formData, {
+    const response = await api.post(`/businesses/${businessId}/products/importar-excel`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
