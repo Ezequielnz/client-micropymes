@@ -3,7 +3,10 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ConfirmEmail from './pages/ConfirmEmail';
+import EmailConfirmation from './pages/EmailConfirmation';
 import CreateBusiness from './pages/CreateBusiness';
+import BusinessDashboard from './pages/BusinessDashboard';
+import MyBusinesses from './pages/MyBusinesses';
 import Categories from './pages/Categories';
 import Products from './pages/Products';
 import Customers from './pages/Customers';
@@ -34,7 +37,10 @@ const App: React.FC = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/confirm-email" element={<ConfirmEmail />} />
+          <Route path="/email-confirmation" element={<EmailConfirmation />} />
+          <Route path="/my-businesses" element={<MyBusinesses />} />
           <Route path="/create-business" element={<CreateBusiness />} />
+          <Route path="/business/:businessId" element={<BusinessDashboard />} />
           <Route path="/business/:businessId/categories" element={<Categories />} />
           <Route path="/business/:businessId/products" element={<Products />} />
           <Route path="/business/:businessId/customers" element={<Customers />} />

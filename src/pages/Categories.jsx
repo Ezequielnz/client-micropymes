@@ -226,6 +226,15 @@ function Categories() {
                   className="text-gray-700 hover:text-blue-600 hover:bg-gray-50"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
+                  Inicio
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => navigate(`/business/${businessId}`)}
+                  className="text-gray-700 hover:text-purple-600 hover:bg-purple-50"
+                >
+                  <Tag className="h-4 w-4 mr-2" />
                   Dashboard
                 </Button>
                 <Button 
@@ -264,6 +273,15 @@ function Categories() {
                   className="w-full text-gray-700"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
+                  Inicio
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => navigate(`/business/${businessId}`)}
+                  className="w-full text-gray-700"
+                >
+                  <Tag className="h-4 w-4 mr-2" />
                   Dashboard
                 </Button>
                 <Button 

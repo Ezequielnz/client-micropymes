@@ -11,8 +11,7 @@ import {
   Mail, 
   Lock, 
   User, 
-  AlertCircle, 
-  CheckCircle,
+  AlertCircle,
   Menu,
   X,
   Sparkles
@@ -41,10 +40,12 @@ function Register() {
     apellido: '',
     rol: 'usuario'
   });
-  /** @type {[string | JSX.Element, function]} error - State for storing and displaying error messages. Can be a string or JSX. */
+  
+  /** @type {[string, function]} error - State for storing error messages as string only */
   const [error, setError] = useState('');
   /** @type {[boolean, function]} loading - State to indicate if a registration request is in progress. */
   const [loading, setLoading] = useState(false);
+  
   const navigate = useNavigate();
 
   /**
@@ -65,9 +66,8 @@ function Register() {
    * Prevents default form submission, sets loading state, and calls `authAPI.register`.
    * If registration is successful and an access token is returned, it stores the token
    * and navigates to the home page.
-   * If no token is returned (common for flows requiring email confirmation), it displays
-   * a success message prompting the user to check their email and then redirects to the
-   * login page after a delay.
+   * If no token is returned (common for flows requiring email confirmation), it redirects
+   * to the email confirmation page.
    * On failure, it extracts an error message and updates the `error` state.
    * @param {React.FormEvent<HTMLFormElement>} e - The form submission event.
    */
@@ -86,36 +86,29 @@ function Register() {
       if (data.access_token) {
         // Guardar el token en localStorage
         localStorage.setItem('token', data.access_token);
-
         // Redireccionar a la página de inicio
         navigate('/');
       } else {
-        // Si no hay token, mostrar mensaje de éxito y redirigir a login
-        setError(
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-green-600">
-              <CheckCircle className="h-5 w-5" />
-              <p className="font-semibold">¡Registro exitoso!</p>
-            </div>
-            <p className="text-gray-700">{data.detail || 'Cuenta creada correctamente.'}</p>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-sm text-blue-800">
-                Por favor revisa tu correo electrónico para confirmar tu cuenta.
-                Si no encuentras el email, revisa tu carpeta de spam.
-              </p>
-              <p className="text-sm text-blue-600 mt-2 font-medium">
-                Serás redirigido a la página de inicio de sesión en unos segundos.
-              </p>
-            </div>
-          </div>
-        );
-        setTimeout(() => {
-          navigate('/login');
-        }, 5000); // Redirigir después de 5 segundos para dar tiempo a leer el mensaje
+        // Si no hay token, redirigir a la página de confirmación
+        navigate(`/email-confirmation?email=${encodeURIComponent(formData.email)}`);
       }
     } catch (err) {
       console.error('Error completo:', err);
-      setError(err.response?.data?.detail || err.message || 'Error al registrar usuario');
+      
+      // Manejar diferentes tipos de errores
+      let errorMessage = 'Error al registrar usuario';
+      
+      if (err.response?.data?.detail) {
+        if (typeof err.response.data.detail === 'string') {
+          errorMessage = err.response.data.detail;
+        } else if (err.response.data.detail.message) {
+          errorMessage = err.response.data.detail.message;
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -214,8 +207,9 @@ function Register() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Error Alert */}
                 {error && (
-                  <Alert variant={typeof error === 'string' ? 'destructive' : 'default'}>
+                  <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
                       {error}

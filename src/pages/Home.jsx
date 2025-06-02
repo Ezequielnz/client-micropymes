@@ -12,7 +12,18 @@ import {
   Loader2,
   User,
   Mail,
-  Shield
+  Shield,
+  Bell,
+  AlertTriangle,
+  TrendingUp,
+  Clock,
+  CheckCircle,
+  DollarSign,
+  Calendar,
+  ArrowRight,
+  Activity,
+  Target,
+  Zap
 } from 'lucide-react';
 
 // Componente Button simple sin dependencias externas
@@ -22,7 +33,9 @@ const SimpleButton = ({ children, onClick, variant = 'default', size = 'default'
   const variants = {
     default: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
     outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500',
-    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-blue-500'
+    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-blue-500',
+    success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500',
+    warning: 'bg-orange-600 text-white hover:bg-orange-700 focus:ring-orange-500'
   };
   
   const sizes = {
@@ -40,22 +53,48 @@ const SimpleButton = ({ children, onClick, variant = 'default', size = 'default'
   );
 };
 
+// Componente Card simple
+const Card = ({ children, className = '' }) => (
+  <div className={`bg-white border border-gray-200 rounded-lg shadow-sm ${className}`}>
+    {children}
+  </div>
+);
+
+const CardHeader = ({ children, className = '' }) => (
+  <div className={`p-6 pb-4 ${className}`}>
+    {children}
+  </div>
+);
+
+const CardContent = ({ children, className = '' }) => (
+  <div className={`p-6 pt-0 ${className}`}>
+    {children}
+  </div>
+);
+
+const CardTitle = ({ children, className = '' }) => (
+  <h3 className={`text-lg font-semibold text-gray-900 ${className}`}>
+    {children}
+  </h3>
+);
+
 function Home() {
   const [user, setUser] = useState(null);
-  const [businesses, setBusinesses] = useState([]);
+  const [businessCount, setBusinessCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [notifications, setNotifications] = useState([]);
   const navigate = useNavigate();
   
-  // Función manual para cargar datos
+  // Función manual para cargar datos del centro de notificaciones
   const loadData = async () => {
-    console.log('Loading data manually...');
+    console.log('Loading notification center data...');
     setLoading(true);
     setError(null);
     
     try {
-      console.log('Fetching user data and businesses...');
+      console.log('Fetching user data and business summary...');
       
       const userData = await authAPI.getCurrentUser();
       console.log('User data received:', userData);
@@ -63,10 +102,51 @@ function Home() {
       
       const businessesData = await businessAPI.getBusinesses();
       console.log('Businesses data received:', businessesData);
-      setBusinesses(businessesData || []);
+      setBusinessCount(businessesData?.length || 0);
       
+      // Simular notificaciones (aquí irían las llamadas reales a la API)
+      const mockNotifications = [
+        {
+          id: 1,
+          type: 'warning',
+          title: 'Stock bajo detectado',
+          message: '3 productos con stock crítico en "Mi Tienda"',
+          time: 'Hace 2 horas',
+          icon: AlertTriangle,
+          color: 'orange'
+        },
+        {
+          id: 2,
+          type: 'success',
+          title: 'Meta de ventas alcanzada',
+          message: 'Has superado tu meta mensual en "Negocio Principal"',
+          time: 'Hace 4 horas',
+          icon: Target,
+          color: 'green'
+        },
+        {
+          id: 3,
+          type: 'info',
+          title: 'Nuevo cliente registrado',
+          message: 'María González se registró en "Mi Tienda"',
+          time: 'Ayer',
+          icon: Users,
+          color: 'blue'
+        },
+        {
+          id: 4,
+          type: 'warning',
+          title: 'Recordatorio de facturación',
+          message: 'Tienes 5 ventas pendientes de facturar',
+          time: 'Hace 1 día',
+          icon: Clock,
+          color: 'orange'
+        }
+      ];
+      
+      setNotifications(mockNotifications);
       setDataLoaded(true);
-      console.log('Data fetching completed successfully');
+      console.log('Notification center data loaded successfully');
     } catch (error) {
       console.error('Error fetching data:', error);
       
@@ -74,6 +154,8 @@ function Home() {
       if (error.response?.status === 401) {
         console.log('Unauthorized, removing token and redirecting to login');
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.clear();
         navigate('/login');
       } else {
         console.log('Non-auth error, staying on page');
@@ -101,8 +183,16 @@ function Home() {
   }, [navigate]);
 
   const handleLogout = () => {
+    // Limpiar completamente el localStorage
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.clear(); // Limpia todo el localStorage por seguridad
+    
+    // Navegar al login
     navigate('/login');
+    
+    // Opcional: recargar la página para asegurar que no quede estado residual
+    window.location.href = '/login';
   };
   
   // Error state
@@ -140,7 +230,7 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Simple Navigation */}
+      {/* Navigation */}
       <nav className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -150,12 +240,14 @@ function Home() {
             </div>
             
             <div className="flex items-center space-x-4">
-              <Link to="/create-business">
-                <SimpleButton variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nuevo Negocio
-                </SimpleButton>
-              </Link>
+              <SimpleButton 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/my-businesses')}
+              >
+                <Building2 className="h-4 w-4 mr-2" />
+                Mis Negocios
+              </SimpleButton>
               <SimpleButton 
                 variant="outline" 
                 size="sm" 
@@ -173,164 +265,194 @@ function Home() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Dashboard</h1>
+          <div className="flex items-center justify-center mb-4">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+              <Bell className="h-8 w-8 text-blue-600" />
+            </div>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Centro de Notificaciones</h1>
           <p className="text-lg text-gray-600 mb-6">
-            Gestiona tus negocios desde un solo lugar
+            Mantente al día con las novedades de tus negocios
           </p>
           
           {!dataLoaded && !loading && (
             <SimpleButton onClick={loadData} className="bg-blue-600 hover:bg-blue-700 text-white">
-              Cargar mis datos
+              <Activity className="h-4 w-4 mr-2" />
+              Cargar Notificaciones
             </SimpleButton>
           )}
         </div>
 
-        {/* User Info */}
-        {user && (
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <User className="h-5 w-5 text-blue-600" />
-              Información del Usuario
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  <User className="h-5 w-5 text-blue-600" />
+        {/* Quick Stats */}
+        {dataLoaded && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <Card className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Mis Negocios</p>
+                    <p className="text-3xl font-bold text-gray-900">{businessCount}</p>
+                    <p className="text-sm text-blue-600 mt-1">Activos</p>
+                  </div>
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Building2 className="h-6 w-6 text-blue-600" />
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Nombre</p>
-                  <p className="font-medium text-gray-900">
-                    {(user.nombre || 'N/A')} {(user.apellido || '')}
-                  </p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Notificaciones</p>
+                    <p className="text-3xl font-bold text-gray-900">{notifications.length}</p>
+                    <p className="text-sm text-orange-600 mt-1">Pendientes</p>
+                  </div>
+                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <Bell className="h-6 w-6 text-orange-600" />
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                  <Mail className="h-5 w-5 text-green-600" />
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Usuario</p>
+                    <p className="text-lg font-bold text-gray-900">{user?.nombre || 'Usuario'}</p>
+                    <p className="text-sm text-green-600 mt-1">Conectado</p>
+                  </div>
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <User className="h-6 w-6 text-green-600" />
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Email</p>
-                  <p className="font-medium text-gray-900">{user.email || 'N/A'}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                  <Shield className="h-5 w-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Rol</p>
-                  <p className="font-medium text-gray-900 capitalize">{user.rol || 'usuario'}</p>
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
-        {/* Businesses Section */}
+        {/* Quick Access */}
         {dataLoaded && (
           <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Mis Negocios</h2>
-              <Link to="/create-business">
-                <SimpleButton className="bg-blue-600 hover:bg-blue-700 text-white">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Crear Nuevo Negocio
-                </SimpleButton>
-              </Link>
-            </div>
-
-            {businesses && businesses.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {businesses.map((business) => (
-                  <div key={business.id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
-                    <div className="p-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <Building2 className="h-6 w-6 text-blue-600" />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-semibold text-gray-900">
-                            {business.nombre || 'Sin nombre'}
-                          </h3>
-                          {business.descripcion && (
-                            <p className="text-gray-600 text-sm">
-                              {business.descripcion}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-3 mb-4">
-                        <SimpleButton 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => navigate(`/business/${business.id}/products`)}
-                          className="text-gray-700 hover:text-blue-600"
-                        >
-                          <Package className="h-4 w-4 mr-2" />
-                          Productos
-                        </SimpleButton>
-                        <SimpleButton 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => navigate(`/business/${business.id}/categories`)}
-                          className="text-gray-700 hover:text-green-600"
-                        >
-                          <Tag className="h-4 w-4 mr-2" />
-                          Categorías
-                        </SimpleButton>
-                        <SimpleButton 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => navigate(`/business/${business.id}/customers`)}
-                          className="text-gray-700 hover:text-purple-600"
-                        >
-                          <Users className="h-4 w-4 mr-2" />
-                          Clientes
-                        </SimpleButton>
-                        <SimpleButton 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => navigate(`/business/${business.id}/pos`)}
-                          className="text-gray-700 hover:text-orange-600"
-                        >
-                          <ShoppingCart className="h-4 w-4 mr-2" />
-                          POS
-                        </SimpleButton>
-                      </div>
-                      
-                      <SimpleButton 
-                        size="sm"
-                        onClick={() => navigate(`/business/${business.id}`)}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                      >
-                        Ver Dashboard
-                      </SimpleButton>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-                <div className="text-center py-12 px-6">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Building2 className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    No tienes negocios registrados
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    Crea tu primer negocio para comenzar a gestionar productos, clientes y ventas.
-                  </p>
-                  <Link to="/create-business">
-                    <SimpleButton className="bg-blue-600 hover:bg-blue-700 text-white">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Crear Mi Primer Negocio
-                    </SimpleButton>
-                  </Link>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-blue-600" />
+                  Acceso Rápido
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <SimpleButton
+                    variant="outline"
+                    className="h-20 flex-col space-y-2 hover:bg-blue-50"
+                    onClick={() => navigate('/my-businesses')}
+                  >
+                    <Building2 className="h-6 w-6 text-blue-600" />
+                    <span className="text-sm">Mis Negocios</span>
+                  </SimpleButton>
+                  
+                  <SimpleButton
+                    variant="outline"
+                    className="h-20 flex-col space-y-2 hover:bg-green-50"
+                    onClick={() => navigate('/create-business')}
+                  >
+                    <Plus className="h-6 w-6 text-green-600" />
+                    <span className="text-sm">Crear Negocio</span>
+                  </SimpleButton>
+                  
+                  <SimpleButton
+                    variant="outline"
+                    className="h-20 flex-col space-y-2 hover:bg-purple-50"
+                    onClick={() => alert('Próximamente: Reportes Globales')}
+                  >
+                    <TrendingUp className="h-6 w-6 text-purple-600" />
+                    <span className="text-sm">Reportes</span>
+                  </SimpleButton>
+                  
+                  <SimpleButton
+                    variant="outline"
+                    className="h-20 flex-col space-y-2 hover:bg-orange-50"
+                    onClick={() => alert('Próximamente: Configuración')}
+                  >
+                    <Shield className="h-6 w-6 text-orange-600" />
+                    <span className="text-sm">Configuración</span>
+                  </SimpleButton>
                 </div>
-              </div>
-            )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Notifications */}
+        {dataLoaded && notifications.length > 0 && (
+          <div className="mb-8">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Bell className="h-5 w-5 text-blue-600" />
+                    Notificaciones Recientes
+                  </CardTitle>
+                  <SimpleButton variant="ghost" size="sm">
+                    Ver todas
+                  </SimpleButton>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {notifications.map((notification) => {
+                    const IconComponent = notification.icon;
+                    const colorClasses = {
+                      orange: 'bg-orange-50 text-orange-600 border-orange-200',
+                      green: 'bg-green-50 text-green-600 border-green-200',
+                      blue: 'bg-blue-50 text-blue-600 border-blue-200',
+                      red: 'bg-red-50 text-red-600 border-red-200'
+                    };
+                    
+                    return (
+                      <div key={notification.id} className={`flex items-start gap-4 p-4 rounded-lg border ${colorClasses[notification.color]}`}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${colorClasses[notification.color]}`}>
+                          <IconComponent className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900">{notification.title}</h4>
+                          <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
+                          <p className="text-xs text-gray-500 mt-2">{notification.time}</p>
+                        </div>
+                        <SimpleButton variant="ghost" size="sm">
+                          <ArrowRight className="h-4 w-4" />
+                        </SimpleButton>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {dataLoaded && notifications.length === 0 && (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="h-8 w-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              ¡Todo al día!
+            </h3>
+            <p className="text-gray-600 mb-6">
+              No tienes notificaciones pendientes en este momento.
+            </p>
+            <SimpleButton 
+              onClick={() => navigate('/my-businesses')}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Building2 className="h-4 w-4 mr-2" />
+              Ir a Mis Negocios
+            </SimpleButton>
           </div>
         )}
       </div>

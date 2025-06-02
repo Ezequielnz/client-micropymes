@@ -29,7 +29,7 @@ function CreateBusiness() {
 
         try {
             await businessAPI.createBusiness({ nombre: businessName });
-            navigate('/'); // Redirecting to home for now, adjust as needed
+            navigate('/my-businesses'); // Redirecting to my businesses after creation
         } catch (err) {
             console.error('Error creating business:', err);
             const errorMessage = err.response?.data?.detail || err.message || 'Error creating business';
@@ -57,14 +57,14 @@ function CreateBusiness() {
                         {/* Desktop Navigation */}
                         <div className="hidden md:block">
                             <div className="ml-10 flex items-baseline space-x-8">
-                                <Link to="/">
+                                <Link to="/my-businesses">
                                     <Button variant="outline" size="sm" className="text-gray-700 hover:text-blue-600 hover:bg-gray-50">
-                                        Dashboard
+                                        Mis Negocios
                                     </Button>
                                 </Link>
-                                <Link to="/login">
+                                <Link to="/home">
                                     <Button variant="outline" size="sm" className="text-gray-700 hover:text-blue-600 hover:bg-gray-50">
-                                        Iniciar Sesión
+                                        Centro de Notificaciones
                                     </Button>
                                 </Link>
                             </div>
@@ -87,14 +87,14 @@ function CreateBusiness() {
                     <div className="md:hidden bg-white border-t border-gray-100">
                         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
                             <div className="flex flex-col space-y-2 px-3 py-2">
-                                <Link to="/">
+                                <Link to="/my-businesses">
                                     <Button variant="outline" size="sm" className="w-full text-gray-700">
-                                        Dashboard
+                                        Mis Negocios
                                     </Button>
                                 </Link>
-                                <Link to="/login">
+                                <Link to="/home">
                                     <Button variant="outline" size="sm" className="w-full text-gray-700">
-                                        Iniciar Sesión
+                                        Centro de Notificaciones
                                     </Button>
                                 </Link>
                             </div>

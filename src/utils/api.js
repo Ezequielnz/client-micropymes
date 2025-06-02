@@ -455,6 +455,17 @@ export const businessAPI = {
   getBusinessById: async (businessId) => {
     const response = await api.get(`/businesses/${businessId}`);
     return response.data;
+  },
+
+  /**
+   * Deletes a business and all its related data.
+   * @param {string} businessId - The ID of the business to delete.
+   * @returns {Promise<object>} A promise that resolves to a confirmation message.
+   * @throws {Error} If the API request fails or the user doesn't have permission.
+   */
+  deleteBusiness: async (businessId) => {
+    const response = await api.delete(`/businesses/${businessId}`);
+    return response.data;
   }
 };
 

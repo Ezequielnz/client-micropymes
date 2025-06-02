@@ -77,21 +77,27 @@ function Login() {
     } catch (err) {
       console.error('Error completo:', err);
       
-      // Extraer el mensaje de error
-      const errorMessage = err.response?.data?.detail || err.message || 'Error al iniciar sesión';
-      setError(errorMessage);
-      
-      // Mostrar instrucciones adicionales para errores específicos
-      if (errorMessage.includes('Email no confirmado') || errorMessage.includes('correo electrónico')) {
+      // Manejar diferentes tipos de errores
+      if (err.response?.status === 403 && err.response?.data?.detail?.error_type === 'email_not_confirmed') {
+        // Error específico de email no confirmado
+        const email = err.response.data.detail.email || formData.email;
         setError(
-          <div className="space-y-2">
-            <p>{errorMessage}</p>
+          <div className="space-y-3">
+            <p className="font-medium text-red-600">Email no confirmado</p>
             <p className="text-sm text-gray-600">
-              Revisa tu bandeja de entrada y haz clic en el enlace de confirmación. 
-              Si no lo encuentras, revisa tu carpeta de spam.
+              Tu cuenta necesita ser verificada antes de poder iniciar sesión.
             </p>
-            {process.env.NODE_ENV !== 'production' && (
-              <div className="pt-2 border-t border-gray-200">
+            <div className="flex flex-col gap-2">
+              <Button 
+                type="button" 
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(`/email-confirmation?email=${encodeURIComponent(email)}`)}
+                className="text-blue-600 border-blue-300 hover:bg-blue-50"
+              >
+                Ir a página de confirmación
+              </Button>
+              {process.env.NODE_ENV !== 'production' && (
                 <Button 
                   type="button" 
                   variant="outline"
@@ -101,10 +107,25 @@ function Login() {
                 >
                   Activar cuenta (solo desarrollo)
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         );
+      } else {
+        // Otros errores
+        let errorMessage = 'Error al iniciar sesión';
+        
+        if (err.response?.data?.detail) {
+          if (typeof err.response.data.detail === 'string') {
+            errorMessage = err.response.data.detail;
+          } else if (err.response.data.detail.message) {
+            errorMessage = err.response.data.detail.message;
+          }
+        } else if (err.message) {
+          errorMessage = err.message;
+        }
+        
+        setError(errorMessage);
       }
     } finally {
       setLoading(false);
