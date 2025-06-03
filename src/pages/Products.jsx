@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { productAPI, categoryAPI } from '../utils/api';
+import ImportProducts from '../components/ImportProducts';
 import { 
   Package, 
   Plus, 
@@ -22,7 +23,8 @@ import {
   X,
   ArrowLeft,
   Loader2,
-  Search
+  Search,
+  Upload
 } from 'lucide-react';
 
 /**
@@ -106,6 +108,9 @@ function Products() {
     categoria_id: '',
     activo: true
   });
+
+  // State for import modal
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const fetchProducts = useCallback(async (categoryId = selectedCategory) => {
     if (!businessId) {
@@ -455,6 +460,31 @@ function Products() {
                   <Tag className="h-4 w-4 mr-2" />
                   Categorías
                 </Button>
+                <div className="border-t border-gray-200 pt-2 mt-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
+                      setShowImportModal(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full border-green-300 text-green-700 hover:bg-green-50"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Importar Excel
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    onClick={() => {
+                      setShowForm(!showForm);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nuevo Producto
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -475,13 +505,23 @@ function Products() {
                   Administra el inventario de tu negocio
                 </p>
               </div>
-              <Button 
-                onClick={() => setShowForm(!showForm)}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Nuevo Producto
-              </Button>
+              <div className="flex gap-3">
+                <Button 
+                  onClick={() => setShowImportModal(true)}
+                  variant="outline"
+                  className="border-green-300 text-green-700 hover:bg-green-50"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Importar Excel
+                </Button>
+                <Button 
+                  onClick={() => setShowForm(!showForm)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nuevo Producto
+                </Button>
+              </div>
             </div>
 
             {error && (
@@ -951,6 +991,18 @@ function Products() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Import Products Modal */}
+      {showImportModal && (
+        <ImportProducts
+          businessId={businessId}
+          onClose={() => setShowImportModal(false)}
+          onImportComplete={() => {
+            setShowImportModal(false);
+            fetchProducts(); // Refresh products list after import
+          }}
+        />
       )}
 
       {/* Footer */}

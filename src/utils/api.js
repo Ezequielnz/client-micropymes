@@ -312,6 +312,100 @@ export const productAPI = {
     });
     return response.data;
   },
+
+  /**
+   * New import workflow endpoints
+   */
+  
+  /**
+   * Uploads and processes an Excel file for product import.
+   * @param {string} businessId - The ID of the business.
+   * @param {FormData} formData - The FormData object containing the Excel file.
+   * @returns {Promise<object>} A promise that resolves to the import result with temporary products.
+   * @throws {Error} If the API request fails.
+   */
+  uploadImportFile: async (businessId, formData) => {
+    const response = await api.post(`/businesses/${businessId}/import/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  /**
+   * Gets the import summary for the current import session.
+   * @param {string} businessId - The ID of the business.
+   * @returns {Promise<object>} A promise that resolves to the import summary.
+   * @throws {Error} If the API request fails.
+   */
+  getImportSummary: async (businessId) => {
+    const response = await api.get(`/businesses/${businessId}/import/resumen`);
+    return response.data;
+  },
+
+  /**
+   * Gets the temporary products from the current import session.
+   * @param {string} businessId - The ID of the business.
+   * @returns {Promise<Array<object>>} A promise that resolves to an array of temporary products.
+   * @throws {Error} If the API request fails.
+   */
+  getTemporaryProducts: async (businessId) => {
+    const response = await api.get(`/businesses/${businessId}/import/productos-temporales`);
+    return response.data;
+  },
+
+  /**
+   * Updates a temporary product before final import.
+   * @param {string} businessId - The ID of the business.
+   * @param {string} productId - The ID of the temporary product.
+   * @param {object} productData - The updated product data.
+   * @returns {Promise<object>} A promise that resolves to the updated temporary product.
+   * @throws {Error} If the API request fails.
+   */
+  updateTemporaryProduct: async (businessId, productId, productData) => {
+    const response = await api.put(`/businesses/${businessId}/import/productos-temporales/${productId}`, productData);
+    return response.data;
+  },
+
+  /**
+   * Confirms the import and creates the final products.
+   * @param {string} businessId - The ID of the business.
+   * @param {object} confirmationData - The confirmation data including selected products and options.
+   * @returns {Promise<object>} A promise that resolves to the final import result.
+   * @throws {Error} If the API request fails.
+   */
+  confirmImport: async (businessId, confirmationData) => {
+    const response = await api.post(`/businesses/${businessId}/import/confirmar`, confirmationData);
+    return response.data;
+  },
+
+  /**
+   * Cancels the current import session and cleans up temporary data.
+   * @param {string} businessId - The ID of the business.
+   * @returns {Promise<object>} A promise that resolves to a confirmation message.
+   * @throws {Error} If the API request fails.
+   */
+  cancelImport: async (businessId) => {
+    const response = await api.delete(`/businesses/${businessId}/import/cancelar`);
+    return response.data;
+  },
+
+  /**
+   * Gets the sheet names from an Excel file.
+   * @param {string} businessId - The ID of the business.
+   * @param {FormData} formData - The FormData object containing the Excel file.
+   * @returns {Promise<Array<string>>} A promise that resolves to an array of sheet names.
+   * @throws {Error} If the API request fails.
+   */
+  getExcelSheets: async (businessId, formData) => {
+    const response = await api.post(`/businesses/${businessId}/import/hojas-excel`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
 };
 
 /**
