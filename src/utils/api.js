@@ -150,65 +150,76 @@ export const authAPI = {
  */
 export const customerAPI = {
   /**
-   * Fetches customers from the API. Can be filtered using parameters.
+   * Fetches customers from the API for a specific business. Can be filtered using parameters.
+   * @param {string} businessId - The ID of the business.
    * @param {object} [params] - Optional parameters for filtering customers.
-   * @param {string} [params.search] - Search term to filter customers by name, email, phone, etc. (if backend supports).
+   * @param {string} [params.q] - Search term to filter customers by name, apellido, email, or documento_numero.
+   * @param {string} [params.documento_tipo] - Document type to filter customers by.
+   * @param {number} [params.limit] - Maximum number of results to return (1-100, default 10).
+   * @param {number} [params.offset] - Number of results to skip for pagination (default 0).
    * @returns {Promise<Array<object>>} A promise that resolves to an array of customer objects.
-   * Each customer object typically includes `id_cliente`, `nombre`, `email`, `telefono`, `direccion`.
+   * Each customer object typically includes `id`, `nombre`, `apellido`, `email`, `telefono`, `direccion`, `documento_tipo`, `documento_numero`.
    * @throws {Error} If the API request fails.
    */
-  getCustomers: async (params) => {
-    const response = await api.get('/clientes', { params });
+  getCustomers: async (businessId, params) => {
+    const response = await api.get(`/businesses/${businessId}/clientes`, { params });
     return response.data;
   },
 
   /**
-   * Fetches a single customer by their ID.
+   * Fetches a single customer by their ID for a specific business.
+   * @param {string} businessId - The ID of the business.
    * @param {string|number} customerId - The ID of the customer to fetch.
    * @returns {Promise<object>} A promise that resolves to the customer object.
    * @throws {Error} If the API request fails or the customer is not found.
    */
-  getCustomerById: async (customerId) => {
-    const response = await api.get(`/clientes/${customerId}`);
+  getCustomerById: async (businessId, customerId) => {
+    const response = await api.get(`/businesses/${businessId}/clientes/${customerId}`);
     return response.data;
   },
 
   /**
-   * Creates a new customer.
+   * Creates a new customer for a specific business.
+   * @param {string} businessId - The ID of the business.
    * @param {object} customerData - Data for the new customer.
-   * @param {string} customerData.nombre - Customer's full name.
-   * @param {string} customerData.email - Customer's email address.
+   * @param {string} customerData.nombre - Customer's name.
+   * @param {string} [customerData.apellido] - Customer's last name (optional).
+   * @param {string} [customerData.email] - Customer's email address (optional).
    * @param {string} [customerData.telefono] - Customer's phone number (optional).
    * @param {string} [customerData.direccion] - Customer's physical address (optional).
+   * @param {string} [customerData.documento_tipo] - Customer's document type (optional).
+   * @param {string} [customerData.documento_numero] - Customer's document number (optional).
    * @returns {Promise<object>} A promise that resolves to the newly created customer object.
    * @throws {Error} If the API request fails.
    */
-  createCustomer: async (customerData) => {
-    const response = await api.post('/clientes', customerData);
+  createCustomer: async (businessId, customerData) => {
+    const response = await api.post(`/businesses/${businessId}/clientes`, customerData);
     return response.data;
   },
 
   /**
-   * Updates an existing customer.
+   * Updates an existing customer for a specific business.
+   * @param {string} businessId - The ID of the business.
    * @param {string|number} customerId - The ID of the customer to update.
    * @param {object} customerData - Data to update the customer with.
-   * Can include `nombre`, `email`, `telefono`, `direccion`.
+   * Can include `nombre`, `apellido`, `email`, `telefono`, `direccion`, `documento_tipo`, `documento_numero`.
    * @returns {Promise<object>} A promise that resolves to the updated customer object.
    * @throws {Error} If the API request fails.
    */
-  updateCustomer: async (customerId, customerData) => {
-    const response = await api.put(`/clientes/${customerId}`, customerData);
+  updateCustomer: async (businessId, customerId, customerData) => {
+    const response = await api.put(`/businesses/${businessId}/clientes/${customerId}`, customerData);
     return response.data;
   },
 
   /**
-   * Deletes a customer.
+   * Deletes a customer for a specific business.
+   * @param {string} businessId - The ID of the business.
    * @param {string|number} customerId - The ID of the customer to delete.
-   * @returns {Promise<object>} A promise that resolves to a confirmation message or an empty object from the API.
+   * @returns {Promise<object>} A promise that resolves to a confirmation message from the API.
    * @throws {Error} If the API request fails.
    */
-  deleteCustomer: async (customerId) => {
-    const response = await api.delete(`/clientes/${customerId}`);
+  deleteCustomer: async (businessId, customerId) => {
+    const response = await api.delete(`/businesses/${businessId}/clientes/${customerId}`);
     return response.data;
   },
 };
@@ -472,7 +483,8 @@ export const categoryAPI = {
  */
 export const salesAPI = {
   /**
-   * Records a new sale transaction.
+   * Records a new sale transaction for a specific business.
+   * @param {string} businessId - The ID of the business.
    * @param {object} saleData - Data for the new sale.
    * @param {(string|number|null)} saleData.id_cliente - The ID of the customer, or null if not specified (e.g., walk-in).
    * @param {Array<object>} saleData.items - An array of items sold.
@@ -484,15 +496,16 @@ export const salesAPI = {
    *                            (e.g., the created sale object or a success message).
    * @throws {Error} If the API request fails.
    */
-  recordSale: async (saleData) => {
+  recordSale: async (businessId, saleData) => {
     // Ensure saleData includes:
     // { id_cliente (opcional), items: [{ id_producto, cantidad, precio_venta }], monto_total }
-    const response = await api.post('/ventas', saleData);
+    const response = await api.post(`/businesses/${businessId}/ventas`, saleData);
     return response.data;
   },
 
   /**
-   * Fetches sales records from the API. Can be filtered using parameters.
+   * Fetches sales records from the API for a specific business. Can be filtered using parameters.
+   * @param {string} businessId - The ID of the business.
    * @param {object} [params] - Optional parameters for filtering sales records.
    * @param {string} [params.fecha_inicio] - Start date for filtering sales (e.g., 'YYYY-MM-DD').
    * @param {string} [params.fecha_fin] - End date for filtering sales (e.g., 'YYYY-MM-DD').
@@ -501,9 +514,9 @@ export const salesAPI = {
    * Each sale object typically includes `id_venta`, `fecha_venta`, `id_cliente`, `monto_total`, and an `items` array.
    * @throws {Error} If the API request fails.
    */
-  getSales: async (params) => {
+  getSales: async (businessId, params) => {
     // params could include: fecha_inicio, fecha_fin, id_cliente, etc.
-    const response = await api.get('/ventas', { params });
+    const response = await api.get(`/businesses/${businessId}/ventas`, { params });
     return response.data;
   },
   
@@ -560,7 +573,101 @@ export const businessAPI = {
   deleteBusiness: async (businessId) => {
     const response = await api.delete(`/businesses/${businessId}`);
     return response.data;
+  },
+
+  /**
+   * Obtiene notificaciones para el centro de notificaciones de un negocio.
+   * @param {string} businessId - The ID of the business.
+   * @returns {Promise<Array<object>>} A promise that resolves to an array of notification objects.
+   * @throws {Error} If the API request fails.
+   */
+  getNotifications: async (businessId) => {
+    const response = await api.get(`/businesses/${businessId}/notificaciones`);
+    return response.data;
+  },
+
+  /**
+   * Lista usuarios pendientes de aprobación para un negocio.
+   * @param {string} businessId - The ID of the business.
+   * @returns {Promise<Array<object>>} A promise that resolves to an array of pending users.
+   * @throws {Error} If the API request fails.
+   */
+  getPendingUsers: async (businessId) => {
+    const response = await api.get(`/businesses/${businessId}/usuarios-pendientes`);
+    return response.data;
+  },
+
+  /**
+   * Aprueba un usuario pendiente.
+   * @param {string} businessId - The ID of the business.
+   * @param {string} userBusinessId - The ID of the user-business relationship.
+   * @param {object} permissions - Permissions to assign to the user.
+   * @returns {Promise<object>} A promise that resolves to a confirmation message.
+   * @throws {Error} If the API request fails.
+   */
+  approveUser: async (businessId, userBusinessId, permissions) => {
+    const response = await api.post(`/businesses/${businessId}/usuarios-pendientes/${userBusinessId}/aprobar`, permissions);
+    return response.data;
+  },
+
+  /**
+   * Rechaza un usuario pendiente.
+   * @param {string} businessId - The ID of the business.
+   * @param {string} userBusinessId - The ID of the user-business relationship.
+   * @returns {Promise<object>} A promise that resolves to a confirmation message.
+   * @throws {Error} If the API request fails.
+   */
+  rejectUser: async (businessId, userBusinessId) => {
+    const response = await api.post(`/businesses/${businessId}/usuarios-pendientes/${userBusinessId}/rechazar`);
+    return response.data;
+  },
+
+  /**
+   * Obtiene todos los usuarios asociados a un negocio.
+   * @param {string} businessId - The ID of the business.
+   * @returns {Promise<Array<object>>} A promise that resolves to an array of users with their permissions.
+   * @throws {Error} If the API request fails.
+   */
+  getBusinessUsers: async (businessId) => {
+    const response = await api.get(`/businesses/${businessId}/usuarios`);
+    return response.data;
+  },
+
+  /**
+   * Actualiza los permisos de un usuario.
+   * @param {string} businessId - The ID of the business.
+   * @param {string} userBusinessId - The ID of the user-business relationship.
+   * @param {object} permissions - New permissions to assign.
+   * @returns {Promise<object>} A promise that resolves to a confirmation message.
+   * @throws {Error} If the API request fails.
+   */
+  updateUserPermissions: async (businessId, userBusinessId, permissions) => {
+    const response = await api.put(`/businesses/${businessId}/usuarios/${userBusinessId}/permisos`, permissions);
+    return response.data;
+  },
+
+  /**
+   * Remueve un usuario del negocio.
+   * @param {string} businessId - The ID of the business.
+   * @param {string} userBusinessId - The ID of the user-business relationship.
+   * @returns {Promise<object>} A promise that resolves to a confirmation message.
+   * @throws {Error} If the API request fails.
+   */
+  removeUser: async (businessId, userBusinessId) => {
+    const response = await api.delete(`/businesses/${businessId}/usuarios/${userBusinessId}`);
+    return response.data;
   }
+};
+
+export const publicBusinessAPI = {
+  buscarNegocios: async ({ nombre = '', id = '' }) => {
+    const params = [];
+    if (nombre) params.push(`nombre=${encodeURIComponent(nombre)}`);
+    if (id) params.push(`id=${encodeURIComponent(id)}`);
+    const query = params.length ? `?${params.join('&')}` : '';
+    const response = await api.get(`/businesses/public/buscar-negocios${query}`);
+    return response.data;
+  },
 };
 
 export default api; 

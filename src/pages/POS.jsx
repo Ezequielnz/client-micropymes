@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import { productAPI, customerAPI, salesAPI } from '../utils/api'; // Import salesAPI
 
 /**
@@ -41,6 +42,8 @@ import { productAPI, customerAPI, salesAPI } from '../utils/api'; // Import sale
  * It interacts with product, customer, and sales APIs to fetch data and submit sales.
  */
 function POS() {
+  const { businessId } = useParams();
+
   /** @type {[Array<ProductInPOS>, function]} allProducts - State for storing all products fetched from the API. */
   const [allProducts, setAllProducts] = useState([]);
   /** @type {[Array<ProductInPOS>, function]} availableProducts - State for products currently displayed to the user, potentially filtered by search. */
@@ -74,6 +77,13 @@ function POS() {
    * It updates loading states and handles potential errors during data fetching.
    */
   const fetchInitialData = useCallback(async () => {
+    if (!businessId) {
+      setError('Business ID is missing.');
+      setLoadingProducts(false);
+      setLoadingCustomers(false);
+      return;
+    }
+
     setLoadingProducts(true);
     setLoadingCustomers(true);
     setError(''); // Clear general errors
@@ -81,8 +91,8 @@ function POS() {
     // cartError is managed per operation
     try {
       const [productsData, customersData] = await Promise.all([
-        productAPI.getProducts(),
-        customerAPI.getCustomers(),
+        productAPI.getProducts(businessId),
+        customerAPI.getCustomers(businessId),
       ]);
       setAllProducts(Array.isArray(productsData) ? productsData : []);
       setAvailableProducts(Array.isArray(productsData) ? productsData : []);
@@ -97,7 +107,7 @@ function POS() {
       setLoadingProducts(false);
       setLoadingCustomers(false);
     }
-  }, []);
+  }, [businessId]);
 
   useEffect(() => {
     fetchInitialData();
@@ -220,6 +230,10 @@ function POS() {
       setError('Cannot complete sale with an empty cart.');
       return;
     }
+    if (!businessId) {
+      setError('Business ID is missing.');
+      return;
+    }
     setSubmittingSale(true);
     setError('');
     setSaleSuccessMessage('');
@@ -236,7 +250,7 @@ function POS() {
     };
 
     try {
-      const response = await salesAPI.recordSale(saleData);
+      const response = await salesAPI.recordSale(businessId, saleData);
       setSaleSuccessMessage(response.message || 'Sale recorded successfully!');
       setCart([]);
       setSelectedCustomer('');
@@ -318,8 +332,8 @@ function POS() {
                   >
                     <option value="">Walk-in / No Customer</option>
                     {customers.map(customer => (
-                      <option key={customer.id_cliente} value={customer.id_cliente}>
-                        {customer.nombre} ({customer.email})
+                      <option key={customer.id} value={customer.id}>
+                        {customer.nombre} {customer.apellido} ({customer.email})
                       </option>
                     ))}
                   </select>

@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { authAPI } from '../utils/api';
+import { authAPI, businessAPI, publicBusinessAPI } from '../utils/api';
 import { 
   ArrowRight, 
   Mail, 
@@ -48,6 +48,54 @@ function Register() {
   
   const navigate = useNavigate();
 
+  const [businesses, setBusinesses] = useState([]);
+  const [selectedBusinessId, setSelectedBusinessId] = useState('');
+  const [newBusinessName, setNewBusinessName] = useState('');
+  const [businessMode, setBusinessMode] = useState('existing'); // 'existing' o 'new'
+
+  const [businessSearch, setBusinessSearch] = useState('');
+  const [businessOptions, setBusinessOptions] = useState([]);
+  const [businessSearchTimeout, setBusinessSearchTimeout] = useState(null);
+
+  // Buscar negocios cuando cambia el input
+  useEffect(() => {
+    console.log('🔍 useEffect triggered:', { businessMode, businessSearch });
+    
+    if (businessMode !== 'existing') {
+      console.log('❌ Not in existing mode, skipping search');
+      return;
+    }
+    
+    if (businessSearchTimeout) clearTimeout(businessSearchTimeout);
+    
+    setBusinessSearchTimeout(setTimeout(async () => {
+      console.log('⏰ Timeout executed, searching for:', businessSearch);
+      let results = [];
+      
+      try {
+        if (businessSearch.length > 2) {
+          console.log('🔍 Searching by name:', businessSearch);
+          results = await publicBusinessAPI.buscarNegocios({ nombre: businessSearch });
+          console.log('✅ Search results by name:', results);
+        } else if (businessSearch.length === 36) { // UUID
+          console.log('🔍 Searching by ID:', businessSearch);
+          results = await publicBusinessAPI.buscarNegocios({ id: businessSearch });
+          console.log('✅ Search results by ID:', results);
+        } else {
+          console.log('❌ Search term too short or invalid length');
+        }
+        
+        setBusinessOptions(results);
+        console.log('📝 Updated businessOptions:', results);
+      } catch (error) {
+        console.error('❌ Error searching businesses:', error);
+        setBusinessOptions([]);
+      }
+    }, 300));
+    
+    // eslint-disable-next-line
+  }, [businessSearch, businessMode]);
+
   /**
    * Handles changes in form input fields.
    * Updates the `formData` state with the new value for the changed field.
@@ -76,28 +124,38 @@ function Register() {
     setError('');
     setLoading(true);
 
+    // Validación: uno de los dos debe estar presente
+    if (businessMode === 'existing' && !selectedBusinessId) {
+      setError('Debes seleccionar un negocio existente o crear uno nuevo.');
+      setLoading(false);
+      return;
+    }
+    if (businessMode === 'new' && !newBusinessName.trim()) {
+      setError('Debes ingresar el nombre del nuevo negocio.');
+      setLoading(false);
+      return;
+    }
+
+    // Construir payload
+    const payload = {
+      ...formData,
+      negocio_id: businessMode === 'existing' ? selectedBusinessId : undefined,
+      nuevo_negocio_nombre: businessMode === 'new' ? newBusinessName : undefined,
+    };
+
     try {
-      console.log('Enviando datos de registro:', formData);
-      
-      const data = await authAPI.register(formData);
+      console.log('Enviando datos de registro:', payload);
+      const data = await authAPI.register(payload);
       console.log('Respuesta del servidor:', data);
-      
-      // Verificar si tenemos un token de acceso
       if (data.access_token) {
-        // Guardar el token en localStorage
         localStorage.setItem('token', data.access_token);
-        // Redireccionar a la página de inicio
         navigate('/');
       } else {
-        // Si no hay token, redirigir a la página de confirmación
         navigate(`/email-confirmation?email=${encodeURIComponent(formData.email)}`);
       }
     } catch (err) {
       console.error('Error completo:', err);
-      
-      // Manejar diferentes tipos de errores
       let errorMessage = 'Error al registrar usuario';
-      
       if (err.response?.data?.detail) {
         if (typeof err.response.data.detail === 'string') {
           errorMessage = err.response.data.detail;
@@ -107,7 +165,6 @@ function Register() {
       } else if (err.message) {
         errorMessage = err.message;
       }
-      
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -294,6 +351,67 @@ function Register() {
                         placeholder="••••••••"
                       />
                     </div>
+                  </div>
+
+                  {/* Selección/creación de negocio */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">¿A qué negocio te asocias?</Label>
+                    <div className="flex gap-4">
+                      <label>
+                        <input
+                          type="radio"
+                          checked={businessMode === 'existing'}
+                          onChange={() => setBusinessMode('existing')}
+                        /> Negocio existente
+                      </label>
+                      <label>
+                        <input
+                          type="radio"
+                          checked={businessMode === 'new'}
+                          onChange={() => setBusinessMode('new')}
+                        /> Crear nuevo negocio
+                      </label>
+                    </div>
+                    {businessMode === 'existing' ? (
+                      <div>
+                        <Input
+                          type="text"
+                          value={businessSearch}
+                          onChange={e => {
+                            setBusinessSearch(e.target.value);
+                            setSelectedBusinessId('');
+                          }}
+                          placeholder="Buscar negocio por nombre o pegar ID"
+                          className="mb-2"
+                        />
+                        {businessOptions.length > 0 && (
+                          <ul className="border rounded bg-white max-h-40 overflow-y-auto">
+                            {businessOptions.map(b => (
+                              <li
+                                key={b.id}
+                                className={`p-2 cursor-pointer hover:bg-blue-100 ${selectedBusinessId === b.id ? 'bg-blue-50' : ''}`}
+                                onClick={() => {
+                                  setSelectedBusinessId(b.id);
+                                  setBusinessSearch(`${b.nombre} (${b.id})`);
+                                  setBusinessOptions([]);
+                                }}
+                              >
+                                {b.nombre} <span className="text-xs text-gray-400">{b.id}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        {/* Permitir pegar el ID manualmente */}
+                        <div className="text-xs text-gray-500 mt-1">Puedes buscar por nombre o pegar el ID exacto del negocio.</div>
+                      </div>
+                    ) : (
+                      <Input
+                        type="text"
+                        value={newBusinessName}
+                        onChange={e => setNewBusinessName(e.target.value)}
+                        placeholder="Nombre del nuevo negocio"
+                      />
+                    )}
                   </div>
 
                   <Button 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import { salesAPI, customerAPI } from '../utils/api'; // Assuming salesAPI is available
 
 /**
@@ -30,6 +31,8 @@ import { salesAPI, customerAPI } from '../utils/api'; // Assuming salesAPI is av
  * Users can filter sales by a date range.
  */
 function SalesReports() {
+  const { businessId } = useParams();
+
   /** @type {[Array<SaleRecord>, function]} sales - State for storing the list of sales records. */
   const [sales, setSales] = useState([]);
   /** @type {[Array<CustomerRef>, function]} customers - State for storing customer data to map customer IDs to names in the report. */
@@ -51,14 +54,17 @@ function SalesReports() {
    * Errors during this fetch are logged but do not necessarily block sales data loading.
    */
   const fetchAllCustomers = useCallback(async () => {
+    if (!businessId) {
+      return;
+    }
     try {
-      const customersData = await customerAPI.getCustomers();
+      const customersData = await customerAPI.getCustomers(businessId);
       setCustomers(Array.isArray(customersData) ? customersData : []);
     } catch (err) {
       console.error('Error fetching customers for report:', err);
       // Not setting main error, as sales might still load
     }
-  }, []);
+  }, [businessId]);
 
 
   /**
@@ -69,6 +75,11 @@ function SalesReports() {
    * @param {string} currentEndDate - The end date for filtering sales (YYYY-MM-DD).
    */
   const fetchSalesData = useCallback(async (currentStartDate, currentEndDate) => {
+    if (!businessId) {
+      setError('Business ID is missing.');
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -76,7 +87,7 @@ function SalesReports() {
       if (currentStartDate) params.fecha_inicio = currentStartDate;
       if (currentEndDate) params.fecha_fin = currentEndDate;
       
-      const data = await salesAPI.getSales(params);
+      const data = await salesAPI.getSales(businessId, params);
       setSales(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching sales data:', err);
@@ -85,7 +96,7 @@ function SalesReports() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [businessId]);
 
   /**
    * useEffect hook for initial data fetching.
@@ -121,8 +132,8 @@ function SalesReports() {
    */
   const getCustomerName = (customerId) => {
     if (!customers.length || !customerId) return 'N/A (Walk-in)';
-    const customer = customers.find(c => c.id_cliente === customerId);
-    return customer ? customer.nombre : `ID: ${customerId}`;
+    const customer = customers.find(c => c.id === customerId);
+    return customer ? `${customer.nombre} ${customer.apellido}`.trim() : `ID: ${customerId}`;
   };
   
   /**

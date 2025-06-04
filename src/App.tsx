@@ -6,6 +6,7 @@ import ConfirmEmail from './pages/ConfirmEmail';
 import EmailConfirmation from './pages/EmailConfirmation';
 import CreateBusiness from './pages/CreateBusiness';
 import BusinessDashboard from './pages/BusinessDashboard';
+import BusinessUsers from './pages/BusinessUsers';
 import MyBusinesses from './pages/MyBusinesses';
 import Categories from './pages/Categories';
 import Products from './pages/Products';
@@ -15,6 +16,7 @@ import SalesReports from './pages/SalesReports';
 import Home from './pages/Home';
 import LandingPage from './pages/LandingPage.tsx';
 import TestPage from './pages/TestPage';
+import PendingApproval from './pages/PendingApproval';
 
 /**
  * The main application component.
@@ -38,6 +40,7 @@ const App: React.FC = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/confirm-email" element={<ConfirmEmail />} />
           <Route path="/email-confirmation" element={<EmailConfirmation />} />
+          <Route path="/pending-approval" element={<PendingApproval />} />
           <Route path="/my-businesses" element={<MyBusinesses />} />
           <Route path="/create-business" element={<CreateBusiness />} />
           <Route path="/business/:businessId" element={<BusinessDashboard />} />
@@ -46,6 +49,7 @@ const App: React.FC = () => {
           <Route path="/business/:businessId/customers" element={<Customers />} />
           <Route path="/business/:businessId/pos" element={<POS />} />
           <Route path="/business/:businessId/reports" element={<SalesReports />} />
+          <Route path="/business/:businessId/users" element={<BusinessUsers />} />
           {/* Catch-all route: If no other route matches, navigate to the home page. */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

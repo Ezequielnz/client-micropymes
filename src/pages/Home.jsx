@@ -23,7 +23,10 @@ import {
   ArrowRight,
   Activity,
   Target,
-  Zap
+  Zap,
+  UserCheck,
+  UserX,
+  XCircle
 } from 'lucide-react';
 
 // Componente Button simple sin dependencias externas
@@ -104,47 +107,39 @@ function Home() {
       console.log('Businesses data received:', businessesData);
       setBusinessCount(businessesData?.length || 0);
       
-      // Simular notificaciones (aquí irían las llamadas reales a la API)
-      const mockNotifications = [
-        {
-          id: 1,
-          type: 'warning',
-          title: 'Stock bajo detectado',
-          message: '3 productos con stock crítico en "Mi Tienda"',
-          time: 'Hace 2 horas',
-          icon: AlertTriangle,
-          color: 'orange'
-        },
-        {
-          id: 2,
-          type: 'success',
-          title: 'Meta de ventas alcanzada',
-          message: 'Has superado tu meta mensual en "Negocio Principal"',
-          time: 'Hace 4 horas',
-          icon: Target,
-          color: 'green'
-        },
-        {
-          id: 3,
-          type: 'info',
-          title: 'Nuevo cliente registrado',
-          message: 'María González se registró en "Mi Tienda"',
-          time: 'Ayer',
-          icon: Users,
-          color: 'blue'
-        },
-        {
-          id: 4,
-          type: 'warning',
-          title: 'Recordatorio de facturación',
-          message: 'Tienes 5 ventas pendientes de facturar',
-          time: 'Hace 1 día',
-          icon: Clock,
-          color: 'orange'
+      // Cargar notificaciones reales de todos los negocios
+      const allNotifications = [];
+      for (const business of businessesData || []) {
+        try {
+          const businessNotifications = await businessAPI.getNotifications(business.id);
+          allNotifications.push(...businessNotifications.map(notif => ({
+            ...notif,
+            businessName: business.nombre,
+            businessId: business.id
+          })));
+        } catch (error) {
+          console.error(`Error loading notifications for business ${business.id}:`, error);
         }
-      ];
+      }
       
-      setNotifications(mockNotifications);
+      // Convertir notificaciones de aprobación a formato del UI
+      const formattedNotifications = allNotifications.map(notif => {
+        if (notif.type === 'approval_request') {
+          return {
+            id: notif.id,
+            type: 'approval',
+            title: notif.title,
+            message: `${notif.message} en "${notif.businessName}"`,
+            time: new Date(notif.time).toLocaleString(),
+            icon: UserCheck,
+            color: 'blue',
+            data: notif.data
+          };
+        }
+        return notif;
+      });
+      
+      setNotifications(formattedNotifications);
       setDataLoaded(true);
       console.log('Notification center data loaded successfully');
     } catch (error) {
@@ -179,7 +174,31 @@ function Home() {
       return;
     }
     
-    console.log('Token found, ready to load data when requested');
+    // Verificar estado de aprobación automáticamente
+    const checkApprovalStatus = async () => {
+      try {
+        const businessesData = await businessAPI.getBusinesses();
+        if (!businessesData || businessesData.length === 0) {
+          console.log('No approved businesses found, redirecting to pending approval');
+          navigate('/pending-approval');
+          return;
+        }
+        console.log('User has approved businesses, can access home');
+      } catch (error) {
+        if (error.response?.status === 403) {
+          console.log('User pending approval, redirecting');
+          navigate('/pending-approval');
+        } else if (error.response?.status === 401) {
+          console.log('Unauthorized, redirecting to login');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          localStorage.clear();
+          navigate('/login');
+        }
+      }
+    };
+    
+    checkApprovalStatus();
   }, [navigate]);
 
   const handleLogout = () => {
@@ -193,6 +212,28 @@ function Home() {
     
     // Opcional: recargar la página para asegurar que no quede estado residual
     window.location.href = '/login';
+  };
+
+  const handleApproveUser = async (notification) => {
+    try {
+      await businessAPI.approveUser(notification.data.business_id, notification.data.usuario_negocio_id);
+      // Recargar notificaciones
+      await loadData();
+    } catch (error) {
+      console.error('Error approving user:', error);
+      setError('Error al aprobar usuario');
+    }
+  };
+
+  const handleRejectUser = async (notification) => {
+    try {
+      await businessAPI.rejectUser(notification.data.business_id, notification.data.usuario_negocio_id);
+      // Recargar notificaciones
+      await loadData();
+    } catch (error) {
+      console.error('Error rejecting user:', error);
+      setError('Error al rechazar usuario');
+    }
   };
   
   // Error state
@@ -406,10 +447,10 @@ function Home() {
                   {notifications.map((notification) => {
                     const IconComponent = notification.icon;
                     const colorClasses = {
-                      orange: 'bg-orange-50 text-orange-600 border-orange-200',
-                      green: 'bg-green-50 text-green-600 border-green-200',
-                      blue: 'bg-blue-50 text-blue-600 border-blue-200',
-                      red: 'bg-red-50 text-red-600 border-red-200'
+                      blue: 'bg-blue-50 border-blue-200 text-blue-800',
+                      green: 'bg-green-50 border-green-200 text-green-800',
+                      orange: 'bg-orange-50 border-orange-200 text-orange-800',
+                      red: 'bg-red-50 border-red-200 text-red-800'
                     };
                     
                     return (
@@ -421,10 +462,28 @@ function Home() {
                           <h4 className="font-medium text-gray-900">{notification.title}</h4>
                           <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
                           <p className="text-xs text-gray-500 mt-2">{notification.time}</p>
+                          
+                          {/* Botones de acción para notificaciones de aprobación */}
+                          {notification.type === 'approval' && (
+                            <div className="flex gap-2 mt-3">
+                              <SimpleButton
+                                onClick={() => handleApproveUser(notification)}
+                                className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1"
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Aprobar
+                              </SimpleButton>
+                              <SimpleButton
+                                onClick={() => handleRejectUser(notification)}
+                                variant="outline"
+                                className="border-red-300 text-red-600 hover:bg-red-50 text-xs px-3 py-1"
+                              >
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Rechazar
+                              </SimpleButton>
+                            </div>
+                          )}
                         </div>
-                        <SimpleButton variant="ghost" size="sm">
-                          <ArrowRight className="h-4 w-4" />
-                        </SimpleButton>
                       </div>
                     );
                   })}

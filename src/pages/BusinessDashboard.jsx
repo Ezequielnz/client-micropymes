@@ -378,6 +378,15 @@ function BusinessDashboard() {
                   <Button
                     variant="outline"
                     className="h-20 flex-col space-y-2"
+                    onClick={() => navigate(`/business/${businessId}/users`)}
+                  >
+                    <Shield className="h-6 w-6 text-indigo-600" />
+                    <span className="text-sm">Gestionar Usuarios</span>
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    className="h-20 flex-col space-y-2"
                     onClick={() => navigate(`/business/${businessId}/reports`)}
                   >
                     <BarChart3 className="h-6 w-6 text-indigo-600" />
