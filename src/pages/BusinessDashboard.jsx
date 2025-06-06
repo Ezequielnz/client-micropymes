@@ -35,7 +35,9 @@ import {
   CreditCard,
   Receipt,
   PieChart,
-  Activity
+  Activity,
+  Wrench,
+  UserCheck
 } from 'lucide-react';
 
 // Componente Button reutilizable
@@ -242,7 +244,7 @@ function BusinessDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-3xl font-bold text-gray-900">
-                Dashboard de {business?.nombre}
+                Panel de control de {business?.nombre}
               </h2>
               <p className="text-gray-600 mt-1">
                 Resumen general de tu negocio y métricas importantes
@@ -338,7 +340,7 @@ function BusinessDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <Button
                     variant="outline"
                     className="h-20 flex-col space-y-2"
@@ -346,6 +348,33 @@ function BusinessDashboard() {
                   >
                     <Package className="h-6 w-6 text-blue-600" />
                     <span className="text-sm">Gestionar Productos</span>
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    className="h-20 flex-col space-y-2"
+                    onClick={() => navigate(`/business/${businessId}/services`)}
+                  >
+                    <Wrench className="h-6 w-6 text-cyan-600" />
+                    <span className="text-sm">Gestionar Servicios</span>
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    className="h-20 flex-col space-y-2"
+                    onClick={() => navigate(`/business/${businessId}/subscriptions`)}
+                  >
+                    <UserCheck className="h-6 w-6 text-teal-600" />
+                    <span className="text-sm">Suscripciones</span>
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    className="h-20 flex-col space-y-2"
+                    onClick={() => navigate(`/business/${businessId}/categories`)}
+                  >
+                    <Tag className="h-6 w-6 text-orange-600" />
+                    <span className="text-sm">Categorías</span>
                   </Button>
                   
                   <Button
@@ -369,15 +398,6 @@ function BusinessDashboard() {
                   <Button
                     variant="outline"
                     className="h-20 flex-col space-y-2"
-                    onClick={() => navigate(`/business/${businessId}/categories`)}
-                  >
-                    <Tag className="h-6 w-6 text-orange-600" />
-                    <span className="text-sm">Categorías</span>
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="h-20 flex-col space-y-2"
                     onClick={() => navigate(`/business/${businessId}/users`)}
                   >
                     <Shield className="h-6 w-6 text-indigo-600" />
@@ -391,15 +411,6 @@ function BusinessDashboard() {
                   >
                     <BarChart3 className="h-6 w-6 text-indigo-600" />
                     <span className="text-sm">Reportes</span>
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="h-20 flex-col space-y-2"
-                    onClick={() => alert('Próximamente: Configuración AFIP')}
-                  >
-                    <Receipt className="h-6 w-6 text-red-600" />
-                    <span className="text-sm">Config. AFIP</span>
                   </Button>
                 </div>
               </CardContent>

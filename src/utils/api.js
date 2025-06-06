@@ -527,6 +527,236 @@ export const salesAPI = {
 };
 
 /**
+ * @namespace serviceAPI
+ * @description Contains functions for managing business services.
+ */
+export const serviceAPI = {
+  /**
+   * Fetches services from the API for a specific business. Can be filtered using parameters.
+   * @param {string} businessId - The ID of the business.
+   * @param {object} [params] - Optional parameters for filtering services.
+   * @param {string} [params.category_id] - Category ID to filter services by.
+   * @returns {Promise<Array<object>>} A promise that resolves to an array of service objects.
+   * @throws {Error} If the API request fails.
+   */
+  getServices: async (businessId, params) => {
+    const response = await api.get(`/businesses/${businessId}/services`, { params });
+    return response.data;
+  },
+
+  /**
+   * Fetches a single service by its ID for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @param {string} serviceId - The ID of the service to fetch.
+   * @returns {Promise<object>} A promise that resolves to the service object.
+   * @throws {Error} If the API request fails or the service is not found.
+   */
+  getServiceById: async (businessId, serviceId) => {
+    const response = await api.get(`/businesses/${businessId}/services/${serviceId}`);
+    return response.data;
+  },
+
+  /**
+   * Creates a new service for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @param {object} serviceData - Data for the new service.
+   * @param {string} serviceData.nombre - Service name.
+   * @param {string} [serviceData.descripcion] - Service description.
+   * @param {number} serviceData.precio - Service price.
+   * @param {number} [serviceData.duracion_minutos] - Service duration in minutes.
+   * @param {string} [serviceData.categoria_id] - Category ID.
+   * @param {boolean} [serviceData.activo] - Whether the service is active.
+   * @returns {Promise<object>} A promise that resolves to the newly created service object.
+   * @throws {Error} If the API request fails.
+   */
+  createService: async (businessId, serviceData) => {
+    const response = await api.post(`/businesses/${businessId}/services`, serviceData);
+    return response.data;
+  },
+
+  /**
+   * Updates an existing service for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @param {string} serviceId - The ID of the service to update.
+   * @param {object} serviceData - Updated service data.
+   * @returns {Promise<object>} A promise that resolves to the updated service object.
+   * @throws {Error} If the API request fails.
+   */
+  updateService: async (businessId, serviceId, serviceData) => {
+    const response = await api.put(`/businesses/${businessId}/services/${serviceId}`, serviceData);
+    return response.data;
+  },
+
+  /**
+   * Deletes a service for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @param {string} serviceId - The ID of the service to delete.
+   * @returns {Promise<object>} A promise that resolves to a confirmation message.
+   * @throws {Error} If the API request fails.
+   */
+  deleteService: async (businessId, serviceId) => {
+    const response = await api.delete(`/businesses/${businessId}/services/${serviceId}`);
+    return response.data;
+  },
+};
+
+/**
+ * @namespace subscriptionAPI
+ * @description Contains functions for managing client subscriptions to services.
+ */
+export const subscriptionAPI = {
+  /**
+   * Fetches subscriptions from the API for a specific business. Can be filtered using parameters.
+   * @param {string} businessId - The ID of the business.
+   * @param {object} [params] - Optional parameters for filtering subscriptions.
+   * @param {string} [params.cliente_id] - Client ID to filter subscriptions by.
+   * @param {string} [params.servicio_id] - Service ID to filter subscriptions by.
+   * @param {string} [params.estado] - Status to filter subscriptions by.
+   * @returns {Promise<Array<object>>} A promise that resolves to an array of subscription objects.
+   * @throws {Error} If the API request fails.
+   */
+  getSubscriptions: async (businessId, params) => {
+    const response = await api.get(`/businesses/${businessId}/subscriptions`, { params });
+    return response.data;
+  },
+
+  /**
+   * Fetches a single subscription by its ID for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @param {string} subscriptionId - The ID of the subscription to fetch.
+   * @returns {Promise<object>} A promise that resolves to the subscription object.
+   * @throws {Error} If the API request fails or the subscription is not found.
+   */
+  getSubscriptionById: async (businessId, subscriptionId) => {
+    const response = await api.get(`/businesses/${businessId}/subscriptions/${subscriptionId}`);
+    return response.data;
+  },
+
+  /**
+   * Creates a new subscription for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @param {object} subscriptionData - Data for the new subscription.
+   * @param {string} subscriptionData.cliente_id - Client ID.
+   * @param {string} subscriptionData.servicio_id - Service ID.
+   * @param {string} subscriptionData.nombre - Subscription name.
+   * @param {string} [subscriptionData.descripcion] - Subscription description.
+   * @param {number} subscriptionData.precio_mensual - Monthly price.
+   * @param {string} [subscriptionData.tipo] - Subscription type (mensual, trimestral, semestral, anual).
+   * @param {string} subscriptionData.fecha_inicio - Start date.
+   * @param {string} [subscriptionData.fecha_fin] - End date.
+   * @param {string} [subscriptionData.fecha_proximo_pago] - Next payment date.
+   * @returns {Promise<object>} A promise that resolves to the newly created subscription object.
+   * @throws {Error} If the API request fails.
+   */
+  createSubscription: async (businessId, subscriptionData) => {
+    const response = await api.post(`/businesses/${businessId}/subscriptions`, subscriptionData);
+    return response.data;
+  },
+
+  /**
+   * Updates an existing subscription for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @param {string} subscriptionId - The ID of the subscription to update.
+   * @param {object} subscriptionData - Updated subscription data.
+   * @returns {Promise<object>} A promise that resolves to the updated subscription object.
+   * @throws {Error} If the API request fails.
+   */
+  updateSubscription: async (businessId, subscriptionId, subscriptionData) => {
+    const response = await api.put(`/businesses/${businessId}/subscriptions/${subscriptionId}`, subscriptionData);
+    return response.data;
+  },
+
+  /**
+   * Updates the status of a subscription.
+   * @param {string} businessId - The ID of the business.
+   * @param {string} subscriptionId - The ID of the subscription to update.
+   * @param {string} estado - New status (activa, pausada, cancelada, vencida).
+   * @returns {Promise<object>} A promise that resolves to the updated subscription object.
+   * @throws {Error} If the API request fails.
+   */
+  updateSubscriptionStatus: async (businessId, subscriptionId, estado) => {
+    const response = await api.patch(`/businesses/${businessId}/subscriptions/${subscriptionId}/estado`, null, {
+      params: { estado }
+    });
+    return response.data;
+  },
+
+  /**
+   * Deletes a subscription for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @param {string} subscriptionId - The ID of the subscription to delete.
+   * @returns {Promise<object>} A promise that resolves to a confirmation message.
+   * @throws {Error} If the API request fails.
+   */
+  deleteSubscription: async (businessId, subscriptionId) => {
+    const response = await api.delete(`/businesses/${businessId}/subscriptions/${subscriptionId}`);
+    return response.data;
+  },
+};
+
+/**
+ * @namespace clientAPI
+ * @description Contains functions for managing client data (alias for customerAPI for consistency).
+ */
+export const clientAPI = {
+  /**
+   * Fetches clients from the API for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @param {object} [params] - Optional parameters for filtering clients.
+   * @returns {Promise<Array<object>>} A promise that resolves to an array of client objects.
+   * @throws {Error} If the API request fails.
+   */
+  getClients: async (businessId, params) => {
+    return customerAPI.getCustomers(businessId, params);
+  },
+
+  /**
+   * Fetches a single client by their ID for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @param {string} clientId - The ID of the client to fetch.
+   * @returns {Promise<object>} A promise that resolves to the client object.
+   * @throws {Error} If the API request fails or the client is not found.
+   */
+  getClientById: async (businessId, clientId) => {
+    return customerAPI.getCustomerById(businessId, clientId);
+  },
+
+  /**
+   * Creates a new client for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @param {object} clientData - Data for the new client.
+   * @returns {Promise<object>} A promise that resolves to the newly created client object.
+   * @throws {Error} If the API request fails.
+   */
+  createClient: async (businessId, clientData) => {
+    return customerAPI.createCustomer(businessId, clientData);
+  },
+
+  /**
+   * Updates an existing client for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @param {string} clientId - The ID of the client to update.
+   * @param {object} clientData - Updated client data.
+   * @returns {Promise<object>} A promise that resolves to the updated client object.
+   * @throws {Error} If the API request fails.
+   */
+  updateClient: async (businessId, clientId, clientData) => {
+    return customerAPI.updateCustomer(businessId, clientId, clientData);
+  },
+
+  /**
+   * Deletes a client for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @param {string} clientId - The ID of the client to delete.
+   * @returns {Promise<object>} A promise that resolves to a confirmation message.
+   * @throws {Error} If the API request fails.
+   */
+  deleteClient: async (businessId, clientId) => {
+    return customerAPI.deleteCustomer(businessId, clientId);
+  },
+};
+
+/**
  * @namespace businessAPI
  * @description Contains functions for managing business data.
  */

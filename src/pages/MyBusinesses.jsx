@@ -533,11 +533,11 @@ function MyBusinesses() {
                         <SimpleButton 
                           variant="outline" 
                           size="sm"
-                          onClick={() => navigate(`/business/${business.id}/categories`)}
-                          className="text-gray-700 hover:text-green-600 hover:bg-green-50"
+                          onClick={() => navigate(`/business/${business.id}/services`)}
+                          className="text-gray-700 hover:text-cyan-600 hover:bg-cyan-50"
                         >
-                          <Tag className="h-4 w-4 mr-2" />
-                          Categorías
+                          <Settings className="h-4 w-4 mr-2" />
+                          Servicios
                         </SimpleButton>
                         <SimpleButton 
                           variant="outline" 
