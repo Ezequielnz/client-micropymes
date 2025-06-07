@@ -8,7 +8,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { subscriptionAPI, serviceAPI, clientAPI } from '../utils/api';
+import { subscriptionAPI, serviceAPI, customerAPI } from '../utils/api';
+import { getErrorMessage } from '../utils/errorHandler';
 import { 
   CreditCard, 
   Plus, 
@@ -37,18 +38,43 @@ const initialFormState = {
   servicio_id: '',
   nombre: '',
   descripcion: '',
-  precio_mensual: '',
+  precio: '',
   tipo: 'mensual',
-  fecha_inicio: '',
-  fecha_fin: '',
-  fecha_proximo_pago: ''
+  dia_cobro: '',
+  dia_cobro_semanal: '',
+  fecha_inicio: ''
 };
 
 const subscriptionTypes = [
+  { value: 'semanal', label: 'Semanal' },
   { value: 'mensual', label: 'Mensual' },
   { value: 'trimestral', label: 'Trimestral' },
-  { value: 'semestral', label: 'Semestral' },
+  { value: 'cuatrimestral', label: 'Cuatrimestral' },
   { value: 'anual', label: 'Anual' }
+];
+
+const frequencyOptions = [
+  { value: 'semanal', label: 'Semanal' },
+  { value: 'mensual', label: 'Mensual' },
+  { value: 'trimestral', label: 'Trimestral' },
+  { value: 'cuatrimestral', label: 'Cuatrimestral' },
+  { value: 'anual', label: 'Anual' }
+];
+
+const schedulingTypes = [
+  { value: 'mismo_dia', label: 'Mismo día del mes' },
+  { value: 'dia_especifico', label: 'Día específico del mes' },
+  { value: 'dia_semana', label: 'Día de la semana' }
+];
+
+const weekDays = [
+  { value: 0, label: 'Domingo' },
+  { value: 1, label: 'Lunes' },
+  { value: 2, label: 'Martes' },
+  { value: 3, label: 'Miércoles' },
+  { value: 4, label: 'Jueves' },
+  { value: 5, label: 'Viernes' },
+  { value: 6, label: 'Sábado' }
 ];
 
 const subscriptionStatuses = [
@@ -68,9 +94,9 @@ function Subscriptions() {
 
   const [subscriptions, setSubscriptions] = useState([]);
   const [services, setServices] = useState([]);
-  const [clients, setClients] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [selectedService, setSelectedService] = useState('');
-  const [selectedClient, setSelectedClient] = useState('');
+  const [selectedCustomer, setSelectedCustomer] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -93,14 +119,14 @@ function Subscriptions() {
     setError('');
     try {
       const params = {};
-      if (selectedClient) params.cliente_id = selectedClient;
+      if (selectedCustomer) params.cliente_id = selectedCustomer;
       if (selectedService) params.servicio_id = selectedService;
       if (selectedStatus) params.estado = selectedStatus;
       
       const data = await subscriptionAPI.getSubscriptions(businessId, params);
       setSubscriptions(Array.isArray(data) ? data : []);
     } catch (err) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Error fetching subscriptions';
+      const errorMessage = getErrorMessage(err);
       if (err.response?.status === 403) {
         setError('You do not have permission to view subscriptions for this business.');
       } else {
@@ -111,7 +137,7 @@ function Subscriptions() {
     } finally {
       setLoading(false);
     }
-  }, [businessId, selectedClient, selectedService, selectedStatus]);
+  }, [businessId, selectedCustomer, selectedService, selectedStatus]);
 
   const fetchServices = useCallback(async () => {
     if (!businessId) return;
@@ -123,20 +149,20 @@ function Subscriptions() {
     }
   }, [businessId]);
 
-  const fetchClients = useCallback(async () => {
+  const fetchCustomers = useCallback(async () => {
     if (!businessId) return;
     try {
-      const data = await clientAPI.getClients(businessId);
-      setClients(Array.isArray(data) ? data : []);
+      const data = await customerAPI.getCustomers(businessId);
+      setCustomers(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error('Error fetching clients:', err);
+      console.error('Error fetching customers:', err);
     }
   }, [businessId]);
 
   useEffect(() => {
     fetchServices();
-    fetchClients();
-  }, [fetchServices, fetchClients]);
+    fetchCustomers();
+  }, [fetchServices, fetchCustomers]);
 
   useEffect(() => {
     fetchSubscriptions();
@@ -157,29 +183,57 @@ function Subscriptions() {
       setFormError('Business ID is missing.');
       return;
     }
-    if (!subscriptionForm.cliente_id || !subscriptionForm.servicio_id || !subscriptionForm.nombre || !subscriptionForm.precio_mensual || !subscriptionForm.fecha_inicio) {
+    
+    // Validación básica
+    if (!subscriptionForm.cliente_id || !subscriptionForm.nombre || !subscriptionForm.precio || !subscriptionForm.fecha_inicio || !subscriptionForm.tipo) {
       setFormError('Please fill all required fields.');
       return;
     }
 
+    // Validación específica según el tipo
+    if (subscriptionForm.tipo === 'semanal') {
+      if (!subscriptionForm.dia_cobro_semanal) {
+        setFormError('Please select the day of the week for weekly billing.');
+        return;
+      }
+    } else {
+      if (!subscriptionForm.dia_cobro) {
+        setFormError('Please enter the day of the month for billing.');
+        return;
+      }
+    }
+
     setLoading(true);
     try {
-      const subscriptionData = { 
+      // Limpiar y preparar los datos
+      const cleanedData = {
         cliente_id: subscriptionForm.cliente_id,
-        servicio_id: subscriptionForm.servicio_id,
-        nombre: subscriptionForm.nombre.trim(), 
-        descripcion: subscriptionForm.descripcion.trim(), 
-        precio_mensual: parseFloat(subscriptionForm.precio_mensual), 
+        nombre: subscriptionForm.nombre.trim(),
+        descripcion: subscriptionForm.descripcion.trim() || null,
+        precio: parseFloat(subscriptionForm.precio),
         tipo: subscriptionForm.tipo,
+        servicio_id: subscriptionForm.servicio_id || null,
         fecha_inicio: subscriptionForm.fecha_inicio,
-        fecha_fin: subscriptionForm.fecha_fin || null,
-        fecha_proximo_pago: subscriptionForm.fecha_proximo_pago || null
       };
 
-      if (isEditing && currentSubscription) {
-        await subscriptionAPI.updateSubscription(businessId, currentSubscription.id, subscriptionData);
+      // Agregar campos de cobro según el tipo
+      if (subscriptionForm.tipo === 'semanal') {
+        cleanedData.dia_cobro_semanal = parseInt(subscriptionForm.dia_cobro_semanal);
+        cleanedData.dia_cobro = null;
       } else {
-        await subscriptionAPI.createSubscription(businessId, subscriptionData);
+        cleanedData.dia_cobro = parseInt(subscriptionForm.dia_cobro);
+        cleanedData.dia_cobro_semanal = null;
+      }
+
+      // Filtrar valores null para no enviarlos
+      const finalData = Object.fromEntries(
+        Object.entries(cleanedData).filter(([key, value]) => value !== null)
+      );
+
+      if (isEditing && currentSubscription) {
+        await subscriptionAPI.updateSubscription(businessId, currentSubscription.id, finalData);
+      } else {
+        await subscriptionAPI.createSubscription(businessId, finalData);
       }
 
       await fetchSubscriptions();
@@ -188,7 +242,7 @@ function Subscriptions() {
       setIsEditing(false);
       setCurrentSubscription(null);
     } catch (err) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Error saving subscription';
+      const errorMessage = getErrorMessage(err, 'Error saving subscription');
       setFormError(errorMessage);
       console.error('Error saving subscription:', err);
     } finally {
@@ -203,11 +257,11 @@ function Subscriptions() {
       servicio_id: subscription.servicio_id || '',
       nombre: subscription.nombre || '',
       descripcion: subscription.descripcion || '',
-      precio_mensual: subscription.precio_mensual?.toString() || '',
+      precio: subscription.precio?.toString() || '',
       tipo: subscription.tipo || 'mensual',
-      fecha_inicio: subscription.fecha_inicio ? subscription.fecha_inicio.split('T')[0] : '',
-      fecha_fin: subscription.fecha_fin ? subscription.fecha_fin.split('T')[0] : '',
-      fecha_proximo_pago: subscription.fecha_proximo_pago ? subscription.fecha_proximo_pago.split('T')[0] : ''
+      dia_cobro: subscription.dia_cobro?.toString() || '',
+      dia_cobro_semanal: subscription.dia_cobro_semanal?.toString() || '',
+      fecha_inicio: subscription.fecha_inicio ? subscription.fecha_inicio.split('T')[0] : ''
     });
     setIsEditing(true);
     setShowForm(true);
@@ -224,7 +278,7 @@ function Subscriptions() {
       await subscriptionAPI.deleteSubscription(businessId, subscriptionId);
       await fetchSubscriptions();
     } catch (err) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Error deleting subscription';
+      const errorMessage = getErrorMessage(err);
       setError(errorMessage);
       console.error('Error deleting subscription:', err);
     } finally {
@@ -238,7 +292,7 @@ function Subscriptions() {
       await subscriptionAPI.updateSubscriptionStatus(businessId, subscriptionId, newStatus);
       await fetchSubscriptions();
     } catch (err) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Error updating subscription status';
+      const errorMessage = getErrorMessage(err);
       setError(errorMessage);
       console.error('Error updating subscription status:', err);
     } finally {
@@ -254,14 +308,14 @@ function Subscriptions() {
     setFormError('');
   };
 
-  const getClientName = (clientId) => {
-    const client = clients.find(c => c.id === clientId);
-    return client ? `${client.nombre} ${client.apellido}` : 'Unknown Client';
+  const getCustomerName = (customerId) => {
+    const customer = customers.find(c => c.id === customerId);
+    return customer ? `${customer.nombre} ${customer.apellido}` : 'Unknown Customer';
   };
 
   const getServiceName = (serviceId) => {
     const service = services.find(s => s.id === serviceId);
-    return service ? service.nombre : 'Unknown Service';
+    return service ? service.nombre : 'No service';
   };
 
   const getStatusInfo = (status) => {
@@ -275,7 +329,7 @@ function Subscriptions() {
 
   const filteredSubscriptions = subscriptions.filter(subscription =>
     subscription.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    getClientName(subscription.cliente_id).toLowerCase().includes(searchTerm.toLowerCase()) ||
+    getCustomerName(subscription.cliente_id).toLowerCase().includes(searchTerm.toLowerCase()) ||
     getServiceName(subscription.servicio_id).toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -336,20 +390,20 @@ function Subscriptions() {
             />
           </div>
           
-          <Select value={selectedClient} onValueChange={setSelectedClient}>
+          <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
             <SelectTrigger>
-              <SelectValue placeholder="Filter by client" />
+              <SelectValue placeholder="Filter by customer" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All clients</SelectItem>
-              {clients.map((client) => (
-                <SelectItem key={client.id} value={client.id}>
-                  {client.nombre} {client.apellido}
+              <SelectItem value="">All customers</SelectItem>
+              {customers.map((customer) => (
+                <SelectItem key={customer.id} value={customer.id}>
+                  {customer.nombre} {customer.apellido}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-
+          
           <Select value={selectedService} onValueChange={setSelectedService}>
             <SelectTrigger>
               <SelectValue placeholder="Filter by service" />
@@ -399,7 +453,7 @@ function Subscriptions() {
                 <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No subscriptions found</h3>
                 <p className="text-gray-500 mb-4">
-                  {searchTerm || selectedClient || selectedService || selectedStatus
+                  {searchTerm || selectedCustomer || selectedService || selectedStatus
                     ? "No subscriptions match your current filters." 
                     : "Get started by adding your first subscription."}
                 </p>
@@ -420,7 +474,7 @@ function Subscriptions() {
                         <div className="flex-1">
                           <CardTitle className="text-lg">{subscription.nombre}</CardTitle>
                           <CardDescription className="mt-1">
-                            {getClientName(subscription.cliente_id)}
+                            {getCustomerName(subscription.cliente_id)}
                           </CardDescription>
                         </div>
                         <div className="flex space-x-1">
@@ -454,18 +508,27 @@ function Subscriptions() {
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-500">Monthly Price:</span>
+                          <span className="text-sm text-gray-500">Price:</span>
                           <div className="flex items-center space-x-1">
                             <DollarSign className="h-4 w-4 text-green-600" />
                             <span className="font-semibold text-green-600">
-                              ${subscription.precio_mensual?.toFixed(2)}
+                              ${subscription.precio?.toFixed(2)}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              /{subscription.tipo === 'semanal' ? 'week' : 
+                                subscription.tipo === 'mensual' ? 'month' :
+                                subscription.tipo === 'trimestral' ? 'quarter' :
+                                subscription.tipo === 'cuatrimestral' ? '4 months' : 'year'}
                             </span>
                           </div>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-500">Type:</span>
+                          <span className="text-sm text-gray-500">Billing:</span>
                           <span className="text-sm font-medium capitalize">
-                            {subscription.tipo}
+                            {subscription.tipo === 'semanal' 
+                              ? `${weekDays.find(d => d.value === subscription.dia_cobro_semanal)?.label || 'Not set'}`
+                              : `Day ${subscription.dia_cobro || 'Not set'} of ${subscription.tipo === 'mensual' ? 'month' : subscription.tipo}`
+                            }
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
@@ -557,20 +620,40 @@ function Subscriptions() {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="cliente_id" className="text-gray-700">Cliente *</Label>
+                  <Select
+                    value={subscriptionForm.cliente_id}
+                    onValueChange={(value) => setSubscriptionForm(prev => ({ ...prev, cliente_id: value }))}
+                  >
+                    <SelectTrigger className="text-gray-900">
+                      <SelectValue placeholder="Selecciona un cliente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {customers.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          {customer.nombre} {customer.apellido}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="cliente_id" className="text-gray-700">Cliente *</Label>
+                    <Label htmlFor="servicio_id" className="text-gray-700">Servicio (Opcional)</Label>
                     <Select
-                      value={subscriptionForm.cliente_id}
-                      onValueChange={(value) => setSubscriptionForm(prev => ({ ...prev, cliente_id: value }))}
+                      value={subscriptionForm.servicio_id}
+                      onValueChange={(value) => setSubscriptionForm(prev => ({ ...prev, servicio_id: value }))}
                     >
                       <SelectTrigger className="text-gray-900">
-                        <SelectValue placeholder="Selecciona un cliente" />
+                        <SelectValue placeholder="Selecciona un servicio base" />
                       </SelectTrigger>
                       <SelectContent>
-                        {clients.map((client) => (
-                          <SelectItem key={client.id} value={client.id}>
-                            {client.nombre} {client.apellido}
+                        <SelectItem value="">Sin servicio base</SelectItem>
+                        {services.map((service) => (
+                          <SelectItem key={service.id} value={service.id}>
+                            {service.nombre}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -578,18 +661,24 @@ function Subscriptions() {
                   </div>
 
                   <div>
-                    <Label htmlFor="servicio_id" className="text-gray-700">Servicio *</Label>
+                    <Label htmlFor="tipo" className="text-gray-700">Tipo de Suscripción *</Label>
                     <Select
-                      value={subscriptionForm.servicio_id}
-                      onValueChange={(value) => setSubscriptionForm(prev => ({ ...prev, servicio_id: value }))}
+                      value={subscriptionForm.tipo}
+                      onValueChange={(value) => setSubscriptionForm(prev => ({ 
+                        ...prev, 
+                        tipo: value,
+                        // Limpiar campos de cobro cuando cambia el tipo
+                        dia_cobro: '',
+                        dia_cobro_semanal: ''
+                      }))}
                     >
                       <SelectTrigger className="text-gray-900">
-                        <SelectValue placeholder="Selecciona un servicio" />
+                        <SelectValue placeholder="Selecciona la frecuencia" />
                       </SelectTrigger>
                       <SelectContent>
-                        {services.map((service) => (
-                          <SelectItem key={service.id} value={service.id}>
-                            {service.nombre}
+                        {subscriptionTypes.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            {type.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -606,6 +695,7 @@ function Subscriptions() {
                     onChange={handleFormChange}
                     required
                     className="text-gray-900"
+                    placeholder="Ej: Plan Premium, Membresía Básica, etc."
                   />
                 </div>
 
@@ -618,46 +708,37 @@ function Subscriptions() {
                     onChange={handleFormChange}
                     rows={3}
                     className="text-gray-900"
+                    placeholder="Describe qué incluye esta suscripción..."
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="precio_mensual" className="text-gray-700">Precio Mensual *</Label>
+                    <Label htmlFor="precio" className="text-gray-700">
+                      Precio *
+                      {subscriptionForm.tipo && (
+                        <span className="text-sm text-gray-500 ml-1">
+                          (por {subscriptionForm.tipo === 'semanal' ? 'semana' : 
+                               subscriptionForm.tipo === 'mensual' ? 'mes' :
+                               subscriptionForm.tipo === 'trimestral' ? 'trimestre' :
+                               subscriptionForm.tipo === 'cuatrimestral' ? 'cuatrimestre' : 'año'})
+                        </span>
+                      )}
+                    </Label>
                     <Input
-                      id="precio_mensual"
-                      name="precio_mensual"
+                      id="precio"
+                      name="precio"
                       type="number"
                       step="0.01"
                       min="0"
-                      value={subscriptionForm.precio_mensual}
+                      value={subscriptionForm.precio}
                       onChange={handleFormChange}
                       required
                       className="text-gray-900"
+                      placeholder="0.00"
                     />
                   </div>
 
-                  <div>
-                    <Label htmlFor="tipo" className="text-gray-700">Tipo de Suscripción</Label>
-                    <Select
-                      value={subscriptionForm.tipo}
-                      onValueChange={(value) => setSubscriptionForm(prev => ({ ...prev, tipo: value }))}
-                    >
-                      <SelectTrigger className="text-gray-900">
-                        <SelectValue placeholder="Selecciona el tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {subscriptionTypes.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="fecha_inicio" className="text-gray-700">Fecha de Inicio *</Label>
                     <Input
@@ -670,31 +751,52 @@ function Subscriptions() {
                       className="text-gray-900"
                     />
                   </div>
-
-                  <div>
-                    <Label htmlFor="fecha_fin" className="text-gray-700">Fecha de Fin</Label>
-                    <Input
-                      id="fecha_fin"
-                      name="fecha_fin"
-                      type="date"
-                      value={subscriptionForm.fecha_fin}
-                      onChange={handleFormChange}
-                      className="text-gray-900"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="fecha_proximo_pago" className="text-gray-700">Fecha del Próximo Pago</Label>
-                    <Input
-                      id="fecha_proximo_pago"
-                      name="fecha_proximo_pago"
-                      type="date"
-                      value={subscriptionForm.fecha_proximo_pago}
-                      onChange={handleFormChange}
-                      className="text-gray-900"
-                    />
-                  </div>
                 </div>
+
+                {/* Configuración de cobro dinámico según el tipo */}
+                {subscriptionForm.tipo === 'semanal' && (
+                  <div>
+                    <Label htmlFor="dia_cobro_semanal" className="text-gray-700">¿Qué día de la semana se cobrará? *</Label>
+                    <Select
+                      value={subscriptionForm.dia_cobro_semanal}
+                      onValueChange={(value) => setSubscriptionForm(prev => ({ ...prev, dia_cobro_semanal: value }))}
+                    >
+                      <SelectTrigger className="text-gray-900">
+                        <SelectValue placeholder="Selecciona el día de la semana" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {weekDays.map((day) => (
+                          <SelectItem key={day.value} value={day.value.toString()}>
+                            {day.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {subscriptionForm.tipo && subscriptionForm.tipo !== 'semanal' && (
+                  <div>
+                    <Label htmlFor="dia_cobro" className="text-gray-700">
+                      ¿Qué día del mes se cobrará? *
+                      <span className="text-sm text-gray-500 block">
+                        Ingresa un número del 1 al 31. Si el mes no tiene ese día, se cobrará el último día del mes.
+                      </span>
+                    </Label>
+                    <Input
+                      id="dia_cobro"
+                      name="dia_cobro"
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={subscriptionForm.dia_cobro}
+                      onChange={handleFormChange}
+                      required
+                      className="text-gray-900"
+                      placeholder="Ej: 15 (día 15 de cada mes/trimestre/cuatrimestre/año)"
+                    />
+                  </div>
+                )}
 
                 <div className="flex space-x-3 pt-4">
                   <Button type="submit" disabled={loading} className="flex-1">

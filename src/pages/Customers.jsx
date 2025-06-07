@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { customerAPI } from '../utils/api';
+import { getErrorMessage, isForbiddenError } from '../utils/errorHandler';
 import { 
   Users, 
   Plus, 
@@ -113,11 +114,10 @@ function Customers() {
       setCustomers(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching customers:', err);
-      const errorMessage = err.response?.data?.detail || err.message || 'Failed to load customers.';
-      if (err.response?.status === 403) {
+      if (isForbiddenError(err)) {
         setError('You do not have permission to view customers for this business.');
       } else {
-        setError(errorMessage);
+        setError(getErrorMessage(err, 'Failed to load customers.'));
       }
       setCustomers([]); // Clear customers on error
     } finally {
@@ -207,6 +207,10 @@ function Customers() {
       setFormError('Name is required.');
       return;
     }
+    if (!formData.apellido) {
+      setFormError('Last name is required.');
+      return;
+    }
     // Basic email validation (only if email is provided)
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
       setFormError('Email address is invalid.');
@@ -217,17 +221,33 @@ function Customers() {
     setError(''); 
 
     try {
+      // Clean the form data - convert empty strings to null for optional fields
+      const cleanedData = {
+        nombre: formData.nombre.trim(),
+        apellido: formData.apellido.trim(),
+        email: formData.email && formData.email.trim() ? formData.email.trim() : null,
+        telefono: formData.telefono && formData.telefono.trim() ? formData.telefono.trim() : null,
+        direccion: formData.direccion && formData.direccion.trim() ? formData.direccion.trim() : null,
+        documento_tipo: formData.documento_tipo && formData.documento_tipo.trim() ? formData.documento_tipo.trim() : null,
+        documento_numero: formData.documento_numero && formData.documento_numero.trim() ? formData.documento_numero.trim() : null,
+      };
+
+      // Remove null values to avoid sending them to the backend
+      const finalData = Object.fromEntries(
+        Object.entries(cleanedData).filter(([key, value]) => value !== null)
+      );
+
       if (isEditing && currentCustomer) {
-        await customerAPI.updateCustomer(businessId, currentCustomer.id, formData);
+        await customerAPI.updateCustomer(businessId, currentCustomer.id, finalData);
       } else {
-        await customerAPI.createCustomer(businessId, formData);
+        await customerAPI.createCustomer(businessId, finalData);
       }
       setShowForm(false);
       setFormData(initialFormState);
       fetchCustomers(searchTerm); // Refresh list
     } catch (err) {
       console.error('Error saving customer:', err);
-      setFormError(err.response?.data?.detail || err.message || 'Error saving customer.');
+      setFormError(getErrorMessage(err, 'Error saving customer.'));
     } finally {
       setSubmittingForm(false);
     }
@@ -252,7 +272,7 @@ function Customers() {
         fetchCustomers(searchTerm); 
       } catch (err) {
         console.error('Error deleting customer:', err);
-        setError(err.response?.data?.detail || err.message || 'Failed to delete customer.');
+        setError(getErrorMessage(err, 'Failed to delete customer.'));
         setLoading(false); // Ensure loading is false on error
       }
       // setLoading will be set to false by fetchCustomers in the success case
@@ -465,7 +485,7 @@ function Customers() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="apellido" className="text-sm font-medium text-gray-700">
-                        Apellido
+                        Apellido <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="apellido"
@@ -473,6 +493,7 @@ function Customers() {
                         type="text"
                         value={formData.apellido}
                         onChange={handleInputChange}
+                        required
                         className="w-full"
                       />
                     </div>
