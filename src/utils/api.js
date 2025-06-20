@@ -486,19 +486,18 @@ export const salesAPI = {
    * Records a new sale transaction for a specific business.
    * @param {string} businessId - The ID of the business.
    * @param {object} saleData - Data for the new sale.
-   * @param {(string|number|null)} saleData.id_cliente - The ID of the customer, or null if not specified (e.g., walk-in).
+   * @param {(string|number|null)} saleData.cliente_id - The ID of the customer, or null if not specified (e.g., walk-in).
+   * @param {string} saleData.medio_pago - Payment method: efectivo, tarjeta, transferencia.
+   * @param {string} [saleData.observaciones] - Optional sale notes.
    * @param {Array<object>} saleData.items - An array of items sold.
-   * @param {(string|number)} saleData.items[].id_producto - The ID of the product sold.
+   * @param {(string|number)} saleData.items[].producto_id - The ID of the product sold.
    * @param {number} saleData.items[].cantidad - The quantity of the product sold.
-   * @param {number} saleData.items[].precio_venta - The price at which the product was sold (per unit).
-   * @param {number} saleData.monto_total - The total amount of the sale.
-   * @returns {Promise<object>} A promise that resolves to the API response, typically confirming the sale
-   *                            (e.g., the created sale object or a success message).
+   * @param {number} saleData.items[].precio_unitario - The price at which the product was sold (per unit).
+   * @param {number} [saleData.items[].descuento] - Optional discount amount.
+   * @returns {Promise<object>} A promise that resolves to the API response with the created sale.
    * @throws {Error} If the API request fails.
    */
   recordSale: async (businessId, saleData) => {
-    // Ensure saleData includes:
-    // { id_cliente (opcional), items: [{ id_producto, cantidad, precio_venta }], monto_total }
     const response = await api.post(`/businesses/${businessId}/ventas`, saleData);
     return response.data;
   },
@@ -509,21 +508,41 @@ export const salesAPI = {
    * @param {object} [params] - Optional parameters for filtering sales records.
    * @param {string} [params.fecha_inicio] - Start date for filtering sales (e.g., 'YYYY-MM-DD').
    * @param {string} [params.fecha_fin] - End date for filtering sales (e.g., 'YYYY-MM-DD').
-   * @param {string|number} [params.id_cliente] - Customer ID to filter sales by.
+   * @param {string|number} [params.cliente_id] - Customer ID to filter sales by.
+   * @param {number} [params.limit] - Maximum number of results to return.
+   * @param {number} [params.offset] - Number of results to skip for pagination.
    * @returns {Promise<Array<object>>} A promise that resolves to an array of sale objects.
-   * Each sale object typically includes `id_venta`, `fecha_venta`, `id_cliente`, `monto_total`, and an `items` array.
    * @throws {Error} If the API request fails.
    */
   getSales: async (businessId, params) => {
-    // params could include: fecha_inicio, fecha_fin, id_cliente, etc.
     const response = await api.get(`/businesses/${businessId}/ventas`, { params });
     return response.data;
   },
-  
-  // For getting products to display in POS, we can reuse productAPI.getProducts
-  // If a specific endpoint or different data structure is needed for POS products,
-  // a new function like getProductsForSale can be added here.
-  // For now, productAPI.getProducts will be used in the POS component.
+
+  /**
+   * Fetches sales reports and analytics for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @param {object} [params] - Optional parameters for filtering the report.
+   * @param {string} [params.fecha_inicio] - Start date for the report (e.g., 'YYYY-MM-DD').
+   * @param {string} [params.fecha_fin] - End date for the report (e.g., 'YYYY-MM-DD').
+   * @returns {Promise<object>} A promise that resolves to the sales report with statistics.
+   * @throws {Error} If the API request fails.
+   */
+  getSalesReport: async (businessId, params) => {
+    const response = await api.get(`/businesses/${businessId}/ventas/reporte`, { params });
+    return response.data;
+  },
+
+  /**
+   * Fetches dashboard statistics for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @returns {Promise<object>} A promise that resolves to dashboard statistics.
+   * @throws {Error} If the API request fails.
+   */
+  getDashboardStats: async (businessId) => {
+    const response = await api.get(`/businesses/${businessId}/ventas/estadisticas`);
+    return response.data;
+  }
 };
 
 /**

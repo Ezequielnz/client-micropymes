@@ -48,5 +48,7 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // @tailwindcss/line-clamp is now included by default in Tailwind CSS v3.3+
+  ],
 } 

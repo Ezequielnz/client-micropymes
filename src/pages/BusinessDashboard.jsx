@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { businessAPI, authAPI } from '../utils/api';
+import { businessAPI, authAPI, salesAPI } from '../utils/api';
 import {
   Building2,
   Package,
@@ -126,15 +126,22 @@ function BusinessDashboard() {
       const businessData = await businessAPI.getBusinessById(businessId);
       setBusiness(businessData);
 
-      // Simular estadísticas (aquí irían las llamadas reales a la API)
-      setStats({
-        totalProducts: 45,
-        totalCustomers: 128,
-        totalSales: 234,
-        monthlyRevenue: 15420.50,
-        lowStockProducts: 8,
-        pendingOrders: 12
-      });
+      // Cargar estadísticas reales desde la API
+      try {
+        const statsData = await salesAPI.getDashboardStats(businessId);
+        setStats(statsData);
+      } catch (err) {
+        console.error('Error loading dashboard stats:', err);
+        // Fallback to default values if stats fail to load
+        setStats({
+          totalProducts: 0,
+          totalCustomers: 0,
+          totalSales: 0,
+          monthlyRevenue: 0,
+          lowStockProducts: 0,
+          pendingOrders: 0
+        });
+      }
 
     } catch (err) {
       console.error('Error loading dashboard data:', err);
@@ -344,10 +351,19 @@ function BusinessDashboard() {
                   <Button
                     variant="outline"
                     className="h-20 flex-col space-y-2"
-                    onClick={() => navigate(`/business/${businessId}/products`)}
+                    onClick={() => navigate(`/business/${businessId}/products-and-services`)}
                   >
                     <Package className="h-6 w-6 text-blue-600" />
-                    <span className="text-sm">Gestionar Productos</span>
+                    <span className="text-sm">Productos y Servicios</span>
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    className="h-20 flex-col space-y-2"
+                    onClick={() => navigate(`/business/${businessId}/products`)}
+                  >
+                    <Package className="h-6 w-6 text-gray-600" />
+                    <span className="text-sm">Solo Productos</span>
                   </Button>
                   
                   <Button
@@ -356,7 +372,7 @@ function BusinessDashboard() {
                     onClick={() => navigate(`/business/${businessId}/services`)}
                   >
                     <Wrench className="h-6 w-6 text-cyan-600" />
-                    <span className="text-sm">Gestionar Servicios</span>
+                    <span className="text-sm">Solo Servicios</span>
                   </Button>
                   
                   <Button
@@ -389,10 +405,10 @@ function BusinessDashboard() {
                   <Button
                     variant="outline"
                     className="h-20 flex-col space-y-2"
-                    onClick={() => navigate(`/business/${businessId}/pos`)}
+                    onClick={() => navigate(`/business/${businessId}/sales`)}
                   >
                     <ShoppingCart className="h-6 w-6 text-purple-600" />
-                    <span className="text-sm">Punto de Venta</span>
+                    <span className="text-sm">Ventas</span>
                   </Button>
                   
                   <Button

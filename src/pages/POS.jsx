@@ -1,27 +1,115 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
-import { productAPI, customerAPI, salesAPI } from '../utils/api'; // Import salesAPI
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { productAPI, customerAPI, salesAPI } from '../utils/api';
+import {
+  Package,
+  Plus,
+  Minus,
+  Trash2,
+  ShoppingCart,
+  Users,
+  CreditCard,
+  DollarSign,
+  Search,
+  ArrowLeft,
+  Building2,
+  LogOut,
+  CheckCircle,
+  AlertTriangle,
+  Loader2,
+  Menu,
+  X
+} from 'lucide-react';
+
+// Componente Button reutilizable
+const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', disabled = false, ...props }) => {
+  const baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
+  
+  const variants = {
+    default: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
+    outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500',
+    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-blue-500',
+    destructive: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
+    success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500'
+  };
+  
+  const sizes = {
+    sm: 'h-8 px-3 text-sm',
+    default: 'h-10 px-4 py-2',
+    lg: 'h-12 px-6 text-lg'
+  };
+  
+  const classes = `${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`;
+  
+  return (
+    <button className={classes} onClick={onClick} disabled={disabled} {...props}>
+      {children}
+    </button>
+  );
+};
+
+// Componente Card
+const Card = ({ children, className = '' }) => (
+  <div className={`bg-white border border-gray-200 rounded-lg shadow-sm ${className}`}>
+    {children}
+  </div>
+);
+
+const CardHeader = ({ children, className = '' }) => (
+  <div className={`p-6 pb-4 ${className}`}>
+    {children}
+  </div>
+);
+
+const CardContent = ({ children, className = '' }) => (
+  <div className={`p-6 pt-0 ${className}`}>
+    {children}
+  </div>
+);
+
+const CardTitle = ({ children, className = '' }) => (
+  <h3 className={`text-lg font-semibold text-gray-900 ${className}`}>
+    {children}
+  </h3>
+);
+
+// Componente Alert
+const Alert = ({ children, variant = 'default', className = '' }) => {
+  const variants = {
+    default: 'bg-blue-50 border-blue-200 text-blue-800',
+    destructive: 'bg-red-50 border-red-200 text-red-800',
+    success: 'bg-green-50 border-green-200 text-green-800',
+    warning: 'bg-yellow-50 border-yellow-200 text-yellow-800'
+  };
+  
+  return (
+    <div className={`border rounded-lg p-4 ${variants[variant]} ${className}`}>
+      {children}
+    </div>
+  );
+};
 
 /**
  * @typedef {object} ProductInPOS
- * @property {string|number} id_producto - The unique identifier for the product.
+ * @property {string} id - The unique identifier for the product.
  * @property {string} nombre - The name of the product.
- * @property {number} precio - The selling price of the product.
- * @property {number} stock - The current available stock of the product.
- * @property {string|number} id_categoria - The ID of the category this product belongs to.
+ * @property {number} precio_venta - The selling price of the product.
+ * @property {number} stock_actual - The current available stock of the product.
+ * @property {string} categoria_id - The ID of the category this product belongs to.
  * @property {string} [descripcion] - Optional description of the product.
  */
 
 /**
  * @typedef {object} CustomerInPOS
- * @property {string|number} id_cliente - The unique identifier for the customer.
- * @property {string} nombre - The customer's full name.
+ * @property {string} id - The unique identifier for the customer.
+ * @property {string} nombre - The customer's first name.
+ * @property {string} apellido - The customer's last name.
  * @property {string} email - The customer's email address.
  */
 
 /**
  * @typedef {object} CartItem
- * @property {string|number} id_producto - The ID of the product in the cart.
+ * @property {string} producto_id - The ID of the product in the cart.
  * @property {string} nombre - The name of the product.
  * @property {number} precio_at_sale - The price of the product at the time it was added to the cart.
  * @property {number} quantity - The quantity of this product in the cart.
@@ -29,20 +117,13 @@ import { productAPI, customerAPI, salesAPI } from '../utils/api'; // Import sale
  * @property {number} item_total - The total price for this cart item (quantity * precio_at_sale).
  */
 
-
 /**
- * Point of Sale (POS) component.
- * This component provides an interface for creating sales transactions. It allows users to:
- * - View and search available products.
- * - Add products to a shopping cart.
- * - Manage quantities of items in the cart.
- * - Select a customer for the sale (optional).
- * - Calculate the total sale amount.
- * - Finalize and record the sale.
- * It interacts with product, customer, and sales APIs to fetch data and submit sales.
+ * Point of Sale (POS) component with modern design.
  */
 function POS() {
   const { businessId } = useParams();
+  const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   /** @type {[Array<ProductInPOS>, function]} allProducts - State for storing all products fetched from the API. */
   const [allProducts, setAllProducts] = useState([]);
@@ -70,6 +151,8 @@ function POS() {
   const [cartError, setCartError] = useState('');
   /** @type {[string, function]} saleSuccessMessage - State for displaying a success message after a sale is completed. */
   const [saleSuccessMessage, setSaleSuccessMessage] = useState('');
+  /** @type {[string, function]} paymentMethod - State for the selected payment method. */
+  const [paymentMethod, setPaymentMethod] = useState('efectivo');
 
   /**
    * Fetches initial data required for the POS system, including all products
@@ -139,28 +222,28 @@ function POS() {
     setCartError('');
     if (quantity <= 0) return;
 
-    const existingCartItem = cart.find(item => item.id_producto === product.id_producto);
-    const availableStock = product.stock - (existingCartItem?.quantity || 0);
+    const existingCartItem = cart.find(item => item.producto_id === product.id);
+    const availableStock = product.stock_actual - (existingCartItem?.quantity || 0);
 
     if (quantity > availableStock) {
-      setCartError(`Cannot add ${quantity} ${product.nombre}(s). Only ${availableStock + (existingCartItem?.quantity || 0)} available in stock (already ${existingCartItem?.quantity || 0} in cart).`);
+      setCartError(`No se puede agregar ${quantity} ${product.nombre}(s). Solo ${availableStock + (existingCartItem?.quantity || 0)} disponible en stock.`);
       return;
     }
 
     if (existingCartItem) {
       setCart(cart.map(item =>
-        item.id_producto === product.id_producto
+        item.producto_id === product.id
           ? { ...item, quantity: item.quantity + quantity, item_total: (item.quantity + quantity) * item.precio_at_sale }
           : item
       ));
     } else {
       setCart([...cart, {
-        id_producto: product.id_producto,
+        producto_id: product.id,
         nombre: product.nombre,
-        precio_at_sale: parseFloat(product.precio), // Assuming product.precio is the sale price
+        precio_at_sale: parseFloat(product.precio_venta), // Assuming product.precio_venta is the sale price
         quantity: quantity,
-        stock_original: product.stock, // Store original stock for validation
-        item_total: quantity * parseFloat(product.precio),
+        stock_original: product.stock_actual, // Store original stock for validation
+        item_total: quantity * parseFloat(product.precio_venta),
       }]);
     }
   };
@@ -168,17 +251,17 @@ function POS() {
   /**
    * Updates the quantity of an item in the cart.
    * Performs stock validation. If the new quantity is 0, the item is removed.
-   * @param {string|number} productId - The ID of the product in the cart to update.
+   * @param {string} productId - The ID of the product in the cart to update.
    * @param {number} newQuantity - The new quantity for the item.
    */
   const handleUpdateCartQuantity = (productId, newQuantity) => {
     setCartError('');
-    const itemToUpdate = cart.find(item => item.id_producto === productId);
+    const itemToUpdate = cart.find(item => item.producto_id === productId);
     if (!itemToUpdate) return;
 
-    const productInAll = allProducts.find(p => p.id_producto === productId);
+    const productInAll = allProducts.find(p => p.id === productId);
     if (!productInAll) {
-        setCartError(`Product details not found for ID ${productId}. Please refresh.`);
+        setCartError(`Detalles del producto no encontrados para ID ${productId}. Por favor actualiza.`);
         return;
     }
 
@@ -189,13 +272,13 @@ function POS() {
       return;
     }
     
-    if (newQuantity > productInAll.stock) {
-      setCartError(`Cannot set quantity to ${newQuantity}. Only ${productInAll.stock} available in stock.`);
+    if (newQuantity > productInAll.stock_actual) {
+      setCartError(`No se puede establecer cantidad a ${newQuantity}. Solo ${productInAll.stock_actual} disponible en stock.`);
       return;
     }
 
     setCart(cart.map(item =>
-      item.id_producto === productId
+      item.producto_id === productId
         ? { ...item, quantity: newQuantity, item_total: newQuantity * item.precio_at_sale }
         : item
     ));
@@ -203,11 +286,11 @@ function POS() {
 
   /**
    * Removes an item completely from the cart.
-   * @param {string|number} productId - The ID of the product to remove from the cart.
+   * @param {string} productId - The ID of the product to remove from the cart.
    */
   const handleRemoveFromCart = (productId) => {
     setCartError('');
-    setCart(cart.filter(item => item.id_producto !== productId));
+    setCart(cart.filter(item => item.producto_id !== productId));
   };
 
   /**
@@ -227,7 +310,7 @@ function POS() {
    */
   const handleCompleteSale = async () => {
     if (cart.length === 0) {
-      setError('Cannot complete sale with an empty cart.');
+      setError('No se puede completar una venta con carrito vacío.');
       return;
     }
     if (!businessId) {
@@ -240,18 +323,20 @@ function POS() {
     setCartError('');
 
     const saleData = {
-      id_cliente: selectedCustomer ? parseInt(selectedCustomer, 10) : null,
+      cliente_id: selectedCustomer ? parseInt(selectedCustomer, 10) : null,
+      medio_pago: paymentMethod,
+      observaciones: null,
       items: cart.map(item => ({
-        id_producto: item.id_producto,
+        producto_id: item.producto_id,
         cantidad: item.quantity,
-        precio_venta: item.precio_at_sale, // Ensure this is the price per unit
-      })),
-      monto_total: cartTotal,
+        precio_unitario: item.precio_at_sale,
+        descuento: 0
+      }))
     };
 
     try {
       const response = await salesAPI.recordSale(businessId, saleData);
-      setSaleSuccessMessage(response.message || 'Sale recorded successfully!');
+      setSaleSuccessMessage('¡Venta registrada exitosamente!');
       setCart([]);
       setSelectedCustomer('');
       setProductSearchTerm('');
@@ -260,147 +345,375 @@ function POS() {
       await fetchInitialData(); 
     } catch (err) {
       console.error('Error recording sale:', err);
-      setError(err.response?.data?.detail || err.message || 'Failed to record sale.');
+      setError(err.response?.data?.detail || err.message || 'Error al registrar la venta.');
     } finally {
       setSubmittingSale(false);
     }
   };
 
   return (
-    <div className="container-fluid mt-4"> {/* Use container-fluid for more space */}
-      <h1>Point of Sale</h1>
-      {error && <div className="alert alert-danger">{error}</div>}
-      {cartError && <div className="alert alert-warning">{cartError}</div>}
-      {saleSuccessMessage && <div className="alert alert-success">{saleSuccessMessage}</div>}
-
-      <div className="row">
-        {/* Product Selection Area (Left Side) */}
-        <div className="col-lg-7 col-md-6 mb-3">
-          <div className="card">
-            <div className="card-header">
-              <h3>Products</h3>
+    <div className="min-h-screen bg-gray-50">
+      {/* Navigation */}
+      <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Link to="/" className="flex-shrink-0 flex items-center">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg mr-3 flex items-center justify-center">
+                  <Building2 className="h-5 w-5 text-white" />
+                </div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  BizFlow Pro
+                </h1>
+              </Link>
             </div>
-            <div className="card-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-              <input
-                type="text"
-                className="form-control mb-3"
-                placeholder="Search products by name..."
-                value={productSearchTerm}
-                onChange={(e) => setProductSearchTerm(e.target.value)}
-              />
-              {loadingProducts && <p>Loading products...</p>}
-              {!loadingProducts && availableProducts.length === 0 && (
-                <p>{productSearchTerm ? 'No products match your search.' : 'No products available.'}</p>
-              )}
-              <div className="list-group">
-                {availableProducts.map(product => (
-                  <div key={product.id_producto} className="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                    <div>
-                      <h5 className="mb-1">{product.nombre}</h5>
-                      <p className="mb-1">Price: ${Number(product.precio).toFixed(2)} - Stock: {product.stock}</p>
-                    </div>
-                    <button 
-                      className="btn btn-primary btn-sm" 
-                      onClick={() => handleAddToCart(product, 1)} 
-                      disabled={product.stock <= (cart.find(item => item.id_producto === product.id_producto)?.quantity || 0) || product.stock === 0}
-                    >
-                      Add to Cart
-                    </button>
-                  </div>
-                ))}
+            
+            {/* Desktop Navigation */}
+            <div className="hidden md:block">
+              <div className="ml-10 flex items-baseline space-x-8">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => navigate('/home')}
+                  className="text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Inicio
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => navigate(`/business/${businessId}`)}
+                  className="text-gray-700 hover:text-purple-600 hover:bg-purple-50"
+                >
+                  <Package className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => navigate(`/business/${businessId}/sales-reports`)}
+                  className="text-gray-700 hover:text-green-600 hover:bg-green-50"
+                >
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  Reportes
+                </Button>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Cart/Sale Summary Area (Right Side) */}
-        <div className="col-lg-5 col-md-6">
-          <div className="card">
-            <div className="card-header">
-              <h3>Current Sale</h3>
-            </div>
-            <div className="card-body">
-              {loadingCustomers && <p>Loading customers...</p>}
-              {!loadingCustomers && customers.length > 0 && (
-                <div className="mb-3">
-                  <label htmlFor="customerSelect" className="form-label">Select Customer (Optional)</label>
-                  <select 
-                    id="customerSelect" 
-                    className="form-select"
-                    value={selectedCustomer}
-                    onChange={(e) => setSelectedCustomer(e.target.value)}
-                  >
-                    <option value="">Walk-in / No Customer</option>
-                    {customers.map(customer => (
-                      <option key={customer.id} value={customer.id}>
-                        {customer.nombre} {customer.apellido} ({customer.email})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {cart.length === 0 ? (
-                <p>Cart is empty.</p>
-              ) : (
-                <ul className="list-group mb-3">
-                  {cart.map(item => (
-                    <li key={item.id_producto} className="list-group-item">
-                      <div className="d-flex justify-content-between align-items-center">
-                        <span>{item.nombre} (${Number(item.precio_at_sale).toFixed(2)} ea.)</span>
-                        <span>Item Total: ${Number(item.item_total).toFixed(2)}</span>
-                      </div>
-                      <div className="d-flex align-items-center mt-2">
-                        <button 
-                            className="btn btn-outline-secondary btn-sm me-2" 
-                            onClick={() => handleUpdateCartQuantity(item.id_producto, item.quantity - 1)}
-                            disabled={item.quantity <= 1 && submittingSale} // Disable if qty is 1, or allow removal
-                        >
-                          -
-                        </button>
-                        <input 
-                          type="number" 
-                          className="form-control form-control-sm text-center" 
-                          style={{width: '60px'}}
-                          value={item.quantity} 
-                          onChange={(e) => handleUpdateCartQuantity(item.id_producto, parseInt(e.target.value, 10) || 0)}
-                          min="0"
-                          max={item.stock_original} // Max is original stock
-                          disabled={submittingSale}
-                        />
-                        <button 
-                            className="btn btn-outline-secondary btn-sm ms-2" 
-                            onClick={() => handleUpdateCartQuantity(item.id_producto, item.quantity + 1)}
-                            disabled={item.quantity >= item.stock_original || submittingSale}
-                        >
-                          +
-                        </button>
-                        <button 
-                            className="btn btn-danger btn-sm ms-auto" 
-                            onClick={() => handleRemoveFromCart(item.id_producto)}
-                            disabled={submittingSale}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              
-              <h4>Total: ${Number(cartTotal).toFixed(2)}</h4>
-              
-              <button 
-                className="btn btn-success w-100 mt-3" 
-                disabled={cart.length === 0 || submittingSale || loadingProducts || loadingCustomers}
-                onClick={handleCompleteSale}
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="text-gray-600 hover:text-gray-900 focus:outline-none focus:text-gray-900"
               >
-                {submittingSale ? 'Processing...' : 'Complete Sale'}
+                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
             </div>
           </div>
         </div>
-      </div>
+
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden bg-white border-t border-gray-100">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+              <div className="flex flex-col space-y-2 px-3 py-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => navigate('/home')}
+                  className="w-full text-gray-700"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Inicio
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => navigate(`/business/${businessId}`)}
+                  className="w-full text-gray-700"
+                >
+                  <Package className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => navigate(`/business/${businessId}/sales-reports`)}
+                  className="w-full text-gray-700"
+                >
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  Reportes
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </nav>
+
+      {/* Main Content */}
+      <section className="bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                  Punto de Venta
+                </h1>
+                <p className="text-lg text-gray-600">
+                  Sistema de ventas para mostrador
+                </p>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg border border-gray-200">
+                  <ShoppingCart className="h-5 w-5 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">
+                    {cart.length} productos en carrito
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Alerts */}
+            {error && (
+              <Alert variant="destructive" className="mb-6">
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                {error}
+              </Alert>
+            )}
+            
+            {cartError && (
+              <Alert variant="warning" className="mb-6">
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                {cartError}
+              </Alert>
+            )}
+            
+            {saleSuccessMessage && (
+              <Alert variant="success" className="mb-6">
+                <CheckCircle className="h-4 w-4 mr-2" />
+                {saleSuccessMessage}
+              </Alert>
+            )}
+          </div>
+
+          {/* Main POS Interface */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Products Section - Left Side */}
+            <div className="lg:col-span-2">
+              <Card className="h-full">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Package className="h-5 w-5 text-blue-600" />
+                    Productos Disponibles
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {/* Search */}
+                  <div className="mb-6">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Buscar productos por nombre..."
+                        value={productSearchTerm}
+                        onChange={(e) => setProductSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Products Grid */}
+                  <div className="max-h-96 overflow-y-auto">
+                    {loadingProducts && (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                        <span className="ml-2 text-gray-600">Cargando productos...</span>
+                      </div>
+                    )}
+                    
+                    {!loadingProducts && availableProducts.length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        {productSearchTerm ? 'No se encontraron productos que coincidan con tu búsqueda.' : 'No hay productos disponibles.'}
+                      </div>
+                    )}
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {availableProducts.map(product => (
+                        <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-gray-900 mb-1">{product.nombre}</h3>
+                              <p className="text-sm text-gray-600 mb-2">
+                                Stock: {product.stock_actual} unidades
+                              </p>
+                              <p className="text-lg font-bold text-blue-600">
+                                ${Number(product.precio_venta).toFixed(2)}
+                              </p>
+                            </div>
+                          </div>
+                          <Button 
+                            onClick={() => handleAddToCart(product, 1)} 
+                            disabled={product.stock_actual <= (cart.find(item => item.producto_id === product.id)?.quantity || 0) || product.stock_actual === 0}
+                            className="w-full"
+                            size="sm"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Agregar al Carrito
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Cart Section - Right Side */}
+            <div className="lg:col-span-1">
+              <Card className="sticky top-24">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ShoppingCart className="h-5 w-5 text-green-600" />
+                    Venta Actual
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {/* Customer Selection */}
+                  {!loadingCustomers && customers.length > 0 && (
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Cliente (Opcional)
+                      </label>
+                      <select 
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={selectedCustomer}
+                        onChange={(e) => setSelectedCustomer(e.target.value)}
+                      >
+                        <option value="">Cliente ocasional</option>
+                        {customers.map(customer => (
+                          <option key={customer.id} value={customer.id}>
+                            {customer.nombre} {customer.apellido}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Payment Method */}
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Método de Pago
+                    </label>
+                    <select 
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      disabled={submittingSale}
+                    >
+                      <option value="efectivo">💵 Efectivo</option>
+                      <option value="tarjeta">💳 Tarjeta</option>
+                      <option value="transferencia">🏦 Transferencia</option>
+                    </select>
+                  </div>
+
+                  {/* Cart Items */}
+                  <div className="mb-6">
+                    {cart.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <ShoppingCart className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                        <p>El carrito está vacío</p>
+                        <p className="text-sm">Agrega productos para comenzar</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3 max-h-64 overflow-y-auto">
+                        {cart.map(item => (
+                          <div key={item.producto_id} className="border border-gray-200 rounded-lg p-3">
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="flex-1">
+                                <h4 className="font-medium text-gray-900 text-sm">{item.nombre}</h4>
+                                <p className="text-sm text-gray-600">
+                                  ${Number(item.precio_at_sale).toFixed(2)} c/u
+                                </p>
+                              </div>
+                              <p className="font-semibold text-blue-600">
+                                ${Number(item.item_total).toFixed(2)}
+                              </p>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-2">
+                                <Button 
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleUpdateCartQuantity(item.producto_id, item.quantity - 1)}
+                                  disabled={submittingSale}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Minus className="h-4 w-4" />
+                                </Button>
+                                <span className="w-8 text-center font-medium">{item.quantity}</span>
+                                <Button 
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleUpdateCartQuantity(item.producto_id, item.quantity + 1)}
+                                  disabled={item.quantity >= item.stock_original || submittingSale}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Plus className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              <Button 
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleRemoveFromCart(item.producto_id)}
+                                disabled={submittingSale}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Total */}
+                  <div className="border-t border-gray-200 pt-4 mb-6">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-semibold text-gray-900">Total:</span>
+                      <span className="text-2xl font-bold text-blue-600">
+                        ${Number(cartTotal).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Complete Sale Button */}
+                  <Button 
+                    onClick={handleCompleteSale}
+                    disabled={cart.length === 0 || submittingSale || loadingProducts || loadingCustomers}
+                    className="w-full"
+                    size="lg"
+                  >
+                    {submittingSale ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Procesando...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        Completar Venta
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
