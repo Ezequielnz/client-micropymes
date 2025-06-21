@@ -497,8 +497,8 @@ export const salesAPI = {
    * @returns {Promise<object>} A promise that resolves to the API response with the created sale.
    * @throws {Error} If the API request fails.
    */
-  recordSale: async (businessId, saleData) => {
-    const response = await api.post(`/businesses/${businessId}/ventas`, saleData);
+  recordSale: async (saleData) => {
+    const response = await api.post('/ventas/record-sale', saleData);
     return response.data;
   },
 
@@ -540,7 +540,37 @@ export const salesAPI = {
    * @throws {Error} If the API request fails.
    */
   getDashboardStats: async (businessId) => {
-    const response = await api.get(`/businesses/${businessId}/ventas/estadisticas`);
+    const response = await api.get(`/ventas/dashboard-stats`);
+    return response.data;
+  },
+
+  /**
+   * Fetches recent activity for the business (sales, new products, new customers).
+   * @returns {Promise<object>} A promise that resolves to recent activity data.
+   * @throws {Error} If the API request fails.
+   */
+  getRecentActivity: async () => {
+    const response = await api.get(`/ventas/recent-activity`);
+    return response.data;
+  },
+
+  /**
+   * Fetches monthly sales chart data.
+   * @returns {Promise<object>} A promise that resolves to monthly sales chart data.
+   * @throws {Error} If the API request fails.
+   */
+  getMonthlySalesChart: async () => {
+    const response = await api.get(`/ventas/monthly-sales-chart`);
+    return response.data;
+  },
+
+  /**
+   * Fetches top products chart data.
+   * @returns {Promise<object>} A promise that resolves to top products chart data.
+   * @throws {Error} If the API request fails.
+   */
+  getTopProductsChart: async () => {
+    const response = await api.get(`/ventas/top-products-chart`);
     return response.data;
   }
 };

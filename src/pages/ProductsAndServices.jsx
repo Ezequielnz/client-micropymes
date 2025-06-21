@@ -394,12 +394,22 @@ function ProductsAndServices() {
 
     setCategoryLoading(true);
     try {
-      await categoryAPI.createCategory(businessId, {
+      const newCategory = await categoryAPI.createCategory(businessId, {
         nombre: categoryForm.nombre.trim(),
         descripcion: categoryForm.descripcion.trim()
       });
       
       await fetchCategories();
+      
+      // Auto-select the newly created category
+      if (newCategory && newCategory.id) {
+        if (itemType === 'producto') {
+          setProductForm(prev => ({ ...prev, categoria_id: newCategory.id }));
+        } else {
+          setServiceForm(prev => ({ ...prev, categoria_id: newCategory.id }));
+        }
+      }
+      
       setShowCategoryModal(false);
       setCategoryForm({ nombre: '', descripcion: '' });
     } catch (err) {
@@ -523,7 +533,7 @@ function ProductsAndServices() {
             <nav className="-mb-px flex space-x-8">
               <button
                 onClick={() => handleTabChange('todos')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                className={`py-2 px-1 border-b-2 font-medium text-sm bg-white ${
                   activeTab === 'todos'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -536,7 +546,7 @@ function ProductsAndServices() {
               </button>
               <button
                 onClick={() => handleTabChange('productos')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                className={`py-2 px-1 border-b-2 font-medium text-sm bg-white ${
                   activeTab === 'productos'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -549,7 +559,7 @@ function ProductsAndServices() {
               </button>
               <button
                 onClick={() => handleTabChange('servicios')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                className={`py-2 px-1 border-b-2 font-medium text-sm bg-white ${
                   activeTab === 'servicios'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -574,7 +584,7 @@ function ProductsAndServices() {
                 placeholder={`Buscar ${activeTab}...`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 bg-white border-gray-300 text-gray-900 placeholder-gray-500"
               />
             </div>
 
@@ -806,20 +816,20 @@ function ProductsAndServices() {
                         </div>
                         <div className="flex space-x-1">
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
-                            className="bg-white hover:bg-gray-100 border border-gray-200"
+                            className="bg-white hover:bg-blue-50 border border-gray-200 text-blue-600 hover:text-blue-700"
                             onClick={() => handleEdit(item, activeTab === 'todos' ? item.type : activeTab === 'productos' ? 'producto' : 'servicio')}
                           >
-                            <Edit className="h-4 w-4 text-blue-600" />
+                            <Edit className="h-4 w-4" />
                           </Button>
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
-                            className="bg-white hover:bg-gray-100 border border-gray-200"
+                            className="bg-white hover:bg-red-50 border border-gray-200 text-red-500 hover:text-red-700"
                             onClick={() => handleDelete(item.id, activeTab === 'todos' ? item.type : activeTab === 'productos' ? 'producto' : 'servicio')}
                           >
-                            <Trash2 className="h-4 w-4 text-red-500" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
@@ -889,7 +899,7 @@ function ProductsAndServices() {
                 <h2 className="text-lg font-semibold text-gray-900">
                   {isEditing ? 'Editar' : 'Nuevo'} {itemType === 'producto' ? 'Producto' : 'Servicio'}
                 </h2>
-                <Button variant="ghost" size="sm" onClick={cancelEdit}>
+                <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50 border-gray-200 text-gray-500 hover:text-gray-700" onClick={cancelEdit}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
@@ -903,42 +913,45 @@ function ProductsAndServices() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <Label htmlFor="nombre">Nombre *</Label>
+                  <Label htmlFor="nombre" className="text-gray-700 font-medium">Nombre *</Label>
                   <Input
                     id="nombre"
                     name="nombre"
                     value={itemType === 'producto' ? productForm.nombre : serviceForm.nombre}
                     onChange={handleFormChange}
                     required
+                    className="mt-1 bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="descripcion">Descripción</Label>
+                  <Label htmlFor="descripcion" className="text-gray-700 font-medium">Descripción</Label>
                   <Textarea
                     id="descripcion"
                     name="descripcion"
                     value={itemType === 'producto' ? productForm.descripcion : serviceForm.descripcion}
                     onChange={handleFormChange}
                     rows={3}
+                    className="mt-1 bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                   />
                 </div>
 
                 {itemType === 'producto' && (
                   <>
                     <div>
-                      <Label htmlFor="codigo">Código/SKU</Label>
+                      <Label htmlFor="codigo" className="text-gray-700 font-medium">Código/SKU</Label>
                       <Input
                         id="codigo"
                         name="codigo"
                         value={productForm.codigo}
                         onChange={handleFormChange}
+                        className="mt-1 bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="precio_venta">Precio Venta *</Label>
+                        <Label htmlFor="precio_venta" className="text-gray-700 font-medium">Precio Venta *</Label>
                         <Input
                           id="precio_venta"
                           name="precio_venta"
@@ -947,10 +960,11 @@ function ProductsAndServices() {
                           value={productForm.precio_venta}
                           onChange={handleFormChange}
                           required
+                          className="mt-1 bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="precio_compra">Precio Compra</Label>
+                        <Label htmlFor="precio_compra" className="text-gray-700 font-medium">Precio Compra</Label>
                         <Input
                           id="precio_compra"
                           name="precio_compra"
@@ -958,13 +972,14 @@ function ProductsAndServices() {
                           step="0.01"
                           value={productForm.precio_compra}
                           onChange={handleFormChange}
+                          className="mt-1 bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="stock_actual">Stock Actual *</Label>
+                        <Label htmlFor="stock_actual" className="text-gray-700 font-medium">Stock Actual *</Label>
                         <Input
                           id="stock_actual"
                           name="stock_actual"
@@ -972,16 +987,18 @@ function ProductsAndServices() {
                           value={productForm.stock_actual}
                           onChange={handleFormChange}
                           required
+                          className="mt-1 bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="stock_minimo">Stock Mínimo</Label>
+                        <Label htmlFor="stock_minimo" className="text-gray-700 font-medium">Stock Mínimo</Label>
                         <Input
                           id="stock_minimo"
                           name="stock_minimo"
                           type="number"
                           value={productForm.stock_minimo}
                           onChange={handleFormChange}
+                          className="mt-1 bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                         />
                       </div>
                     </div>
@@ -991,7 +1008,7 @@ function ProductsAndServices() {
                 {itemType === 'servicio' && (
                   <>
                     <div>
-                      <Label htmlFor="precio">Precio *</Label>
+                      <Label htmlFor="precio" className="text-gray-700 font-medium">Precio *</Label>
                       <Input
                         id="precio"
                         name="precio"
@@ -1000,11 +1017,12 @@ function ProductsAndServices() {
                         value={serviceForm.precio}
                         onChange={handleFormChange}
                         required
+                        className="mt-1 bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="duracion_minutos">Duración (minutos)</Label>
+                      <Label htmlFor="duracion_minutos" className="text-gray-700 font-medium">Duración (minutos)</Label>
                       <Input
                         id="duracion_minutos"
                         name="duracion_minutos"
@@ -1012,28 +1030,47 @@ function ProductsAndServices() {
                         value={serviceForm.duracion_minutos}
                         onChange={handleFormChange}
                         placeholder="Ej: 60"
+                        className="mt-1 bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                       />
                     </div>
                   </>
                 )}
 
                 <div>
-                  <Label htmlFor="categoria_id">Categoría *</Label>
-                  <Select
-                    value={itemType === 'producto' ? productForm.categoria_id : serviceForm.categoria_id}
-                    onValueChange={(value) => handleFormChange({ target: { name: 'categoria_id', value } })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar categoría" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="categoria_id" className="text-gray-700 font-medium">Categoría *</Label>
+                  <div className="flex gap-2 mt-1">
+                    <Select
+                      value={itemType === 'producto' ? productForm.categoria_id : serviceForm.categoria_id}
+                      onValueChange={(value) => handleFormChange({ target: { name: 'categoria_id', value } })}
+                    >
+                      <SelectTrigger className="bg-white border-gray-300 text-gray-900">
+                        <SelectValue placeholder="Seleccionar categoría">
+                          {(() => {
+                            const selectedId = itemType === 'producto' ? productForm.categoria_id : serviceForm.categoria_id;
+                            const selectedCategory = categories.find(cat => cat.id === selectedId);
+                            return selectedCategory ? selectedCategory.nombre : "Seleccionar categoría";
+                          })()}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowCategoryModal(true)}
+                      className="bg-white hover:bg-blue-50 border-gray-300 text-blue-600 hover:text-blue-700 px-3 shrink-0"
+                      title="Crear nueva categoría"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="flex justify-end space-x-2 pt-4">
@@ -1060,7 +1097,7 @@ function ProductsAndServices() {
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold text-gray-900">Nueva Categoría</h2>
-                <Button variant="ghost" size="sm" onClick={cancelCategoryModal}>
+                <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50 border-gray-200 text-gray-500 hover:text-gray-700" onClick={cancelCategoryModal}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
@@ -1074,24 +1111,26 @@ function ProductsAndServices() {
 
               <form onSubmit={handleCreateCategory} className="space-y-4">
                 <div>
-                  <Label htmlFor="category-name">Nombre *</Label>
+                  <Label htmlFor="category-name" className="text-gray-700 font-medium">Nombre *</Label>
                   <Input
                     id="category-name"
                     name="nombre"
                     value={categoryForm.nombre}
                     onChange={handleCategoryFormChange}
                     required
+                    className="mt-1 bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="category-description">Descripción</Label>
+                  <Label htmlFor="category-description" className="text-gray-700 font-medium">Descripción</Label>
                   <Textarea
                     id="category-description"
                     name="descripcion"
                     value={categoryForm.descripcion}
                     onChange={handleCategoryFormChange}
                     rows={3}
+                    className="mt-1 bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                   />
                 </div>
 
@@ -1119,15 +1158,16 @@ function ProductsAndServices() {
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-lg font-semibold text-gray-900">¿Qué deseas agregar?</h2>
-                <Button variant="ghost" size="sm" onClick={() => setShowItemTypeModal(false)}>
+                <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50 border-gray-200 text-gray-500 hover:text-gray-700" onClick={() => setShowItemTypeModal(false)}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
 
               <div className="space-y-3">
-                <button
+                <Button
+                  variant="outline"
                   onClick={() => handleItemTypeSelection('producto')}
-                  className="w-full p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-left"
+                  className="w-full p-4 h-auto bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-left justify-start"
                 >
                   <div className="flex items-center space-x-3">
                     <div className="p-2 bg-blue-100 rounded-lg">
@@ -1138,11 +1178,12 @@ function ProductsAndServices() {
                       <p className="text-sm text-gray-500">Artículo físico con stock e inventario</p>
                     </div>
                   </div>
-                </button>
+                </Button>
 
-                <button
+                <Button
+                  variant="outline"
                   onClick={() => handleItemTypeSelection('servicio')}
-                  className="w-full p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-left"
+                  className="w-full p-4 h-auto bg-white border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-left justify-start"
                 >
                   <div className="flex items-center space-x-3">
                     <div className="p-2 bg-green-100 rounded-lg">
@@ -1153,7 +1194,7 @@ function ProductsAndServices() {
                       <p className="text-sm text-gray-500">Actividad o trabajo que se ofrece</p>
                     </div>
                   </div>
-                </button>
+                </Button>
               </div>
 
               <div className="flex justify-end pt-6">

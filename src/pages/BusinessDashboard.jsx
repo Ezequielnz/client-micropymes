@@ -108,6 +108,9 @@ function BusinessDashboard() {
     lowStockProducts: 0,
     pendingOrders: 0
   });
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [monthlySalesData, setMonthlySalesData] = useState(null);
+  const [topProductsData, setTopProductsData] = useState(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -141,6 +144,33 @@ function BusinessDashboard() {
           lowStockProducts: 0,
           pendingOrders: 0
         });
+      }
+
+      // Cargar actividad reciente
+      try {
+        const activityData = await salesAPI.getRecentActivity();
+        setRecentActivity(activityData.actividades || []);
+      } catch (err) {
+        console.error('Error loading recent activity:', err);
+        setRecentActivity([]);
+      }
+
+      // Cargar datos de gráfico de ventas mensuales
+      try {
+        const monthlySales = await salesAPI.getMonthlySalesChart();
+        setMonthlySalesData(monthlySales);
+      } catch (err) {
+        console.error('Error loading monthly sales chart:', err);
+        setMonthlySalesData(null);
+      }
+
+      // Cargar datos de productos más vendidos
+      try {
+        const topProducts = await salesAPI.getTopProductsChart();
+        setTopProductsData(topProducts);
+      } catch (err) {
+        console.error('Error loading top products chart:', err);
+        setTopProductsData(null);
       }
 
     } catch (err) {
@@ -277,7 +307,7 @@ function BusinessDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Productos</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.totalProducts}</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats.totalProducts || 0}</p>
                   <p className="text-sm text-green-600 mt-1">+12% este mes</p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -292,7 +322,7 @@ function BusinessDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Clientes</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.totalCustomers}</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats.totalCustomers || 0}</p>
                   <p className="text-sm text-green-600 mt-1">+8% este mes</p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -307,7 +337,7 @@ function BusinessDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Ventas</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.totalSales}</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats.totalSales || 0}</p>
                   <p className="text-sm text-green-600 mt-1">+15% este mes</p>
                 </div>
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -323,7 +353,7 @@ function BusinessDashboard() {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Ingresos</p>
                   <p className="text-3xl font-bold text-gray-900">
-                    ${stats.monthlyRevenue.toLocaleString()}
+                    ${(stats.monthlyRevenue || 0).toLocaleString()}
                   </p>
                   <p className="text-sm text-green-600 mt-1">+22% este mes</p>
                 </div>
@@ -343,90 +373,36 @@ function BusinessDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Zap className="h-5 w-5 text-blue-600" />
-                  Acciones Rápidas
+                  Accesos Directos
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <Button
                     variant="outline"
-                    className="h-20 flex-col space-y-2"
+                    className="h-24 flex-col space-y-3 text-center"
                     onClick={() => navigate(`/business/${businessId}/products-and-services`)}
                   >
-                    <Package className="h-6 w-6 text-blue-600" />
-                    <span className="text-sm">Productos y Servicios</span>
+                    <Package className="h-8 w-8 text-blue-600" />
+                    <span className="text-base font-medium">Productos y Servicios</span>
                   </Button>
                   
                   <Button
                     variant="outline"
-                    className="h-20 flex-col space-y-2"
-                    onClick={() => navigate(`/business/${businessId}/products`)}
+                    className="h-24 flex-col space-y-3 text-center"
+                    onClick={() => navigate(`/business/${businessId}/pos`)}
                   >
-                    <Package className="h-6 w-6 text-gray-600" />
-                    <span className="text-sm">Solo Productos</span>
+                    <ShoppingCart className="h-8 w-8 text-purple-600" />
+                    <span className="text-base font-medium">Ventas (POS)</span>
                   </Button>
                   
                   <Button
                     variant="outline"
-                    className="h-20 flex-col space-y-2"
-                    onClick={() => navigate(`/business/${businessId}/services`)}
-                  >
-                    <Wrench className="h-6 w-6 text-cyan-600" />
-                    <span className="text-sm">Solo Servicios</span>
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="h-20 flex-col space-y-2"
-                    onClick={() => navigate(`/business/${businessId}/subscriptions`)}
-                  >
-                    <UserCheck className="h-6 w-6 text-teal-600" />
-                    <span className="text-sm">Suscripciones</span>
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="h-20 flex-col space-y-2"
-                    onClick={() => navigate(`/business/${businessId}/categories`)}
-                  >
-                    <Tag className="h-6 w-6 text-orange-600" />
-                    <span className="text-sm">Categorías</span>
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="h-20 flex-col space-y-2"
+                    className="h-24 flex-col space-y-3 text-center"
                     onClick={() => navigate(`/business/${businessId}/customers`)}
                   >
-                    <Users className="h-6 w-6 text-green-600" />
-                    <span className="text-sm">Ver Clientes</span>
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="h-20 flex-col space-y-2"
-                    onClick={() => navigate(`/business/${businessId}/sales`)}
-                  >
-                    <ShoppingCart className="h-6 w-6 text-purple-600" />
-                    <span className="text-sm">Ventas</span>
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="h-20 flex-col space-y-2"
-                    onClick={() => navigate(`/business/${businessId}/users`)}
-                  >
-                    <Shield className="h-6 w-6 text-indigo-600" />
-                    <span className="text-sm">Gestionar Usuarios</span>
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="h-20 flex-col space-y-2"
-                    onClick={() => navigate(`/business/${businessId}/reports`)}
-                  >
-                    <BarChart3 className="h-6 w-6 text-indigo-600" />
-                    <span className="text-sm">Reportes</span>
+                    <Users className="h-8 w-8 text-green-600" />
+                    <span className="text-base font-medium">Clientes</span>
                   </Button>
                 </div>
               </CardContent>
@@ -451,7 +427,7 @@ function BusinessDashboard() {
                         Stock bajo
                       </p>
                       <p className="text-sm text-orange-600">
-                        {stats.lowStockProducts} productos con stock bajo
+                        {stats.lowStockProducts || 0} productos con stock bajo
                       </p>
                     </div>
                   </div>
@@ -463,7 +439,7 @@ function BusinessDashboard() {
                         Pedidos pendientes
                       </p>
                       <p className="text-sm text-blue-600">
-                        {stats.pendingOrders} pedidos por procesar
+                        {stats.pendingOrders || 0} pedidos por procesar
                       </p>
                     </div>
                   </div>
@@ -492,16 +468,48 @@ function BusinessDashboard() {
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-green-600" />
                 Ventas del Mes
+                {monthlySalesData && (
+                  <span className="text-sm font-normal text-gray-500">
+                    ({monthlySalesData.mes})
+                  </span>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                <div className="text-center">
-                  <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500">Gráfico de ventas</p>
-                  <p className="text-sm text-gray-400">Próximamente</p>
+              {monthlySalesData && monthlySalesData.datos.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                    <div className="bg-blue-50 p-3 rounded-lg">
+                      <p className="text-2xl font-bold text-blue-600">{monthlySalesData.total_ventas}</p>
+                      <p className="text-sm text-blue-600">Ventas totales</p>
+                    </div>
+                    <div className="bg-green-50 p-3 rounded-lg">
+                      <p className="text-2xl font-bold text-green-600">
+                        ${monthlySalesData.total_ingresos.toLocaleString()}
+                      </p>
+                      <p className="text-sm text-green-600">Ingresos totales</p>
+                    </div>
+                  </div>
+                  <div className="h-32 bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-2">Últimos días con ventas:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {monthlySalesData.datos.slice(-7).map((dia, index) => (
+                        <div key={index} className="bg-white px-2 py-1 rounded text-xs">
+                          <span className="font-medium">Día {dia.dia}:</span> {dia.ventas} ventas
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+                  <div className="text-center">
+                    <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-500">Sin ventas este mes</p>
+                    <p className="text-sm text-gray-400">Realiza tu primera venta para ver estadísticas</p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -510,16 +518,47 @@ function BusinessDashboard() {
               <CardTitle className="flex items-center gap-2">
                 <PieChart className="h-5 w-5 text-purple-600" />
                 Productos más Vendidos
+                {topProductsData && (
+                  <span className="text-sm font-normal text-gray-500">
+                    ({topProductsData.periodo})
+                  </span>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                <div className="text-center">
-                  <PieChart className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500">Análisis de productos</p>
-                  <p className="text-sm text-gray-400">Próximamente</p>
+              {topProductsData && topProductsData.datos.length > 0 ? (
+                <div className="space-y-3">
+                  {topProductsData.datos.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${
+                          index === 0 ? 'bg-yellow-500' : 
+                          index === 1 ? 'bg-gray-400' : 
+                          index === 2 ? 'bg-amber-600' : 'bg-blue-500'
+                        }`}>
+                          {index + 1}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{item.nombre}</p>
+                          <p className="text-sm text-gray-600 capitalize">{item.tipo}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-gray-900">{item.cantidad_total}</p>
+                        <p className="text-sm text-gray-600">vendidos</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
+              ) : (
+                <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+                  <div className="text-center">
+                    <PieChart className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-500">Sin datos de ventas</p>
+                    <p className="text-sm text-gray-400">Realiza ventas para ver productos populares</p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -533,40 +572,68 @@ function BusinessDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                  <ShoppingCart className="h-5 w-5 text-green-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">Nueva venta registrada</p>
-                  <p className="text-sm text-gray-600">Venta #234 por $1,250.00</p>
-                </div>
-                <span className="text-sm text-gray-500">Hace 2 horas</span>
+            {recentActivity.length > 0 ? (
+              <div className="space-y-4">
+                {recentActivity.map((actividad, index) => {
+                  const getIcon = (tipo) => {
+                    switch (tipo) {
+                      case 'venta': return <ShoppingCart className="h-5 w-5 text-green-600" />;
+                      case 'producto': return <Package className="h-5 w-5 text-blue-600" />;
+                      case 'cliente': return <Users className="h-5 w-5 text-purple-600" />;
+                      default: return <Activity className="h-5 w-5 text-gray-600" />;
+                    }
+                  };
+
+                  const getColorClass = (color) => {
+                    switch (color) {
+                      case 'green': return 'bg-green-100';
+                      case 'blue': return 'bg-blue-100';
+                      case 'purple': return 'bg-purple-100';
+                      default: return 'bg-gray-100';
+                    }
+                  };
+
+                  const formatearFecha = (fechaStr) => {
+                    try {
+                      const fecha = new Date(fechaStr);
+                      const ahora = new Date();
+                      const diferencia = ahora - fecha;
+                      const horas = Math.floor(diferencia / (1000 * 60 * 60));
+                      const dias = Math.floor(diferencia / (1000 * 60 * 60 * 24));
+
+                      if (dias > 0) {
+                        return `Hace ${dias} día${dias > 1 ? 's' : ''}`;
+                      } else if (horas > 0) {
+                        return `Hace ${horas} hora${horas > 1 ? 's' : ''}`;
+                      } else {
+                        return 'Hace menos de 1 hora';
+                      }
+                    } catch (error) {
+                      return 'Recientemente';
+                    }
+                  };
+
+                  return (
+                    <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getColorClass(actividad.color)}`}>
+                        {getIcon(actividad.tipo)}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">{actividad.titulo}</p>
+                        <p className="text-sm text-gray-600">{actividad.descripcion}</p>
+                      </div>
+                      <span className="text-sm text-gray-500">{formatearFecha(actividad.fecha)}</span>
+                    </div>
+                  );
+                })}
               </div>
-              
-              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Package className="h-5 w-5 text-blue-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">Producto agregado</p>
-                  <p className="text-sm text-gray-600">Nuevo producto "Laptop HP" agregado al inventario</p>
-                </div>
-                <span className="text-sm text-gray-500">Hace 4 horas</span>
+            ) : (
+              <div className="text-center py-8">
+                <Activity className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500">No hay actividad reciente</p>
+                <p className="text-sm text-gray-400">La actividad aparecerá aquí cuando realices acciones en tu negocio</p>
               </div>
-              
-              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                  <Users className="h-5 w-5 text-purple-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">Nuevo cliente registrado</p>
-                  <p className="text-sm text-gray-600">María González se registró como cliente</p>
-                </div>
-                <span className="text-sm text-gray-500">Ayer</span>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>

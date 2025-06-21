@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { productAPI, customerAPI, salesAPI } from '../utils/api';
+import { productAPI, customerAPI, salesAPI, serviceAPI } from '../utils/api';
 import {
   Package,
   Plus,
@@ -18,7 +18,8 @@ import {
   AlertTriangle,
   Loader2,
   Menu,
-  X
+  X,
+  Wrench
 } from 'lucide-react';
 
 // Componente Button reutilizable
@@ -127,8 +128,12 @@ function POS() {
 
   /** @type {[Array<ProductInPOS>, function]} allProducts - State for storing all products fetched from the API. */
   const [allProducts, setAllProducts] = useState([]);
+  /** @type {[Array<ServiceInPOS>, function]} allServices - State for storing all services fetched from the API. */
+  const [allServices, setAllServices] = useState([]);
   /** @type {[Array<ProductInPOS>, function]} availableProducts - State for products currently displayed to the user, potentially filtered by search. */
   const [availableProducts, setAvailableProducts] = useState([]);
+  /** @type {[Array<ServiceInPOS>, function]} availableServices - State for services currently displayed to the user, potentially filtered by search. */
+  const [availableServices, setAvailableServices] = useState([]);
   /** @type {[Array<CartItem>, function]} cart - State representing the current shopping cart, an array of CartItem objects. */
   const [cart, setCart] = useState([]);
   /** @type {[Array<CustomerInPOS>, function]} customers - State for the list of customers available for selection. */
@@ -136,11 +141,15 @@ function POS() {
   /** @type {[string, function]} selectedCustomer - State for the ID of the customer selected for the current sale. Empty string if no customer is selected. */
   const [selectedCustomer, setSelectedCustomer] = useState('');
   
-  /** @type {[string, function]} productSearchTerm - State for the search term entered by the user to filter products. */
-  const [productSearchTerm, setProductSearchTerm] = useState('');
+  /** @type {[string, function]} searchTerm - State for the search term entered by the user to filter products and services. */
+  const [searchTerm, setSearchTerm] = useState('');
+  /** @type {[string, function]} activeTab - State for the currently active tab (productos or servicios). */
+  const [activeTab, setActiveTab] = useState('productos');
   
   /** @type {[boolean, function]} loadingProducts - State to indicate if product data is currently being fetched. */
   const [loadingProducts, setLoadingProducts] = useState(true);
+  /** @type {[boolean, function]} loadingServices - State to indicate if service data is currently being fetched. */
+  const [loadingServices, setLoadingServices] = useState(true);
   /** @type {[boolean, function]} loadingCustomers - State to indicate if customer data is currently being fetched. */
   const [loadingCustomers, setLoadingCustomers] = useState(true);
   /** @type {[boolean, function]} submittingSale - State to indicate if a sale is currently being submitted to the API. */
@@ -155,39 +164,47 @@ function POS() {
   const [paymentMethod, setPaymentMethod] = useState('efectivo');
 
   /**
-   * Fetches initial data required for the POS system, including all products
-   * and a list of customers. This function is called on component mount.
+   * Fetches initial data required for the POS system, including all products,
+   * services, and a list of customers. This function is called on component mount.
    * It updates loading states and handles potential errors during data fetching.
    */
   const fetchInitialData = useCallback(async () => {
     if (!businessId) {
       setError('Business ID is missing.');
       setLoadingProducts(false);
+      setLoadingServices(false);
       setLoadingCustomers(false);
       return;
     }
 
     setLoadingProducts(true);
+    setLoadingServices(true);
     setLoadingCustomers(true);
     setError(''); // Clear general errors
     setSaleSuccessMessage(''); // Clear previous success messages
     // cartError is managed per operation
     try {
-      const [productsData, customersData] = await Promise.all([
+      const [productsData, servicesData, customersData] = await Promise.all([
         productAPI.getProducts(businessId),
+        serviceAPI.getServices(businessId),
         customerAPI.getCustomers(businessId),
       ]);
       setAllProducts(Array.isArray(productsData) ? productsData : []);
       setAvailableProducts(Array.isArray(productsData) ? productsData : []);
+      setAllServices(Array.isArray(servicesData) ? servicesData : []);
+      setAvailableServices(Array.isArray(servicesData) ? servicesData : []);
       setCustomers(Array.isArray(customersData) ? customersData : []);
     } catch (err) {
       console.error('Error fetching initial data:', err);
       setError('Failed to load initial data. Please try refreshing.');
       setAllProducts([]);
       setAvailableProducts([]);
+      setAllServices([]);
+      setAvailableServices([]);
       setCustomers([]);
     } finally {
       setLoadingProducts(false);
+      setLoadingServices(false);
       setLoadingCustomers(false);
     }
   }, [businessId]);
@@ -197,20 +214,36 @@ function POS() {
   }, [fetchInitialData]);
 
   /**
-   * useEffect hook to filter `availableProducts` based on `productSearchTerm`.
-   * This runs whenever `productSearchTerm` or the master `allProducts` list changes.
+   * useEffect hook to filter `availableProducts` based on `searchTerm`.
+   * This runs whenever `searchTerm` or the master `allProducts` list changes.
    */
   useEffect(() => {
-    if (!productSearchTerm) {
+    if (!searchTerm) {
       setAvailableProducts(allProducts);
     } else {
       setAvailableProducts(
         allProducts.filter(product =>
-          product.nombre.toLowerCase().includes(productSearchTerm.toLowerCase())
+          product.nombre.toLowerCase().includes(searchTerm.toLowerCase())
         )
       );
     }
-  }, [productSearchTerm, allProducts]);
+  }, [searchTerm, allProducts]);
+
+  /**
+   * useEffect hook to filter `availableServices` based on `searchTerm`.
+   * This runs whenever `searchTerm` or the master `allServices` list changes.
+   */
+  useEffect(() => {
+    if (!searchTerm) {
+      setAvailableServices(allServices);
+    } else {
+      setAvailableServices(
+        allServices.filter(service =>
+          service.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
+    }
+  }, [searchTerm, allServices]);
 
   /**
    * Adds a product to the cart or updates its quantity if already present.
@@ -222,7 +255,7 @@ function POS() {
     setCartError('');
     if (quantity <= 0) return;
 
-    const existingCartItem = cart.find(item => item.producto_id === product.id);
+    const existingCartItem = cart.find(item => item.item_id === product.id && item.tipo === 'producto');
     const availableStock = product.stock_actual - (existingCartItem?.quantity || 0);
 
     if (quantity > availableStock) {
@@ -232,53 +265,88 @@ function POS() {
 
     if (existingCartItem) {
       setCart(cart.map(item =>
-        item.producto_id === product.id
+        item.item_id === product.id && item.tipo === 'producto'
           ? { ...item, quantity: item.quantity + quantity, item_total: (item.quantity + quantity) * item.precio_at_sale }
           : item
       ));
     } else {
       setCart([...cart, {
-        producto_id: product.id,
+        item_id: product.id,
+        tipo: 'producto',
         nombre: product.nombre,
-        precio_at_sale: parseFloat(product.precio_venta), // Assuming product.precio_venta is the sale price
+        precio_at_sale: parseFloat(product.precio_venta),
         quantity: quantity,
-        stock_original: product.stock_actual, // Store original stock for validation
+        stock_original: product.stock_actual,
         item_total: quantity * parseFloat(product.precio_venta),
       }]);
     }
   };
 
   /**
+   * Adds a service to the cart or updates its quantity if already present.
+   * No stock validation needed for services.
+   * @param {ServiceInPOS} service - The service object to add to the cart.
+   * @param {number} [quantity=1] - The quantity of the service to add. Defaults to 1.
+   */
+  const handleAddServiceToCart = (service, quantity = 1) => {
+    setCartError('');
+    if (quantity <= 0) return;
+
+    const existingCartItem = cart.find(item => item.item_id === service.id && item.tipo === 'servicio');
+
+    if (existingCartItem) {
+      setCart(cart.map(item =>
+        item.item_id === service.id && item.tipo === 'servicio'
+          ? { ...item, quantity: item.quantity + quantity, item_total: (item.quantity + quantity) * item.precio_at_sale }
+          : item
+      ));
+    } else {
+      setCart([...cart, {
+        item_id: service.id,
+        tipo: 'servicio',
+        nombre: service.nombre,
+        precio_at_sale: parseFloat(service.precio),
+        quantity: quantity,
+        item_total: quantity * parseFloat(service.precio),
+      }]);
+    }
+  };
+
+  /**
    * Updates the quantity of an item in the cart.
-   * Performs stock validation. If the new quantity is 0, the item is removed.
-   * @param {string} productId - The ID of the product in the cart to update.
+   * Performs stock validation for products only. If the new quantity is 0, the item is removed.
+   * @param {string} itemId - The ID of the item in the cart to update.
+   * @param {string} tipo - The type of the item (producto or servicio).
    * @param {number} newQuantity - The new quantity for the item.
    */
-  const handleUpdateCartQuantity = (productId, newQuantity) => {
+  const handleUpdateCartQuantity = (itemId, tipo, newQuantity) => {
     setCartError('');
-    const itemToUpdate = cart.find(item => item.producto_id === productId);
+    const itemToUpdate = cart.find(item => item.item_id === itemId && item.tipo === tipo);
     if (!itemToUpdate) return;
-
-    const productInAll = allProducts.find(p => p.id === productId);
-    if (!productInAll) {
-        setCartError(`Detalles del producto no encontrados para ID ${productId}. Por favor actualiza.`);
-        return;
-    }
 
     if (newQuantity < 0) return; // Cannot have negative quantity
 
     if (newQuantity === 0) {
-      handleRemoveFromCart(productId);
-      return;
-    }
-    
-    if (newQuantity > productInAll.stock_actual) {
-      setCartError(`No se puede establecer cantidad a ${newQuantity}. Solo ${productInAll.stock_actual} disponible en stock.`);
+      handleRemoveFromCart(itemId, tipo);
       return;
     }
 
+    // Only validate stock for products, not services
+    if (itemToUpdate.tipo === 'producto') {
+      const productInAll = allProducts.find(p => p.id === itemId);
+      if (!productInAll) {
+        setCartError(`Detalles del producto no encontrados para ID ${itemId}. Por favor actualiza.`);
+        return;
+      }
+      
+      if (newQuantity > productInAll.stock_actual) {
+        setCartError(`No se puede establecer cantidad a ${newQuantity}. Solo ${productInAll.stock_actual} disponible en stock.`);
+        return;
+      }
+    }
+
     setCart(cart.map(item =>
-      item.producto_id === productId
+      item.item_id === itemId && item.tipo === tipo
         ? { ...item, quantity: newQuantity, item_total: newQuantity * item.precio_at_sale }
         : item
     ));
@@ -286,11 +354,17 @@ function POS() {
 
   /**
    * Removes an item completely from the cart.
-   * @param {string} productId - The ID of the product to remove from the cart.
+   * @param {string} itemId - The ID of the item to remove from the cart.
+   * @param {string} tipo - The type of the item (producto or servicio).
    */
-  const handleRemoveFromCart = (productId) => {
+  const handleRemoveFromCart = (itemId, tipo = null) => {
     setCartError('');
-    setCart(cart.filter(item => item.producto_id !== productId));
+    if (tipo) {
+      setCart(cart.filter(item => !(item.item_id === itemId && item.tipo === tipo)));
+    } else {
+      // Fallback for backward compatibility
+      setCart(cart.filter(item => item.item_id !== itemId));
+    }
   };
 
   /**
@@ -323,23 +397,23 @@ function POS() {
     setCartError('');
 
     const saleData = {
-      cliente_id: selectedCustomer ? parseInt(selectedCustomer, 10) : null,
-      medio_pago: paymentMethod,
+      cliente_id: selectedCustomer,
+      metodo_pago: paymentMethod,
       observaciones: null,
       items: cart.map(item => ({
-        producto_id: item.producto_id,
+        id: item.item_id,
+        tipo: item.tipo,
         cantidad: item.quantity,
-        precio_unitario: item.precio_at_sale,
-        descuento: 0
+        precio: item.precio_at_sale
       }))
     };
 
     try {
-      const response = await salesAPI.recordSale(businessId, saleData);
+      const response = await salesAPI.recordSale(saleData);
       setSaleSuccessMessage('¡Venta registrada exitosamente!');
       setCart([]);
       setSelectedCustomer('');
-      setProductSearchTerm('');
+      setSearchTerm('');
       // Re-fetch products to update stock, and customers just in case.
       // This is a simple way to reflect stock changes.
       await fetchInitialData(); 
@@ -469,7 +543,7 @@ function POS() {
                 <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg border border-gray-200">
                   <ShoppingCart className="h-5 w-5 text-gray-500" />
                   <span className="text-sm font-medium text-gray-700">
-                    {cart.length} productos en carrito
+                    {cart.length} items en carrito
                   </span>
                 </div>
               </div>
@@ -500,14 +574,51 @@ function POS() {
 
           {/* Main POS Interface */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Products Section - Left Side */}
+            {/* Products and Services Section - Left Side */}
             <div className="lg:col-span-2">
               <Card className="h-full">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Package className="h-5 w-5 text-blue-600" />
-                    Productos Disponibles
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      {activeTab === 'productos' ? (
+                        <>
+                          <Package className="h-5 w-5 text-blue-600" />
+                          Productos Disponibles
+                        </>
+                      ) : (
+                        <>
+                          <Wrench className="h-5 w-5 text-purple-600" />
+                          Servicios Disponibles
+                        </>
+                      )}
+                    </CardTitle>
+                    
+                    {/* Tabs */}
+                    <div className="flex bg-gray-100 rounded-lg p-1">
+                      <button
+                        onClick={() => setActiveTab('productos')}
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                          activeTab === 'productos'
+                            ? 'bg-white text-blue-600 shadow-sm'
+                            : 'bg-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }`}
+                      >
+                        <Package className="h-4 w-4 mr-2 inline" />
+                        Productos
+                      </button>
+                      <button
+                        onClick={() => setActiveTab('servicios')}
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                          activeTab === 'servicios'
+                            ? 'bg-white text-purple-600 shadow-sm'
+                            : 'bg-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }`}
+                      >
+                        <Wrench className="h-4 w-4 mr-2 inline" />
+                        Servicios
+                      </button>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {/* Search */}
@@ -516,55 +627,105 @@ function POS() {
                       <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                       <input
                         type="text"
-                        placeholder="Buscar productos por nombre..."
-                        value={productSearchTerm}
-                        onChange={(e) => setProductSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                        placeholder={activeTab === 'productos' ? "Buscar productos por nombre..." : "Buscar servicios por nombre..."}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500"
                       />
                     </div>
                   </div>
 
-                  {/* Products Grid */}
+                  {/* Products/Services Grid */}
                   <div className="max-h-96 overflow-y-auto">
-                    {loadingProducts && (
-                      <div className="flex items-center justify-center py-8">
-                        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                        <span className="ml-2 text-gray-600">Cargando productos...</span>
-                      </div>
-                    )}
-                    
-                    {!loadingProducts && availableProducts.length === 0 && (
-                      <div className="text-center py-8 text-gray-500">
-                        {productSearchTerm ? 'No se encontraron productos que coincidan con tu búsqueda.' : 'No hay productos disponibles.'}
-                      </div>
-                    )}
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {availableProducts.map(product => (
-                        <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                          <div className="flex justify-between items-start mb-3">
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-gray-900 mb-1">{product.nombre}</h3>
-                              <p className="text-sm text-gray-600 mb-2">
-                                Stock: {product.stock_actual} unidades
-                              </p>
-                              <p className="text-lg font-bold text-blue-600">
-                                ${Number(product.precio_venta).toFixed(2)}
-                              </p>
-                            </div>
+                    {activeTab === 'productos' ? (
+                      <>
+                        {loadingProducts && (
+                          <div className="flex items-center justify-center py-8">
+                            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                            <span className="ml-2 text-gray-600">Cargando productos...</span>
                           </div>
-                          <Button 
-                            onClick={() => handleAddToCart(product, 1)} 
-                            disabled={product.stock_actual <= (cart.find(item => item.producto_id === product.id)?.quantity || 0) || product.stock_actual === 0}
-                            className="w-full"
-                            size="sm"
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Agregar al Carrito
-                          </Button>
+                        )}
+                        
+                        {!loadingProducts && availableProducts.length === 0 && (
+                          <div className="text-center py-8 text-gray-500">
+                            {searchTerm ? 'No se encontraron productos que coincidan con tu búsqueda.' : 'No hay productos disponibles.'}
+                          </div>
+                        )}
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {availableProducts.map(product => (
+                            <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                              <div className="flex justify-between items-start mb-3">
+                                <div className="flex-1">
+                                  <h3 className="font-semibold text-gray-900 mb-1">{product.nombre}</h3>
+                                  <p className="text-sm text-gray-600 mb-2">
+                                    Stock: {product.stock_actual} unidades
+                                  </p>
+                                  <p className="text-lg font-bold text-blue-600">
+                                    ${Number(product.precio_venta).toFixed(2)}
+                                  </p>
+                                </div>
+                              </div>
+                              <Button 
+                                onClick={() => handleAddToCart(product, 1)} 
+                                disabled={product.stock_actual <= (cart.find(item => item.item_id === product.id && item.tipo === 'producto')?.quantity || 0) || product.stock_actual === 0}
+                                className="w-full"
+                                size="sm"
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Agregar al Carrito
+                              </Button>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </>
+                    ) : (
+                      <>
+                        {loadingServices && (
+                          <div className="flex items-center justify-center py-8">
+                            <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+                            <span className="ml-2 text-gray-600">Cargando servicios...</span>
+                          </div>
+                        )}
+                        
+                        {!loadingServices && availableServices.length === 0 && (
+                          <div className="text-center py-8 text-gray-500">
+                            {searchTerm ? 'No se encontraron servicios que coincidan con tu búsqueda.' : 'No hay servicios disponibles.'}
+                          </div>
+                        )}
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {availableServices.map(service => (
+                            <div key={service.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                              <div className="flex justify-between items-start mb-3">
+                                <div className="flex-1">
+                                  <h3 className="font-semibold text-gray-900 mb-1">{service.nombre}</h3>
+                                  {service.descripcion && (
+                                    <p className="text-sm text-gray-600 mb-2">{service.descripcion}</p>
+                                  )}
+                                  {service.duracion_minutos && (
+                                    <p className="text-sm text-gray-500 mb-2">
+                                      Duración: {service.duracion_minutos} min
+                                    </p>
+                                  )}
+                                  <p className="text-lg font-bold text-purple-600">
+                                    ${Number(service.precio).toFixed(2)}
+                                  </p>
+                                </div>
+                              </div>
+                              <Button 
+                                onClick={() => handleAddServiceToCart(service, 1)} 
+                                className="w-full bg-purple-600 hover:bg-purple-700"
+                                size="sm"
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Agregar al Carrito
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -587,13 +748,13 @@ function POS() {
                         Cliente (Opcional)
                       </label>
                       <select 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                         value={selectedCustomer}
                         onChange={(e) => setSelectedCustomer(e.target.value)}
                       >
-                        <option value="">Cliente ocasional</option>
+                        <option value="" className="text-gray-900">Cliente ocasional</option>
                         {customers.map(customer => (
-                          <option key={customer.id} value={customer.id}>
+                          <option key={customer.id} value={customer.id} className="text-gray-900">
                             {customer.nombre} {customer.apellido}
                           </option>
                         ))}
@@ -607,14 +768,14 @@ function POS() {
                       Método de Pago
                     </label>
                     <select 
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                       value={paymentMethod}
                       onChange={(e) => setPaymentMethod(e.target.value)}
                       disabled={submittingSale}
                     >
-                      <option value="efectivo">💵 Efectivo</option>
-                      <option value="tarjeta">💳 Tarjeta</option>
-                      <option value="transferencia">🏦 Transferencia</option>
+                      <option value="efectivo" className="text-gray-900">💵 Efectivo</option>
+                      <option value="tarjeta" className="text-gray-900">💳 Tarjeta</option>
+                      <option value="transferencia" className="text-gray-900">🏦 Transferencia</option>
                     </select>
                   </div>
 
@@ -624,15 +785,29 @@ function POS() {
                       <div className="text-center py-8 text-gray-500">
                         <ShoppingCart className="h-12 w-12 mx-auto mb-3 text-gray-300" />
                         <p>El carrito está vacío</p>
-                        <p className="text-sm">Agrega productos para comenzar</p>
+                        <p className="text-sm">Agrega productos o servicios para comenzar</p>
                       </div>
                     ) : (
                       <div className="space-y-3 max-h-64 overflow-y-auto">
                         {cart.map(item => (
-                          <div key={item.producto_id} className="border border-gray-200 rounded-lg p-3">
+                          <div key={`${item.item_id}-${item.tipo}`} className="border border-gray-200 rounded-lg p-3">
                             <div className="flex justify-between items-start mb-2">
                               <div className="flex-1">
-                                <h4 className="font-medium text-gray-900 text-sm">{item.nombre}</h4>
+                                <div className="flex items-center gap-2 mb-1">
+                                  {item.tipo === 'producto' ? (
+                                    <Package className="h-4 w-4 text-blue-600" />
+                                  ) : (
+                                    <Wrench className="h-4 w-4 text-purple-600" />
+                                  )}
+                                  <h4 className="font-medium text-gray-900 text-sm">{item.nombre}</h4>
+                                  <span className={`text-xs px-2 py-1 rounded-full ${
+                                    item.tipo === 'producto' 
+                                      ? 'bg-blue-100 text-blue-700' 
+                                      : 'bg-purple-100 text-purple-700'
+                                  }`}>
+                                    {item.tipo === 'producto' ? 'Producto' : 'Servicio'}
+                                  </span>
+                                </div>
                                 <p className="text-sm text-gray-600">
                                   ${Number(item.precio_at_sale).toFixed(2)} c/u
                                 </p>
@@ -646,7 +821,7 @@ function POS() {
                                 <Button 
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => handleUpdateCartQuantity(item.producto_id, item.quantity - 1)}
+                                  onClick={() => handleUpdateCartQuantity(item.item_id, item.tipo, item.quantity - 1)}
                                   disabled={submittingSale}
                                   className="h-8 w-8 p-0"
                                 >
@@ -656,8 +831,8 @@ function POS() {
                                 <Button 
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => handleUpdateCartQuantity(item.producto_id, item.quantity + 1)}
-                                  disabled={item.quantity >= item.stock_original || submittingSale}
+                                  onClick={() => handleUpdateCartQuantity(item.item_id, item.tipo, item.quantity + 1)}
+                                  disabled={item.tipo === 'producto' && item.quantity >= item.stock_original || submittingSale}
                                   className="h-8 w-8 p-0"
                                 >
                                   <Plus className="h-4 w-4" />
@@ -666,7 +841,7 @@ function POS() {
                               <Button 
                                 variant="destructive"
                                 size="sm"
-                                onClick={() => handleRemoveFromCart(item.producto_id)}
+                                onClick={() => handleRemoveFromCart(item.item_id, item.tipo)}
                                 disabled={submittingSale}
                                 className="h-8 w-8 p-0"
                               >
@@ -692,7 +867,7 @@ function POS() {
                   {/* Complete Sale Button */}
                   <Button 
                     onClick={handleCompleteSale}
-                    disabled={cart.length === 0 || submittingSale || loadingProducts || loadingCustomers}
+                    disabled={cart.length === 0 || submittingSale || loadingProducts || loadingServices || loadingCustomers}
                     className="w-full"
                     size="lg"
                   >

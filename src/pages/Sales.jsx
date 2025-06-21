@@ -339,18 +339,17 @@ function Sales() {
 
     try {
       const saleData = {
-        cliente_id: selectedCustomer || null,
+        cliente_id: selectedCustomer,
         metodo_pago: paymentMethod,
-        total: cartTotal,
         items: cart.map(item => ({
-          producto_id: item.producto_id,
+          id: item.producto_id,
+          tipo: "producto", // Por ahora solo productos, después agregar servicios
           cantidad: item.quantity,
-          precio_unitario: item.precio_at_sale,
-          subtotal: item.item_total
+          precio: item.precio_at_sale
         }))
       };
 
-      const result = await salesAPI.createSale(businessId, saleData);
+      const result = await salesAPI.recordSale(saleData);
       
       // Clear cart and show success message
       setCart([]);
@@ -467,7 +466,7 @@ function Sales() {
                       placeholder="Buscar productos..."
                       value={productSearchTerm}
                       onChange={(e) => setProductSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500"
                     />
                   </div>
                 </div>
@@ -559,11 +558,11 @@ function Sales() {
                   <select
                     value={selectedCustomer}
                     onChange={(e) => setSelectedCustomer(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                   >
-                    <option value="">Cliente anónimo</option>
+                    <option value="" className="text-gray-900">Cliente anónimo</option>
                     {customers.map((customer) => (
-                      <option key={customer.id} value={customer.id}>
+                      <option key={customer.id} value={customer.id} className="text-gray-900">
                         {customer.nombre} {customer.apellido}
                       </option>
                     ))}
@@ -578,11 +577,11 @@ function Sales() {
                   <select
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                   >
-                    <option value="efectivo">Efectivo</option>
-                    <option value="tarjeta">Tarjeta</option>
-                    <option value="transferencia">Transferencia</option>
+                    <option value="efectivo" className="text-gray-900">Efectivo</option>
+                    <option value="tarjeta" className="text-gray-900">Tarjeta</option>
+                    <option value="transferencia" className="text-gray-900">Transferencia</option>
                   </select>
                 </div>
 
