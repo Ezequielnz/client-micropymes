@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { productAPI, serviceAPI, categoryAPI } from '../utils/api';
 import ImportProducts from '../components/ImportProducts';
+import PermissionGuard from '../components/PermissionGuard';
 import { 
   Package, 
   Settings,
@@ -1222,4 +1223,10 @@ function ProductsAndServices() {
   );
 }
 
-export default ProductsAndServices;
+export default function ProtectedProductsAndServices() {
+  return (
+    <PermissionGuard requiredModule="productos" requiredAction="ver">
+      <ProductsAndServices />
+    </PermissionGuard>
+  );
+}

@@ -949,4 +949,120 @@ export const publicBusinessAPI = {
   },
 };
 
+/**
+ * @namespace tasksAPI
+ * @description Contains functions for managing tasks.
+ */
+export const tasksAPI = {
+  /**
+   * Fetches tasks from the API for a specific business with filtering and pagination.
+   * @param {string} businessId - The ID of the business.
+   * @param {object} [params] - Optional parameters for filtering tasks.
+   * @param {number} [params.pagina] - Page number (default 1).
+   * @param {number} [params.por_pagina] - Tasks per page (default 20).
+   * @param {string} [params.estado] - Filter by status (comma-separated for multiple).
+   * @param {string} [params.prioridad] - Filter by priority.
+   * @param {string} [params.asignada_a_id] - Filter by assigned user ID.
+   * @param {string} [params.busqueda] - Search term for title/description.
+   * @returns {Promise<object>} A promise that resolves to tasks data with pagination info.
+   * @throws {Error} If the API request fails.
+   */
+  getTasks: async (businessId, params) => {
+    const response = await api.get(`/businesses/${businessId}/tareas`, { params });
+    return response.data;
+  },
+
+  /**
+   * Fetches a single task by ID for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @param {string} taskId - The ID of the task to fetch.
+   * @returns {Promise<object>} A promise that resolves to the task object.
+   * @throws {Error} If the API request fails or the task is not found.
+   */
+  getTaskById: async (businessId, taskId) => {
+    const response = await api.get(`/businesses/${businessId}/tareas/${taskId}`);
+    return response.data;
+  },
+
+  /**
+   * Creates a new task for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @param {object} taskData - Data for the new task.
+   * @param {string} taskData.titulo - Task title.
+   * @param {string} [taskData.descripcion] - Task description.
+   * @param {string} [taskData.fecha_inicio] - Start date.
+   * @param {string} [taskData.fecha_fin] - End date.
+   * @param {string} [taskData.estado] - Task status.
+   * @param {string} [taskData.prioridad] - Task priority.
+   * @param {string} [taskData.asignada_a_id] - Assigned user ID.
+   * @returns {Promise<object>} A promise that resolves to the newly created task object.
+   * @throws {Error} If the API request fails.
+   */
+  createTask: async (businessId, taskData) => {
+    const response = await api.post(`/businesses/${businessId}/tareas`, taskData);
+    return response.data;
+  },
+
+  /**
+   * Updates an existing task for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @param {string} taskId - The ID of the task to update.
+   * @param {object} taskData - Updated task data.
+   * @returns {Promise<object>} A promise that resolves to the updated task object.
+   * @throws {Error} If the API request fails.
+   */
+  updateTask: async (businessId, taskId, taskData) => {
+    const response = await api.put(`/businesses/${businessId}/tareas/${taskId}`, taskData);
+    return response.data;
+  },
+
+  /**
+   * Deletes a task for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @param {string} taskId - The ID of the task to delete.
+   * @returns {Promise<object>} A promise that resolves to a confirmation message.
+   * @throws {Error} If the API request fails.
+   */
+  deleteTask: async (businessId, taskId) => {
+    const response = await api.delete(`/businesses/${businessId}/tareas/${taskId}`);
+    return response.data;
+  },
+
+  /**
+   * Fetches task statistics for dashboard.
+   * @param {string} businessId - The ID of the business.
+   * @returns {Promise<object>} A promise that resolves to task statistics.
+   * @throws {Error} If the API request fails.
+   */
+  getTaskStatistics: async (businessId) => {
+    const response = await api.get(`/businesses/${businessId}/tareas/estadisticas`);
+    return response.data;
+  },
+
+  /**
+   * Fetches employees for task assignment.
+   * @param {string} businessId - The ID of the business.
+   * @returns {Promise<Array<object>>} A promise that resolves to an array of employees.
+   * @throws {Error} If the API request fails.
+   */
+  getEmployees: async (businessId) => {
+    const response = await api.get(`/businesses/${businessId}/tareas/empleados`);
+    return response.data;
+  },
+
+  /**
+   * Fetches tasks for calendar view.
+   * @param {string} businessId - The ID of the business.
+   * @param {object} [params] - Optional parameters for date range.
+   * @param {string} [params.fecha_inicio] - Start date for calendar range.
+   * @param {string} [params.fecha_fin] - End date for calendar range.
+   * @returns {Promise<Array<object>>} A promise that resolves to an array of calendar tasks.
+   * @throws {Error} If the API request fails.
+   */
+  getCalendarTasks: async (businessId, params) => {
+    const response = await api.get(`/businesses/${businessId}/tareas/calendario`, { params });
+    return response.data;
+  }
+};
+
 export default api; 

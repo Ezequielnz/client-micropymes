@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { businessAPI, authAPI, salesAPI } from '../utils/api';
+import api, { businessAPI, authAPI, salesAPI, tasksAPI } from '../utils/api';
 import {
   Building2,
   Package,
@@ -37,7 +37,8 @@ import {
   PieChart,
   Activity,
   Wrench,
-  UserCheck
+  UserCheck,
+  ClipboardList
 } from 'lucide-react';
 
 // Componente Button reutilizable
@@ -98,6 +99,8 @@ function BusinessDashboard() {
   
   const [business, setBusiness] = useState(null);
   const [user, setUser] = useState(null);
+  const [userRole, setUserRole] = useState(null);
+  const [userPermissions, setUserPermissions] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState({
@@ -111,6 +114,8 @@ function BusinessDashboard() {
   const [recentActivity, setRecentActivity] = useState([]);
   const [monthlySalesData, setMonthlySalesData] = useState(null);
   const [topProductsData, setTopProductsData] = useState(null);
+  const [userTasks, setUserTasks] = useState([]);
+  const [taskNotifications, setTaskNotifications] = useState([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -128,6 +133,18 @@ function BusinessDashboard() {
       // Cargar datos del negocio
       const businessData = await businessAPI.getBusinessById(businessId);
       setBusiness(businessData);
+
+      // Obtener rol del usuario actual en este negocio
+      try {
+        const businessUsers = await businessAPI.getBusinessUsers(businessId);
+        const currentUserInBusiness = businessUsers.find(u => u.usuario?.email === userData.email);
+        setUserRole(currentUserInBusiness?.rol || 'empleado');
+        setUserPermissions(currentUserInBusiness?.permisos || {});
+      } catch (err) {
+        console.error('Error loading user role:', err);
+        setUserRole('empleado'); // Default role
+        setUserPermissions({}); // Default permissions
+      }
 
       // Cargar estadísticas reales desde la API
       try {
@@ -173,6 +190,33 @@ function BusinessDashboard() {
         setTopProductsData(null);
       }
 
+      // Cargar tareas del usuario
+      try {
+        const tasksData = await tasksAPI.getTasks(businessId, {
+          por_pagina: 5,
+          estado: 'pendiente,en_progreso'
+        });
+        
+        setUserTasks(tasksData.tareas || []);
+        
+        // Filtrar tareas asignadas al usuario actual para notificaciones
+        // Comparar usando el email del usuario ya que es único y está disponible en ambos objetos
+        const userTaskNotifications = (tasksData.tareas || [])
+          .filter(task => {
+            // Solo mostrar notificaciones si la tarea está asignada al usuario actual
+            // y no es el creador de la tarea
+            return task.asignada_a && 
+                   task.asignada_a.email === userData.email &&
+                   task.asignada_a.email !== (task.creada_por?.email || '');
+          })
+          .slice(0, 3); // Máximo 3 notificaciones
+        setTaskNotifications(userTaskNotifications);
+      } catch (err) {
+        console.error('Error loading user tasks:', err);
+        setUserTasks([]);
+        setTaskNotifications([]);
+      }
+
     } catch (err) {
       console.error('Error loading dashboard data:', err);
       setError(err.message || 'Error al cargar los datos del dashboard');
@@ -186,6 +230,12 @@ function BusinessDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Función para verificar permisos
+  const hasPermission = (module, action = 'ver') => {
+    if (userRole === 'admin') return true;
+    return userPermissions?.[`puede_${action}_${module}`] || false;
   };
 
   const handleLogout = () => {
@@ -302,68 +352,143 @@ function BusinessDashboard() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Productos</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.totalProducts || 0}</p>
-                  <p className="text-sm text-green-600 mt-1">+12% este mes</p>
+          {hasPermission('productos') && (
+            <Card className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Productos</p>
+                    <p className="text-3xl font-bold text-gray-900">{stats.totalProducts || 0}</p>
+                    <p className="text-sm text-green-600 mt-1">+12% este mes</p>
+                  </div>
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Package className="h-6 w-6 text-blue-600" />
+                  </div>
                 </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Package className="h-6 w-6 text-blue-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
-          <Card className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Clientes</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.totalCustomers || 0}</p>
-                  <p className="text-sm text-green-600 mt-1">+8% este mes</p>
+          {hasPermission('clientes') && (
+            <Card className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Clientes</p>
+                    <p className="text-3xl font-bold text-gray-900">{stats.totalCustomers || 0}</p>
+                    <p className="text-sm text-green-600 mt-1">+8% este mes</p>
+                  </div>
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Users className="h-6 w-6 text-green-600" />
+                  </div>
                 </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Users className="h-6 w-6 text-green-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
-          <Card className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Ventas</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.totalSales || 0}</p>
-                  <p className="text-sm text-green-600 mt-1">+15% este mes</p>
+          {hasPermission('ventas') && (
+            <Card className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Ventas</p>
+                    <p className="text-3xl font-bold text-gray-900">{stats.totalSales || 0}</p>
+                    <p className="text-sm text-green-600 mt-1">+15% este mes</p>
+                  </div>
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <ShoppingCart className="h-6 w-6 text-purple-600" />
+                  </div>
                 </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <ShoppingCart className="h-6 w-6 text-purple-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
-          <Card className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Ingresos</p>
-                  <p className="text-3xl font-bold text-gray-900">
-                    ${(stats.monthlyRevenue || 0).toLocaleString()}
-                  </p>
-                  <p className="text-sm text-green-600 mt-1">+22% este mes</p>
+          {hasPermission('ventas') && (
+            <Card className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Ingresos</p>
+                    <p className="text-3xl font-bold text-gray-900">
+                      ${(stats.monthlyRevenue || 0).toLocaleString()}
+                    </p>
+                    <p className="text-sm text-green-600 mt-1">+22% este mes</p>
+                  </div>
+                  <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                    <DollarSign className="h-6 w-6 text-yellow-600" />
+                  </div>
                 </div>
-                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <DollarSign className="h-6 w-6 text-yellow-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
+
+        {/* User Tasks Section */}
+        {userTasks.filter(task => 
+          task.asignada_a && task.asignada_a.email === user?.email
+        ).length > 0 && (
+          <div className="mb-8">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <ClipboardList className="h-5 w-5 text-orange-600" />
+                    Mis tareas pendientes
+                  </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/business/${businessId}/tasks`)}
+                  >
+                    Ver todas
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {userTasks
+                    .filter(task => task.asignada_a && task.asignada_a.email === user?.email)
+                    .slice(0, 3)
+                    .map((task) => (
+                    <div key={task.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-medium text-gray-900 truncate">{task.titulo}</h4>
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          task.prioridad === 'urgente' ? 'bg-red-100 text-red-800' :
+                          task.prioridad === 'alta' ? 'bg-orange-100 text-orange-800' :
+                          task.prioridad === 'media' ? 'bg-blue-100 text-blue-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {task.prioridad}
+                        </span>
+                      </div>
+                      {task.descripcion && (
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                          {task.descripcion}
+                        </p>
+                      )}
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span className={`px-2 py-1 rounded-full ${
+                          task.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-800' :
+                          task.estado === 'en_progreso' ? 'bg-blue-100 text-blue-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {task.estado === 'en_progreso' ? 'En progreso' : 
+                           task.estado === 'pendiente' ? 'Pendiente' : task.estado}
+                        </span>
+                        {task.fecha_fin && (
+                          <span>
+                            {new Date(task.fecha_fin).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
@@ -377,33 +502,60 @@ function BusinessDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <Button
-                    variant="outline"
-                    className="h-24 flex-col space-y-3 text-center"
-                    onClick={() => navigate(`/business/${businessId}/products-and-services`)}
-                  >
-                    <Package className="h-8 w-8 text-blue-600" />
-                    <span className="text-base font-medium">Productos y Servicios</span>
-                  </Button>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  {hasPermission('productos') && (
+                    <Button
+                      variant="outline"
+                      className="h-24 flex-col space-y-3 text-center"
+                      onClick={() => navigate(`/business/${businessId}/products-and-services`)}
+                    >
+                      <Package className="h-8 w-8 text-blue-600" />
+                      <span className="text-base font-medium">Productos y Servicios</span>
+                    </Button>
+                  )}
+                  
+                  {hasPermission('ventas') && (
+                    <Button
+                      variant="outline"
+                      className="h-24 flex-col space-y-3 text-center"
+                      onClick={() => navigate(`/business/${businessId}/pos`)}
+                    >
+                      <ShoppingCart className="h-8 w-8 text-purple-600" />
+                      <span className="text-base font-medium">Ventas (POS)</span>
+                    </Button>
+                  )}
                   
                   <Button
                     variant="outline"
                     className="h-24 flex-col space-y-3 text-center"
-                    onClick={() => navigate(`/business/${businessId}/pos`)}
+                    onClick={() => navigate(`/business/${businessId}/tasks`)}
                   >
-                    <ShoppingCart className="h-8 w-8 text-purple-600" />
-                    <span className="text-base font-medium">Ventas (POS)</span>
+                    <ClipboardList className="h-8 w-8 text-orange-600" />
+                    <span className="text-base font-medium">Tareas</span>
                   </Button>
                   
-                  <Button
-                    variant="outline"
-                    className="h-24 flex-col space-y-3 text-center"
-                    onClick={() => navigate(`/business/${businessId}/customers`)}
-                  >
-                    <Users className="h-8 w-8 text-green-600" />
-                    <span className="text-base font-medium">Clientes</span>
-                  </Button>
+                  {hasPermission('clientes') && (
+                    <Button
+                      variant="outline"
+                      className="h-24 flex-col space-y-3 text-center"
+                      onClick={() => navigate(`/business/${businessId}/customers`)}
+                    >
+                      <Users className="h-8 w-8 text-green-600" />
+                      <span className="text-base font-medium">Clientes</span>
+                    </Button>
+                  )}
+                  
+                  {/* Usuarios - Solo visible para admins */}
+                  {userRole === 'admin' && (
+                    <Button
+                      variant="outline"
+                      className="h-24 flex-col space-y-3 text-center"
+                      onClick={() => navigate(`/business/${businessId}/users`)}
+                    >
+                      <UserCheck className="h-8 w-8 text-indigo-600" />
+                      <span className="text-base font-medium">Usuarios</span>
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -420,6 +572,29 @@ function BusinessDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  {/* Notificaciones de tareas asignadas */}
+                  {taskNotifications.length > 0 && taskNotifications.map((task, index) => (
+                    <div key={task.id} className="flex items-start gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                      <ClipboardList className="h-5 w-5 text-orange-600 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-orange-800">
+                          Tarea asignada: {task.titulo}
+                        </p>
+                        <p className="text-sm text-orange-600">
+                          {task.fecha_fin ? `Vence: ${new Date(task.fecha_fin).toLocaleDateString()}` : 'Sin fecha límite'}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-orange-600 border-orange-300 hover:bg-orange-100"
+                        onClick={() => navigate(`/business/${businessId}/tasks`)}
+                      >
+                        Ver
+                      </Button>
+                    </div>
+                  ))}
+                  
                   <div className="flex items-start gap-3 p-3 bg-orange-50 rounded-lg">
                     <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5" />
                     <div>
@@ -462,106 +637,108 @@ function BusinessDashboard() {
         </div>
 
         {/* Charts and Analytics */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-green-600" />
-                Ventas del Mes
-                {monthlySalesData && (
-                  <span className="text-sm font-normal text-gray-500">
-                    ({monthlySalesData.mes})
-                  </span>
+        {hasPermission('ventas') && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-green-600" />
+                  Ventas del Mes
+                  {monthlySalesData && (
+                    <span className="text-sm font-normal text-gray-500">
+                      ({monthlySalesData.mes})
+                    </span>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {monthlySalesData && monthlySalesData.datos.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4 text-center">
+                      <div className="bg-blue-50 p-3 rounded-lg">
+                        <p className="text-2xl font-bold text-blue-600">{monthlySalesData.total_ventas}</p>
+                        <p className="text-sm text-blue-600">Ventas totales</p>
+                      </div>
+                      <div className="bg-green-50 p-3 rounded-lg">
+                        <p className="text-2xl font-bold text-green-600">
+                          ${monthlySalesData.total_ingresos.toLocaleString()}
+                        </p>
+                        <p className="text-sm text-green-600">Ingresos totales</p>
+                      </div>
+                    </div>
+                    <div className="h-32 bg-gray-50 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 mb-2">Últimos días con ventas:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {monthlySalesData.datos.slice(-7).map((dia, index) => (
+                          <div key={index} className="bg-white px-2 py-1 rounded text-xs">
+                            <span className="font-medium">Día {dia.dia}:</span> {dia.ventas} ventas
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+                    <div className="text-center">
+                      <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-500">Sin ventas este mes</p>
+                      <p className="text-sm text-gray-400">Realiza tu primera venta para ver estadísticas</p>
+                    </div>
+                  </div>
                 )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {monthlySalesData && monthlySalesData.datos.length > 0 ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4 text-center">
-                    <div className="bg-blue-50 p-3 rounded-lg">
-                      <p className="text-2xl font-bold text-blue-600">{monthlySalesData.total_ventas}</p>
-                      <p className="text-sm text-blue-600">Ventas totales</p>
-                    </div>
-                    <div className="bg-green-50 p-3 rounded-lg">
-                      <p className="text-2xl font-bold text-green-600">
-                        ${monthlySalesData.total_ingresos.toLocaleString()}
-                      </p>
-                      <p className="text-sm text-green-600">Ingresos totales</p>
-                    </div>
-                  </div>
-                  <div className="h-32 bg-gray-50 rounded-lg p-4">
-                    <p className="text-sm text-gray-600 mb-2">Últimos días con ventas:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {monthlySalesData.datos.slice(-7).map((dia, index) => (
-                        <div key={index} className="bg-white px-2 py-1 rounded text-xs">
-                          <span className="font-medium">Día {dia.dia}:</span> {dia.ventas} ventas
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                  <div className="text-center">
-                    <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-500">Sin ventas este mes</p>
-                    <p className="text-sm text-gray-400">Realiza tu primera venta para ver estadísticas</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <PieChart className="h-5 w-5 text-purple-600" />
-                Productos más Vendidos
-                {topProductsData && (
-                  <span className="text-sm font-normal text-gray-500">
-                    ({topProductsData.periodo})
-                  </span>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {topProductsData && topProductsData.datos.length > 0 ? (
-                <div className="space-y-3">
-                  {topProductsData.datos.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${
-                          index === 0 ? 'bg-yellow-500' : 
-                          index === 1 ? 'bg-gray-400' : 
-                          index === 2 ? 'bg-amber-600' : 'bg-blue-500'
-                        }`}>
-                          {index + 1}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <PieChart className="h-5 w-5 text-purple-600" />
+                  Productos más Vendidos
+                  {topProductsData && (
+                    <span className="text-sm font-normal text-gray-500">
+                      ({topProductsData.periodo})
+                    </span>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {topProductsData && topProductsData.datos.length > 0 ? (
+                  <div className="space-y-3">
+                    {topProductsData.datos.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${
+                            index === 0 ? 'bg-yellow-500' : 
+                            index === 1 ? 'bg-gray-400' : 
+                            index === 2 ? 'bg-amber-600' : 'bg-blue-500'
+                          }`}>
+                            {index + 1}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{item.nombre}</p>
+                            <p className="text-sm text-gray-600 capitalize">{item.tipo}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{item.nombre}</p>
-                          <p className="text-sm text-gray-600 capitalize">{item.tipo}</p>
+                        <div className="text-right">
+                          <p className="font-bold text-gray-900">{item.cantidad_total}</p>
+                          <p className="text-sm text-gray-600">vendidos</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold text-gray-900">{item.cantidad_total}</p>
-                        <p className="text-sm text-gray-600">vendidos</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                  <div className="text-center">
-                    <PieChart className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-500">Sin datos de ventas</p>
-                    <p className="text-sm text-gray-400">Realiza ventas para ver productos populares</p>
+                    ))}
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                ) : (
+                  <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+                    <div className="text-center">
+                      <PieChart className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-500">Sin datos de ventas</p>
+                      <p className="text-sm text-gray-400">Realiza ventas para ver productos populares</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Recent Activity */}
         <Card>

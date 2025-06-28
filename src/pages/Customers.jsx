@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { customerAPI } from '../utils/api';
 import { getErrorMessage, isForbiddenError } from '../utils/errorHandler';
+import PermissionGuard from '../components/PermissionGuard';
 import { 
   Users, 
   Plus, 
@@ -705,4 +706,10 @@ function Customers() {
   );
 }
 
-export default Customers;
+export default function ProtectedCustomers() {
+  return (
+    <PermissionGuard requiredModule="clientes" requiredAction="ver">
+      <Customers />
+    </PermissionGuard>
+  );
+}

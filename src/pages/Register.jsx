@@ -48,53 +48,7 @@ function Register() {
   
   const navigate = useNavigate();
 
-  const [businesses, setBusinesses] = useState([]);
-  const [selectedBusinessId, setSelectedBusinessId] = useState('');
-  const [newBusinessName, setNewBusinessName] = useState('');
-  const [businessMode, setBusinessMode] = useState('existing'); // 'existing' o 'new'
-
-  const [businessSearch, setBusinessSearch] = useState('');
-  const [businessOptions, setBusinessOptions] = useState([]);
-  const [businessSearchTimeout, setBusinessSearchTimeout] = useState(null);
-
-  // Buscar negocios cuando cambia el input
-  useEffect(() => {
-    console.log('🔍 useEffect triggered:', { businessMode, businessSearch });
-    
-    if (businessMode !== 'existing') {
-      console.log('❌ Not in existing mode, skipping search');
-      return;
-    }
-    
-    if (businessSearchTimeout) clearTimeout(businessSearchTimeout);
-    
-    setBusinessSearchTimeout(setTimeout(async () => {
-      console.log('⏰ Timeout executed, searching for:', businessSearch);
-      let results = [];
-      
-      try {
-        if (businessSearch.length > 2) {
-          console.log('🔍 Searching by name:', businessSearch);
-          results = await publicBusinessAPI.buscarNegocios({ nombre: businessSearch });
-          console.log('✅ Search results by name:', results);
-        } else if (businessSearch.length === 36) { // UUID
-          console.log('🔍 Searching by ID:', businessSearch);
-          results = await publicBusinessAPI.buscarNegocios({ id: businessSearch });
-          console.log('✅ Search results by ID:', results);
-        } else {
-          console.log('❌ Search term too short or invalid length');
-        }
-        
-        setBusinessOptions(results);
-        console.log('📝 Updated businessOptions:', results);
-      } catch (error) {
-        console.error('❌ Error searching businesses:', error);
-        setBusinessOptions([]);
-      }
-    }, 300));
-    
-    // eslint-disable-next-line
-  }, [businessSearch, businessMode]);
+  // Removed business search functionality - users will be invited by business owners
 
   /**
    * Handles changes in form input fields.
@@ -124,23 +78,9 @@ function Register() {
     setError('');
     setLoading(true);
 
-    // Validación: uno de los dos debe estar presente
-    if (businessMode === 'existing' && !selectedBusinessId) {
-      setError('Debes seleccionar un negocio existente o crear uno nuevo.');
-      setLoading(false);
-      return;
-    }
-    if (businessMode === 'new' && !newBusinessName.trim()) {
-      setError('Debes ingresar el nombre del nuevo negocio.');
-      setLoading(false);
-      return;
-    }
-
-    // Construir payload
+    // Construir payload - ahora solo se permite crear nuevos negocios
     const payload = {
       ...formData,
-      negocio_id: businessMode === 'existing' ? selectedBusinessId : undefined,
-      nuevo_negocio_nombre: businessMode === 'new' ? newBusinessName : undefined,
     };
 
     try {
@@ -353,65 +293,21 @@ function Register() {
                     </div>
                   </div>
 
-                  {/* Selección/creación de negocio */}
+                  {/* Información sobre negocios */}
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-700">¿A qué negocio te asocias?</Label>
-                    <div className="flex gap-4">
-                      <label>
-                        <input
-                          type="radio"
-                          checked={businessMode === 'existing'}
-                          onChange={() => setBusinessMode('existing')}
-                        /> Negocio existente
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          checked={businessMode === 'new'}
-                          onChange={() => setBusinessMode('new')}
-                        /> Crear nuevo negocio
-                      </label>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="text-sm font-medium text-blue-800 mb-2">
+                        ¿Qué pasa después del registro?
+                      </h4>
+                      <p className="text-sm text-blue-700 mb-2">
+                        Una vez registrado, podrás:
+                      </p>
+                      <ul className="text-sm text-blue-700 list-disc list-inside space-y-1">
+                        <li>Crear tu propio negocio y ser el administrador</li>
+                        <li>Esperar a que un administrador te invite a su negocio</li>
+                        <li>Gestionar productos, ventas y clientes según tus permisos</li>
+                      </ul>
                     </div>
-                    {businessMode === 'existing' ? (
-                      <div>
-                        <Input
-                          type="text"
-                          value={businessSearch}
-                          onChange={e => {
-                            setBusinessSearch(e.target.value);
-                            setSelectedBusinessId('');
-                          }}
-                          placeholder="Buscar negocio por nombre o pegar ID"
-                          className="mb-2"
-                        />
-                        {businessOptions.length > 0 && (
-                          <ul className="border rounded bg-white max-h-40 overflow-y-auto">
-                            {businessOptions.map(b => (
-                              <li
-                                key={b.id}
-                                className={`p-2 cursor-pointer hover:bg-blue-100 ${selectedBusinessId === b.id ? 'bg-blue-50' : ''}`}
-                                onClick={() => {
-                                  setSelectedBusinessId(b.id);
-                                  setBusinessSearch(`${b.nombre} (${b.id})`);
-                                  setBusinessOptions([]);
-                                }}
-                              >
-                                {b.nombre} <span className="text-xs text-gray-400">{b.id}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                        {/* Permitir pegar el ID manualmente */}
-                        <div className="text-xs text-gray-500 mt-1">Puedes buscar por nombre o pegar el ID exacto del negocio.</div>
-                      </div>
-                    ) : (
-                      <Input
-                        type="text"
-                        value={newBusinessName}
-                        onChange={e => setNewBusinessName(e.target.value)}
-                        placeholder="Nombre del nuevo negocio"
-                      />
-                    )}
                   </div>
 
                   <Button 

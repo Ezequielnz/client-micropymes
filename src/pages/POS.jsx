@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { productAPI, customerAPI, salesAPI, serviceAPI } from '../utils/api';
+import PermissionGuard from '../components/PermissionGuard';
 import {
   Package,
   Plus,
@@ -893,4 +894,10 @@ function POS() {
   );
 }
 
-export default POS;
+export default function ProtectedPOS() {
+  return (
+    <PermissionGuard requiredModule="ventas" requiredAction="ver">
+      <POS />
+    </PermissionGuard>
+  );
+}

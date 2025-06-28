@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { categoryAPI } from '../utils/api';
+import PermissionGuard from '../components/PermissionGuard';
 import { 
   Tag, 
   Plus, 
@@ -510,4 +511,10 @@ function Categories() {
   );
 }
 
-export default Categories;
+export default function ProtectedCategories() {
+  return (
+    <PermissionGuard requiredModule="categorias" requiredAction="ver">
+      <Categories />
+    </PermissionGuard>
+  );
+}

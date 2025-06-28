@@ -17,6 +17,7 @@ import Services from './pages/Services';
 import Subscriptions from './pages/Subscriptions';
 import ProductsAndServices from './pages/ProductsAndServices';
 import Sales from './pages/Sales';
+import Tasks from './pages/Tasks';
 import Home from './pages/Home';
 import LandingPage from './pages/LandingPage.tsx';
 import TestPage from './pages/TestPage';
@@ -56,6 +57,7 @@ const App: React.FC = () => {
           <Route path="/business/:businessId/subscriptions" element={<Subscriptions />} />
           <Route path="/business/:businessId/pos" element={<POS />} />
           <Route path="/business/:businessId/sales" element={<Sales />} />
+          <Route path="/business/:businessId/tasks" element={<Tasks />} />
           <Route path="/business/:businessId/reports" element={<SalesReports />} />
           <Route path="/business/:businessId/users" element={<BusinessUsers />} />
           {/* Catch-all route: If no other route matches, navigate to the home page. */}

@@ -1,327 +1,151 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { businessAPI } from '../utils/api';
+import { businessAPI, authAPI } from '../utils/api';
 import {
   ArrowLeft,
+  LogOut,
   Users,
-  Shield,
-  Edit,
-  Trash2,
-  UserPlus,
-  CheckCircle,
-  XCircle,
-  Clock,
   Settings,
-  Eye,
-  EyeOff,
-  Save,
+  Check,
   X,
-  AlertCircle,
-  Loader2,
-  Mail,
-  Calendar,
+  Edit,
+  Save,
   UserCheck,
-  UserX
+  Shield,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
-
-// Componentes reutilizables
-const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', disabled = false, ...props }) => {
-  const baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
-  
-  const variants = {
-    default: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
-    outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500',
-    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-blue-500',
-    destructive: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
-    success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500'
-  };
-  
-  const sizes = {
-    sm: 'h-8 px-3 text-sm',
-    default: 'h-10 px-4 py-2',
-    lg: 'h-12 px-6 text-lg'
-  };
-  
-  const classes = `${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`;
-  
-  return (
-    <button className={classes} onClick={onClick} disabled={disabled} {...props}>
-      {children}
-    </button>
-  );
-};
-
-const Card = ({ children, className = '' }) => (
-  <div className={`bg-white border border-gray-200 rounded-lg shadow-sm ${className}`}>
-    {children}
-  </div>
-);
-
-const CardHeader = ({ children, className = '' }) => (
-  <div className={`p-6 pb-4 ${className}`}>
-    {children}
-  </div>
-);
-
-const CardContent = ({ children, className = '' }) => (
-  <div className={`p-6 pt-0 ${className}`}>
-    {children}
-  </div>
-);
-
-const CardTitle = ({ children, className = '' }) => (
-  <h3 className={`text-lg font-semibold text-gray-900 ${className}`}>
-    {children}
-  </h3>
-);
-
-// Componente para mostrar permisos
-const PermissionBadge = ({ permission, value }) => {
-  if (!value) return null;
-  
-  return (
-    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-      {permission}
-    </span>
-  );
-};
-
-// Componente para editar permisos
-const PermissionEditor = ({ permissions, onChange, onSave, onCancel }) => {
-  const [localPermissions, setLocalPermissions] = useState(permissions);
-
-  const handlePermissionChange = (key, value) => {
-    setLocalPermissions(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  };
-
-  const handleSave = () => {
-    onSave(localPermissions);
-  };
-
-  const permissionGroups = [
-    {
-      title: 'Productos',
-      permissions: [
-        { key: 'puede_ver_productos', label: 'Ver productos' },
-        { key: 'puede_editar_productos', label: 'Editar productos' },
-        { key: 'puede_eliminar_productos', label: 'Eliminar productos' }
-      ]
-    },
-    {
-      title: 'Clientes',
-      permissions: [
-        { key: 'puede_ver_clientes', label: 'Ver clientes' },
-        { key: 'puede_editar_clientes', label: 'Editar clientes' },
-        { key: 'puede_eliminar_clientes', label: 'Eliminar clientes' }
-      ]
-    },
-    {
-      title: 'Categorías',
-      permissions: [
-        { key: 'puede_ver_categorias', label: 'Ver categorías' },
-        { key: 'puede_editar_categorias', label: 'Editar categorías' },
-        { key: 'puede_eliminar_categorias', label: 'Eliminar categorías' }
-      ]
-    },
-    {
-      title: 'Ventas',
-      permissions: [
-        { key: 'puede_ver_ventas', label: 'Ver ventas' },
-        { key: 'puede_editar_ventas', label: 'Editar ventas' }
-      ]
-    },
-    {
-      title: 'Stock',
-      permissions: [
-        { key: 'puede_ver_stock', label: 'Ver stock' },
-        { key: 'puede_editar_stock', label: 'Editar stock' }
-      ]
-    },
-    {
-      title: 'Facturación',
-      permissions: [
-        { key: 'puede_ver_facturacion', label: 'Ver facturación' },
-        { key: 'puede_editar_facturacion', label: 'Editar facturación' }
-      ]
-    }
-  ];
-
-  return (
-    <div className="space-y-6">
-      {/* Acceso Total */}
-      <div className="border-b pb-4">
-        <label className="flex items-center space-x-3">
-          <input
-            type="checkbox"
-            checked={localPermissions.acceso_total || false}
-            onChange={(e) => handlePermissionChange('acceso_total', e.target.checked)}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-          />
-          <span className="text-sm font-medium text-gray-900">Acceso Total (Todos los permisos)</span>
-        </label>
-        <p className="text-sm text-gray-500 mt-1">
-          Si está marcado, el usuario tendrá acceso completo a todas las funciones
-        </p>
-      </div>
-
-      {/* Permisos específicos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {permissionGroups.map((group) => (
-          <div key={group.title} className="space-y-3">
-            <h4 className="text-sm font-medium text-gray-900 border-b pb-2">
-              {group.title}
-            </h4>
-            <div className="space-y-2">
-              {group.permissions.map((perm) => (
-                <label key={perm.key} className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={localPermissions[perm.key] || false}
-                    onChange={(e) => handlePermissionChange(perm.key, e.target.checked)}
-                    disabled={localPermissions.acceso_total}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
-                  />
-                  <span className={`text-sm ${localPermissions.acceso_total ? 'text-gray-400' : 'text-gray-700'}`}>
-                    {perm.label}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Botones de acción */}
-      <div className="flex justify-end space-x-3 pt-4 border-t">
-        <Button variant="outline" onClick={onCancel}>
-          <X className="h-4 w-4 mr-2" />
-          Cancelar
-        </Button>
-        <Button onClick={handleSave}>
-          <Save className="h-4 w-4 mr-2" />
-          Guardar Permisos
-        </Button>
-      </div>
-    </div>
-  );
-};
 
 function BusinessUsers() {
   const { businessId } = useParams();
   const navigate = useNavigate();
   
+  const [business, setBusiness] = useState(null);
   const [users, setUsers] = useState([]);
   const [pendingUsers, setPendingUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
-  const [approvingUser, setApprovingUser] = useState(null);
-  const [showPermissions, setShowPermissions] = useState({});
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Permisos disponibles
+  const availablePermissions = {
+    productos: { label: 'Productos y Servicios', actions: ['ver', 'editar', 'eliminar'] },
+    clientes: { label: 'Clientes', actions: ['ver', 'editar', 'eliminar'] },
+    categorias: { label: 'Categorías', actions: ['ver', 'editar', 'eliminar'] },
+    ventas: { label: 'Ventas (POS)', actions: ['ver', 'editar', 'eliminar'] },
+    stock: { label: 'Gestión de Stock', actions: ['ver', 'editar'] },
+    facturacion: { label: 'Facturación', actions: ['ver', 'editar'] },
+    tareas: { label: 'Tareas (Solo asignar)', actions: ['asignar'] }
+  };
 
   useEffect(() => {
-    loadUsers();
+    loadData();
   }, [businessId]);
 
-  const loadUsers = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
       setError(null);
 
+      // Cargar datos del usuario actual
+      const userData = await authAPI.getCurrentUser();
+      setCurrentUser(userData);
+
+      // Cargar datos del negocio
+      const businessData = await businessAPI.getBusinessById(businessId);
+      setBusiness(businessData);
+
+      // Verificar que el usuario actual sea admin
+      const businessUsers = await businessAPI.getBusinessUsers(businessId);
+      const currentUserInBusiness = businessUsers.find(u => u.usuario?.email === userData.email);
+      
+      if (currentUserInBusiness?.rol !== 'admin') {
+        setError('No tienes permisos para acceder a esta página');
+        return;
+      }
+
       // Cargar usuarios del negocio
-      const usersData = await businessAPI.getBusinessUsers(businessId);
-      setUsers(usersData);
+      setUsers(businessUsers);
 
       // Cargar usuarios pendientes
-      const pendingData = await businessAPI.getPendingUsers(businessId);
-      setPendingUsers(pendingData);
+      try {
+        const pendingData = await businessAPI.getPendingUsers(businessId);
+        setPendingUsers(pendingData);
+      } catch (err) {
+        console.error('Error loading pending users:', err);
+        setPendingUsers([]);
+      }
 
     } catch (err) {
-      console.error('Error loading users:', err);
-      setError(err.message || 'Error al cargar usuarios');
+      console.error('Error loading data:', err);
+      setError(err.message || 'Error al cargar los datos');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleApproveUser = async (usuarioNegocioId, permissions) => {
+  const handleApproveUser = async (userBusinessId, permissions) => {
     try {
-      await businessAPI.approveUser(businessId, usuarioNegocioId, permissions);
-      await loadUsers(); // Recargar datos
+      await businessAPI.approveUser(businessId, userBusinessId, permissions);
+      await loadData(); // Recargar datos
     } catch (err) {
       console.error('Error approving user:', err);
-      alert('Error al aprobar usuario: ' + err.message);
+      alert('Error al aprobar usuario: ' + (err.response?.data?.detail || err.message));
     }
   };
 
-  const handleRejectUser = async (usuarioNegocioId) => {
+  const handleRejectUser = async (userBusinessId) => {
     if (!confirm('¿Estás seguro de que quieres rechazar este usuario?')) return;
     
     try {
-      await businessAPI.rejectUser(businessId, usuarioNegocioId);
-      await loadUsers(); // Recargar datos
+      await businessAPI.rejectUser(businessId, userBusinessId);
+      await loadData(); // Recargar datos
     } catch (err) {
       console.error('Error rejecting user:', err);
-      alert('Error al rechazar usuario: ' + err.message);
+      alert('Error al rechazar usuario: ' + (err.response?.data?.detail || err.message));
     }
   };
 
-  const handleUpdatePermissions = async (usuarioNegocioId, permissions) => {
+  const handleUpdatePermissions = async (userBusinessId, newPermissions) => {
     try {
-      await businessAPI.updateUserPermissions(businessId, usuarioNegocioId, permissions);
+      await businessAPI.updateUserPermissions(businessId, userBusinessId, newPermissions);
       setEditingUser(null);
-      await loadUsers(); // Recargar datos
+      await loadData(); // Recargar datos
     } catch (err) {
       console.error('Error updating permissions:', err);
-      alert('Error al actualizar permisos: ' + err.message);
+      alert('Error al actualizar permisos: ' + (err.response?.data?.detail || err.message));
     }
   };
 
-  const handleRemoveUser = async (usuarioNegocioId) => {
+  const handleRemoveUser = async (userBusinessId) => {
     if (!confirm('¿Estás seguro de que quieres remover este usuario del negocio?')) return;
     
     try {
-      await businessAPI.removeUser(businessId, usuarioNegocioId);
-      await loadUsers(); // Recargar datos
+      await businessAPI.removeUser(businessId, userBusinessId);
+      await loadData(); // Recargar datos
     } catch (err) {
       console.error('Error removing user:', err);
-      alert('Error al remover usuario: ' + err.message);
+      alert('Error al remover usuario: ' + (err.response?.data?.detail || err.message));
     }
   };
 
-  const togglePermissionsView = (userId) => {
-    setShowPermissions(prev => ({
-      ...prev,
-      [userId]: !prev[userId]
-    }));
-  };
-
-  const getStatusBadge = (estado) => {
-    const statusConfig = {
-      aceptado: { color: 'green', icon: CheckCircle, text: 'Activo' },
-      pendiente: { color: 'yellow', icon: Clock, text: 'Pendiente' },
-      rechazado: { color: 'red', icon: XCircle, text: 'Rechazado' }
-    };
-
-    const config = statusConfig[estado] || statusConfig.pendiente;
-    const Icon = config.icon;
-
-    return (
-      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-${config.color}-100 text-${config.color}-800`}>
-        <Icon className="h-3 w-3 mr-1" />
-        {config.text}
-      </span>
-    );
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.clear();
+    navigate('/login');
+    window.location.href = '/login';
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex items-center gap-3 text-blue-600">
-          <Loader2 className="h-8 w-8 animate-spin" />
-          <span className="text-lg font-medium">Cargando usuarios...</span>
+      <div className="app-container">
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="flex items-center gap-3 text-blue-600">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <span className="text-lg font-medium">Cargando usuarios...</span>
+          </div>
         </div>
       </div>
     );
@@ -329,282 +153,350 @@ function BusinessUsers() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="max-w-md mx-auto">
-          <CardContent className="text-center py-8">
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Error</h3>
-            <p className="text-gray-600 mb-4">{error}</p>
-            <div className="space-y-2">
-              <Button onClick={loadUsers} className="w-full">
-                Reintentar
-              </Button>
-              <Button onClick={() => navigate(`/business/${businessId}`)} variant="outline" className="w-full">
-                Volver al Dashboard
-              </Button>
+      <div className="app-container">
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="card max-w-md mx-auto">
+            <div className="text-center p-8">
+              <AlertCircle className="h-12 w-12 text-red-600 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Error</h3>
+              <p className="text-gray-600 mb-4">{error}</p>
+              <div className="flex gap-2">
+                <button onClick={loadData} className="btn btn-primary flex-1">
+                  Reintentar
+                </button>
+                <button onClick={() => navigate(`/business/${businessId}`)} className="btn btn-outline flex-1">
+                  Volver
+                </button>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="app-container">
       {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate(`/business/${businessId}`)}
-                className="text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Volver al Dashboard
-              </Button>
-              
-              <div className="flex items-center">
-                <div className="w-8 h-8 bg-indigo-600 rounded-lg mr-3 flex items-center justify-center">
-                  <Users className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-gray-900">
-                    Gestión de Usuarios
-                  </h1>
-                  <p className="text-sm text-gray-500">Administrar usuarios y permisos</p>
-                </div>
+      <nav className="nav">
+        <div className="nav-container">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate(`/business/${businessId}`)}
+              className="btn btn-outline btn-sm"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Volver al Dashboard
+            </button>
+            
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-indigo-600 rounded-lg mr-3 flex items-center justify-center">
+                <UserCheck className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">
+                  Gestión de Usuarios
+                </h1>
+                <p className="text-sm text-gray-500">{business?.nombre}</p>
               </div>
             </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-600">
+              Hola, {currentUser?.nombre || 'Usuario'}
+            </span>
+            <button onClick={handleLogout} className="btn btn-outline btn-sm">
+              <LogOut className="h-4 w-4 mr-2" />
+              Salir
+            </button>
           </div>
         </div>
       </nav>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container">
         {/* Header */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">Usuarios del Negocio</h2>
-          <p className="text-gray-600 mt-1">
-            Gestiona los usuarios que tienen acceso a tu negocio y configura sus permisos
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            Usuarios del Negocio
+          </h2>
+          <p className="text-gray-600">
+            Gestiona los usuarios y sus permisos para acceder a las diferentes secciones del sistema
           </p>
         </div>
 
         {/* Usuarios Pendientes */}
         {pendingUsers.length > 0 && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-orange-600" />
-                Usuarios Pendientes de Aprobación ({pendingUsers.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {pendingUsers.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between p-4 bg-orange-50 rounded-lg border border-orange-200">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                        <UserPlus className="h-5 w-5 text-orange-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {user.usuario?.nombre} {user.usuario?.apellido}
-                        </p>
-                        <p className="text-sm text-gray-600">{user.usuario?.email}</p>
-                        <p className="text-xs text-gray-500">
-                          Solicitó acceso el {new Date(user.creada_en).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          // Abrir modal de permisos para aprobación
-                          setApprovingUser(user);
-                        }}
-                      >
-                        <UserCheck className="h-4 w-4 mr-1" />
-                        Aprobar
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleRejectUser(user.id)}
-                      >
-                        <UserX className="h-4 w-4 mr-1" />
-                        Rechazar
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+          <div className="mb-8">
+            <div className="card">
+              <div className="card-header">
+                <h3 className="card-title flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-orange-600" />
+                  Usuarios Pendientes de Aprobación ({pendingUsers.length})
+                </h3>
               </div>
-            </CardContent>
-          </Card>
+              <div className="card-content">
+                <div className="space-y-4">
+                  {pendingUsers.map((pendingUser) => (
+                    <PendingUserCard
+                      key={pendingUser.id}
+                      user={pendingUser}
+                      availablePermissions={availablePermissions}
+                      onApprove={handleApproveUser}
+                      onReject={handleRejectUser}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Usuarios Activos */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-green-600" />
-              Usuarios Activos ({users.filter(u => u.estado === 'aceptado').length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {users.filter(u => u.estado === 'aceptado').map((user) => (
-                <div key={user.id} className="border border-gray-200 rounded-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                        <Users className="h-6 w-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-gray-900">
-                          {user.usuario?.nombre} {user.usuario?.apellido}
-                        </h3>
-                        <p className="text-sm text-gray-600">{user.usuario?.email}</p>
-                        <div className="flex items-center space-x-2 mt-1">
-                          {getStatusBadge(user.estado)}
-                          <span className="text-xs text-gray-500">
-                            Rol: {user.rol}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => togglePermissionsView(user.id)}
-                      >
-                        {showPermissions[user.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        {showPermissions[user.id] ? 'Ocultar' : 'Ver'} Permisos
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setEditingUser(user)}
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Editar
-                      </Button>
-                      {user.rol !== 'admin' && (
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleRemoveUser(user.id)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          Remover
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Mostrar permisos */}
-                  {showPermissions[user.id] && (
-                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                      <h4 className="text-sm font-medium text-gray-900 mb-3">Permisos Actuales:</h4>
-                      {user.permisos?.acceso_total ? (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                          <Shield className="h-4 w-4 mr-1" />
-                          Acceso Total
-                        </span>
-                      ) : (
-                        <div className="flex flex-wrap gap-2">
-                          <PermissionBadge permission="Ver Productos" value={user.permisos?.puede_ver_productos} />
-                          <PermissionBadge permission="Editar Productos" value={user.permisos?.puede_editar_productos} />
-                          <PermissionBadge permission="Eliminar Productos" value={user.permisos?.puede_eliminar_productos} />
-                          <PermissionBadge permission="Ver Clientes" value={user.permisos?.puede_ver_clientes} />
-                          <PermissionBadge permission="Editar Clientes" value={user.permisos?.puede_editar_clientes} />
-                          <PermissionBadge permission="Eliminar Clientes" value={user.permisos?.puede_eliminar_clientes} />
-                          <PermissionBadge permission="Ver Categorías" value={user.permisos?.puede_ver_categorias} />
-                          <PermissionBadge permission="Editar Categorías" value={user.permisos?.puede_editar_categorias} />
-                          <PermissionBadge permission="Eliminar Categorías" value={user.permisos?.puede_eliminar_categorias} />
-                          <PermissionBadge permission="Ver Ventas" value={user.permisos?.puede_ver_ventas} />
-                          <PermissionBadge permission="Editar Ventas" value={user.permisos?.puede_editar_ventas} />
-                          <PermissionBadge permission="Ver Stock" value={user.permisos?.puede_ver_stock} />
-                          <PermissionBadge permission="Editar Stock" value={user.permisos?.puede_editar_stock} />
-                          <PermissionBadge permission="Ver Facturación" value={user.permisos?.puede_ver_facturacion} />
-                          <PermissionBadge permission="Editar Facturación" value={user.permisos?.puede_editar_facturacion} />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Modal de edición de permisos */}
-      {editingUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Editar Permisos - {editingUser.usuario?.nombre} {editingUser.usuario?.apellido}
-              </h3>
-              <p className="text-sm text-gray-600 mt-1">{editingUser.usuario?.email}</p>
-            </div>
-            <div className="p-6">
-              <PermissionEditor
-                permissions={editingUser.permisos || {}}
-                onSave={(permissions) => handleUpdatePermissions(editingUser.id, permissions)}
-                onCancel={() => setEditingUser(null)}
-              />
-            </div>
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-600" />
+              Usuarios Activos ({users.length})
+            </h3>
+          </div>
+          <div className="card-content">
+            {users.length === 0 ? (
+              <div className="text-center py-8">
+                <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500">No hay usuarios activos</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {users.map((user) => (
+                  <UserCard
+                    key={user.id}
+                    user={user}
+                    availablePermissions={availablePermissions}
+                    editingUser={editingUser}
+                    currentUser={currentUser}
+                    onEdit={setEditingUser}
+                    onSave={handleUpdatePermissions}
+                    onCancel={() => setEditingUser(null)}
+                    onRemove={handleRemoveUser}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
+    </div>
+  );
+}
 
-      {/* Modal de aprobación con permisos */}
-      {approvingUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Aprobar Usuario - {approvingUser.usuario?.nombre} {approvingUser.usuario?.apellido}
-              </h3>
-              <p className="text-sm text-gray-600 mt-1">{approvingUser.usuario?.email}</p>
-              <p className="text-sm text-blue-600 mt-1">
-                Configura los permisos que tendrá este usuario en tu negocio
-              </p>
-            </div>
-            <div className="p-6">
-              <PermissionEditor
-                permissions={{
-                  acceso_total: false,
-                  puede_ver_productos: true,
-                  puede_editar_productos: false,
-                  puede_eliminar_productos: false,
-                  puede_ver_clientes: true,
-                  puede_editar_clientes: false,
-                  puede_eliminar_clientes: false,
-                  puede_ver_categorias: true,
-                  puede_editar_categorias: false,
-                  puede_eliminar_categorias: false,
-                  puede_ver_ventas: false,
-                  puede_editar_ventas: false,
-                  puede_ver_stock: false,
-                  puede_editar_stock: false,
-                  puede_ver_facturacion: false,
-                  puede_editar_facturacion: false
-                }}
-                onSave={(permissions) => {
-                  handleApproveUser(approvingUser.id, permissions);
-                  setApprovingUser(null);
-                }}
-                onCancel={() => setApprovingUser(null)}
-              />
+// Componente para usuarios pendientes
+function PendingUserCard({ user, availablePermissions, onApprove, onReject }) {
+  const [selectedPermissions, setSelectedPermissions] = useState({});
+
+  const handlePermissionChange = (module, action, checked) => {
+    setSelectedPermissions(prev => ({
+      ...prev,
+      [`puede_${action}_${module}`]: checked
+    }));
+  };
+
+  const handleApprove = () => {
+    onApprove(user.id, selectedPermissions);
+  };
+
+  return (
+    <div className="border border-orange-200 bg-orange-50 rounded-lg p-4">
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h4 className="font-medium text-gray-900">
+            {user.usuario?.nombre} {user.usuario?.apellido}
+          </h4>
+          <p className="text-sm text-gray-600">{user.usuario?.email}</p>
+          <span className="badge badge-pending mt-1">Pendiente</span>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={handleApprove}
+            className="btn btn-success btn-sm"
+          >
+            <Check className="h-4 w-4 mr-1" />
+            Aprobar
+          </button>
+          <button
+            onClick={() => onReject(user.id)}
+            className="btn btn-destructive btn-sm"
+          >
+            <X className="h-4 w-4 mr-1" />
+            Rechazar
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Object.entries(availablePermissions).map(([module, config]) => (
+          <div key={module} className="bg-white p-3 rounded border">
+            <h5 className="font-medium text-sm mb-2">{config.label}</h5>
+            <div className="space-y-1">
+              {config.actions.map((action) => (
+                <label key={action} className="flex items-center text-sm">
+                  <input
+                    type="checkbox"
+                    className="mr-2"
+                    onChange={(e) => handlePermissionChange(module, action, e.target.checked)}
+                  />
+                  {action === 'ver' ? 'Ver' : 
+                   action === 'editar' ? 'Editar' : 
+                   action === 'eliminar' ? 'Eliminar' : 
+                   action === 'asignar' ? 'Asignar' : action}
+                </label>
+              ))}
             </div>
           </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Componente para usuarios activos
+function UserCard({ user, availablePermissions, editingUser, currentUser, onEdit, onSave, onCancel, onRemove }) {
+  const [permissions, setPermissions] = useState({});
+  const isEditing = editingUser?.id === user.id;
+  const isCurrentUser = user.usuario?.email === currentUser?.email;
+
+  useEffect(() => {
+    if (isEditing && user.permisos) {
+      setPermissions(user.permisos);
+    }
+  }, [isEditing, user.permisos]);
+
+  const handlePermissionChange = (permissionKey, checked) => {
+    setPermissions(prev => ({
+      ...prev,
+      [permissionKey]: checked
+    }));
+  };
+
+  const handleSave = () => {
+    onSave(user.id, permissions);
+  };
+
+  return (
+    <div className="border border-gray-200 rounded-lg p-4 bg-white">
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h4 className="font-medium text-gray-900 flex items-center gap-2">
+            {user.usuario?.nombre} {user.usuario?.apellido}
+            {user.rol === 'admin' && (
+              <span className="badge" style={{backgroundColor: '#e0e7ff', color: '#3730a3'}}>
+                <Shield className="h-3 w-3 mr-1" />
+                Admin
+              </span>
+            )}
+            {isCurrentUser && (
+              <span className="badge" style={{backgroundColor: '#dcfce7', color: '#166534'}}>
+                Tú
+              </span>
+            )}
+          </h4>
+          <p className="text-sm text-gray-600">{user.usuario?.email}</p>
+          <span className="badge" style={{backgroundColor: '#d1fae5', color: '#065f46'}}>
+            Activo
+          </span>
+        </div>
+        
+        {!isCurrentUser && user.rol !== 'admin' && (
+          <div className="flex gap-2">
+            {isEditing ? (
+              <>
+                <button onClick={handleSave} className="btn btn-success btn-sm">
+                  <Save className="h-4 w-4 mr-1" />
+                  Guardar
+                </button>
+                <button onClick={onCancel} className="btn btn-outline btn-sm">
+                  Cancelar
+                </button>
+              </>
+            ) : (
+              <>
+                <button onClick={() => onEdit(user)} className="btn btn-outline btn-sm">
+                  <Edit className="h-4 w-4 mr-1" />
+                  Editar
+                </button>
+                <button onClick={() => onRemove(user.id)} className="btn btn-destructive btn-sm">
+                  <X className="h-4 w-4 mr-1" />
+                  Remover
+                </button>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {user.rol === 'admin' ? (
+        <div className="bg-blue-50 p-3 rounded border">
+          <p className="text-sm text-blue-800 flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Este usuario tiene acceso total como administrador
+          </p>
+        </div>
+      ) : isEditing ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Object.entries(availablePermissions).map(([module, config]) => (
+            <div key={module} className="bg-gray-50 p-3 rounded border">
+              <h5 className="font-medium text-sm mb-2">{config.label}</h5>
+              <div className="space-y-1">
+                {config.actions.map((action) => {
+                  const permissionKey = `puede_${action}_${module}`;
+                  return (
+                    <label key={action} className="flex items-center text-sm">
+                      <input
+                        type="checkbox"
+                        className="mr-2"
+                        checked={permissions[permissionKey] || false}
+                        onChange={(e) => handlePermissionChange(permissionKey, e.target.checked)}
+                      />
+                      {action === 'ver' ? 'Ver' : 
+                       action === 'editar' ? 'Editar' : 
+                       action === 'eliminar' ? 'Eliminar' : 
+                       action === 'asignar' ? 'Asignar' : action}
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Object.entries(availablePermissions).map(([module, config]) => (
+            <div key={module} className="bg-gray-50 p-3 rounded border">
+              <h5 className="font-medium text-sm mb-2">{config.label}</h5>
+              <div className="space-y-1">
+                {config.actions.map((action) => {
+                  const permissionKey = `puede_${action}_${module}`;
+                  const hasPermission = user.permisos?.[permissionKey];
+                  return (
+                    <div key={action} className="flex items-center text-sm">
+                      {hasPermission ? (
+                        <Check className="h-4 w-4 text-green-600 mr-2" />
+                      ) : (
+                        <X className="h-4 w-4 text-red-600 mr-2" />
+                      )}
+                      <span className={hasPermission ? 'text-green-700' : 'text-red-700'}>
+                        {action === 'ver' ? 'Ver' : 
+                         action === 'editar' ? 'Editar' : 
+                         action === 'eliminar' ? 'Eliminar' : 
+                         action === 'asignar' ? 'Asignar' : action}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
