@@ -492,6 +492,10 @@
   height: 100%;
 }
 
+.h-3 w-3 text-green-500 {
+  color: #171717;
+}
+
 .min-h-screen {
   min-height: 100vh;
 }
@@ -572,6 +576,10 @@
 
 .text-blue-600 {
   color: #0ea5e9; /* erp-primary */
+}
+
+.text-green-500 {
+  color: #171717;
 }
 
 .text-green-600 {
@@ -872,6 +880,10 @@ button:disabled {
   font-size: 0.75rem;
   font-weight: 500;
   margin-top: 0.25rem;
+  color: #525252; /* erp-neutral-600 */
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .metric-change.positive {
@@ -1018,10 +1030,37 @@ button:disabled {
   margin-bottom: 0.5rem;
 }
 
+/* Period selector - Regla universal para eliminar contornos */
+button.period-btn,
+button.period-btn:hover,
+button.period-btn:focus,
+button.period-btn:focus-visible,
+button.period-btn:active,
+button.period-btn:focus-within {
+  outline: 0 !important;
+  outline-offset: 0 !important;
+  outline-color: transparent !important;
+  outline-style: none !important;
+  outline-width: 0 !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+  border: 1px solid transparent !important; /* Borde transparente */
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-shadow: 0 0 #0000 !important;
+  --tw-shadow-colored: 0 0 #0000 !important;
+  --tw-ring-color: transparent !important;
+  --tw-ring-offset-color: transparent !important;
+  --tw-ring-opacity: 0 !important;
+  --tw-ring-offset-width: 0px !important;
+  --tw-ring-width: 0px !important;
+}
+
 /* Period selector */
 .period-btn {
   padding: 0.5rem 1rem;
-  border: 1px solid #e5e5e5; /* erp-neutral-200 */
+  border: 1px solid transparent; /* Borde transparente */
   background-color: #ffffff;
   color: #525252; /* erp-neutral-600 */
   border-radius: 0.375rem;
@@ -1029,18 +1068,73 @@ button:disabled {
   transition: all 0.2s ease-in-out;
   font-size: 0.875rem;
   font-weight: 500;
+  outline: none !important; /* Eliminar el contorno azul */
+  box-shadow: none !important; /* Eliminar cualquier sombra */
+  /* Sobrescribir estilos de Tailwind y navegador */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  /* Eliminar cualquier ring o outline de Tailwind */
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+}
+
+.period-btn:hover,
+.period-btn:focus,
+.period-btn:focus-visible,
+.period-btn:active {
+  outline: none !important; /* Eliminar el contorno azul */
+  box-shadow: none !important; /* Eliminar cualquier sombra */
+  -webkit-box-shadow: none !important; /* Para Safari */
+  -moz-box-shadow: none !important; /* Para Firefox */
+  /* Eliminar cualquier ring o outline de Tailwind */
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-shadow: 0 0 #0000 !important;
+  --tw-shadow-colored: 0 0 #0000 !important;
+  /* Eliminar ring específico de Tailwind */
+  --tw-ring-color: transparent !important;
+  --tw-ring-offset-color: transparent !important;
+  --tw-ring-opacity: 0 !important;
+  --tw-ring-offset-width: 0px !important;
+  --tw-ring-width: 0px !important;
 }
 
 .period-btn.active {
-  background-color: #0ea5e9; /* erp-primary */
+  background-color: #171717; /* erp-neutral-900 - Negro */
   color: #ffffff;
-  border-color: #0ea5e9; /* erp-primary */
+  border: 1px solid transparent !important; /* Borde transparente */
+}
+
+.period-btn.active:focus,
+.period-btn.active:focus-visible {
+  background-color: #171717 !important; /* Mantener el color negro */
+  color: #ffffff !important; /* Mantener el texto blanco */
+  border: 1px solid transparent !important; /* Borde transparente */
+  outline: none !important; /* Sin contorno */
+  box-shadow: none !important; /* Sin sombra */
 }
 
 .period-btn:hover:not(.active) {
-  background-color: #fafafa; /* erp-neutral-50 */
-  border-color: #0ea5e9; /* erp-primary */
-  color: #0ea5e9; /* erp-primary */
+  background-color: #f5f5f5; /* erp-neutral-100 - Ligeramente más oscuro */
+  border: 1px solid transparent !important; /* Borde transparente */
+  color: #171717; /* erp-neutral-900 - Negro */
+  outline: none !important; /* Sin contorno */
+  box-shadow: none !important; /* Sin sombra */
+  -webkit-box-shadow: none !important; /* Para Safari */
+  -moz-box-shadow: none !important; /* Para Firefox */
+  /* Eliminar cualquier ring o outline de Tailwind en hover */
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-shadow: 0 0 #0000 !important;
+  --tw-shadow-colored: 0 0 #0000 !important;
+  --tw-ring-color: transparent !important;
+  --tw-ring-offset-color: transparent !important;
+  --tw-ring-opacity: 0 !important;
+  --tw-ring-offset-width: 0px !important;
+  --tw-ring-width: 0px !important;
 }
 
 /* Stats grid */

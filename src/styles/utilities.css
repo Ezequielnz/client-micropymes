@@ -92,7 +92,7 @@
   
   /* Texto con nuestros colores modernos */
   .text-erp-primary {
-    @apply text-erp-primary;
+    @apply text-erp-primary-500;
   }
   
   .text-erp-secondary {
@@ -100,15 +100,15 @@
   }
   
   .text-erp-success {
-    @apply text-erp-success;
+    @apply text-erp-success-500;
   }
   
   .text-erp-warning {
-    @apply text-erp-warning;
+    @apply text-erp-warning-500;
   }
   
   .text-erp-error {
-    @apply text-erp-error;
+    @apply text-erp-error-500;
   }
   
   .text-erp-muted {

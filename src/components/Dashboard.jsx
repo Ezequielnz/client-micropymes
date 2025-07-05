@@ -474,7 +474,7 @@ export default function Dashboard() {
                 ${salesData[selectedPeriod].sales.toLocaleString()}
               </div>
               <div className="metric-change">
-                <TrendingUp className="h-3 w-3 text-green-500" />
+                <TrendingUp className="h-3 w-3 text-erp-success-600" />
                 Datos estimados
               </div>
             </div>
@@ -499,7 +499,7 @@ export default function Dashboard() {
                 {salesData[selectedPeriod].orders}
               </div>
               <div className="metric-change">
-                <TrendingDown className="h-3 w-3 text-red-500" />
+                <TrendingDown className="h-3 w-3 text-erp-error-600" />
                 -3% vs período anterior
               </div>
             </div>
