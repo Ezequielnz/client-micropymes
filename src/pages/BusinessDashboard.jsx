@@ -250,8 +250,8 @@ function BusinessDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex items-center gap-3 text-blue-600">
+      <div className="page-container flex items-center justify-center">
+        <div className="flex items-center gap-3 text-mp-primary">
           <Loader2 className="h-8 w-8 animate-spin" />
           <span className="text-lg font-medium">Cargando dashboard...</span>
         </div>
@@ -261,12 +261,12 @@ function BusinessDashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="page-container flex items-center justify-center">
         <Card className="max-w-md mx-auto">
           <CardContent className="text-center py-8">
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Error</h3>
-            <p className="text-gray-600 mb-4">{error}</p>
+            <AlertCircle className="h-12 w-12 text-mp-error mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-mp-text mb-2">Error</h3>
+            <p className="text-mp-text-secondary mb-4">{error}</p>
             <div className="space-y-2">
               <Button onClick={loadDashboardData} className="w-full">
                 Reintentar
@@ -282,9 +282,9 @@ function BusinessDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="page-container">
       {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b border-gray-200">
+      <nav className="page-header">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
@@ -292,14 +292,14 @@ function BusinessDashboard() {
                 variant="outline"
                 size="sm"
                 onClick={() => navigate('/home')}
-                className="text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+                className="text-mp-text-secondary hover:text-mp-primary hover:bg-mp-primary-50"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Volver
               </Button>
               
               <div className="flex items-center">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg mr-3 flex items-center justify-center">
+                <div className="w-8 h-8 bg-mp-primary rounded-lg mr-3 flex items-center justify-center">
                   <Building2 className="h-5 w-5 text-white" />
                 </div>
                 <div>
@@ -359,10 +359,10 @@ function BusinessDashboard() {
                   <div>
                     <p className="text-sm font-medium text-gray-600">Productos</p>
                     <p className="text-3xl font-bold text-gray-900">{stats.totalProducts || 0}</p>
-                    <p className="text-sm text-green-600 mt-1">+12% este mes</p>
+                    <p className="text-sm text-mp-success mt-1">+12% este mes</p>
                   </div>
                   <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Package className="h-6 w-6 text-blue-600" />
+                                          <Package className="h-6 w-6 text-mp-primary" />
                   </div>
                 </div>
               </CardContent>

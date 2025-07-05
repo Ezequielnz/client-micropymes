@@ -137,9 +137,13 @@ function MyBusinesses() {
     try {
       console.log('Fetching user data and businesses...');
       
+      // Cargar datos secuencialmente para evitar timeouts
       const userData = await authAPI.getCurrentUser();
       console.log('User data received:', userData);
       setUser(userData);
+      
+      // Esperar un poco antes de la siguiente petición
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       const businessesData = await businessAPI.getBusinesses();
       console.log('Businesses data received:', businessesData);
@@ -150,8 +154,10 @@ function MyBusinesses() {
     } catch (error) {
       console.error('Error fetching data:', error);
       
-      // Si hay un error con el token, redirigir al login
-      if (error.response?.status === 401) {
+      // Manejo específico para timeouts
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        setError('La conexión tardó demasiado tiempo. Verifica tu conexión a internet e intenta nuevamente.');
+      } else if (error.response?.status === 401) {
         console.log('Unauthorized, removing token and redirecting to login');
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -159,7 +165,8 @@ function MyBusinesses() {
         navigate('/login');
       } else {
         console.log('Non-auth error, staying on page');
-        setError(error.message || 'Error loading data');
+        const errorMessage = error.response?.data?.detail || error.message || 'Error loading data';
+        setError(errorMessage);
       }
     } finally {
       console.log('Setting loading to false');
@@ -328,9 +335,9 @@ function MyBusinesses() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="page-container">
       {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b border-gray-200">
+              <nav className="page-header">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">

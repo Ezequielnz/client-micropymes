@@ -334,9 +334,9 @@ function Subscriptions() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="page-container">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+              <div className="page-header">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
@@ -344,14 +344,14 @@ function Subscriptions() {
                 variant="outline"
                 size="sm"
                 onClick={() => navigate(`/business/${businessId}`)}
-                className="flex items-center space-x-2 bg-white text-gray-700 hover:text-blue-600 hover:bg-blue-50 border-gray-200"
+                className="flex items-center space-x-2 bg-white text-mp-text-secondary hover:text-mp-primary hover:bg-mp-primary-50 border-gray-200"
               >
                 <ArrowLeft className="h-4 w-4" />
                 <span>Volver al Panel</span>
               </Button>
               <div className="flex items-center space-x-2">
-                <CreditCard className="h-6 w-6 text-blue-600" />
-                <h1 className="text-2xl font-bold text-gray-900">Subscriptions</h1>
+                <CreditCard className="h-6 w-6 text-mp-primary" />
+                <h1 className="text-2xl font-bold text-mp-text">Subscriptions</h1>
               </div>
             </div>
             
@@ -380,7 +380,7 @@ function Subscriptions() {
         {/* Filters */}
         <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-mp-text-secondary h-4 w-4" />
             <Input
               type="text"
               placeholder="Search subscriptions..."
@@ -435,24 +435,24 @@ function Subscriptions() {
 
         {/* Error Alert */}
         {error && (
-          <Alert className="mb-6 border-red-200 bg-red-50">
-            <AlertTriangle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-800">{error}</AlertDescription>
+          <Alert className="alert-mp-error mb-6">
+            <AlertTriangle className="h-4 w-4 text-mp-error" />
+            <AlertDescription className="text-mp-error">{error}</AlertDescription>
           </Alert>
         )}
 
         {/* Subscriptions Grid */}
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <Loader2 className="h-8 w-8 animate-spin text-mp-primary" />
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredSubscriptions.length === 0 ? (
               <div className="col-span-full text-center py-12">
-                <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No subscriptions found</h3>
-                <p className="text-gray-500 mb-4">
+                              <CreditCard className="h-12 w-12 text-mp-text-secondary mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-mp-text mb-2">No subscriptions found</h3>
+              <p className="text-mp-text-secondary mb-4">
                   {searchTerm || selectedCustomer || selectedService || selectedStatus
                     ? "No subscriptions match your current filters." 
                     : "Get started by adding your first subscription."}

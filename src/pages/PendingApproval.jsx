@@ -11,7 +11,7 @@ function PendingApproval() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="page-container flex items-center justify-center">
       <div className="max-w-md w-full bg-white rounded-lg shadow-sm border border-gray-200 p-8">
         <div className="text-center">
           {/* Icon */}

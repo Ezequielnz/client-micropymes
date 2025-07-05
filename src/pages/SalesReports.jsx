@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { salesAPI, customerAPI } from '../utils/api';
+import { PageLoader, SectionLoader } from '../components/LoadingSpinner';
 import {
   TrendingUp,
   DollarSign,
@@ -269,9 +270,9 @@ function SalesReports() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="page-container">
       {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+              <nav className="page-header sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
@@ -456,10 +457,7 @@ function SalesReports() {
           </Card>
 
           {loading && (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-              <span className="ml-2 text-gray-600">Cargando reportes de ventas...</span>
-            </div>
+            <SectionLoader message="Cargando reportes de ventas..." variant="primary" />
           )}
 
           {/* Sales Analytics Cards */}

@@ -1,3 +1,6 @@
+/* Importar utilidades personalizadas */
+@import './styles/utilities.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -12,26 +15,37 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Paleta personalizada MicroPymes */
+    --mp-primary: #2563eb;
+    --mp-secondary: #9333ea;
+    --mp-success: #22c55e;
+    --mp-warning: #f59e0b;
+    --mp-error: #ef4444;
+    --mp-background: #f9fafb;
+    --mp-text: #111827;
+    --mp-text-secondary: #6b7280;
+    
+    /* Variables para shadcn/ui (usando nuestra paleta) */
+    --background: 0 0% 98%;      /* #f9fafb */
+    --foreground: 222.2 84% 4.9%; /* #111827 */
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
+    --primary: 221.2 83.2% 53.3%; /* #2563eb */
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
+    --secondary: 271.5 81% 56%;    /* #9333ea */
+    --secondary-foreground: 210 40% 98%;
+    --muted: 210 40% 98%;          /* #f9fafb */
+    --muted-foreground: 215.4 16.3% 46.9%; /* #6b7280 */
+    --accent: 210 40% 98%;
     --accent-foreground: 222.2 84% 4.9%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84.2% 60.2%;  /* #ef4444 */
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;             /* Bordes más redondeados */
   }
 
   .dark {

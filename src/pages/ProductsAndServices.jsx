@@ -468,7 +468,7 @@ function ProductsAndServices() {
                      activeTab === 'productos' ? filteredProducts : filteredServices;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="page-container">
       {/* Mobile Menu */}
       <div className={`fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-300 lg:hidden ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsMenuOpen(false)}>
         <div className={`fixed left-0 top-0 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`} onClick={(e) => e.stopPropagation()}>

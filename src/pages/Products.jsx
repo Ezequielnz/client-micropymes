@@ -26,6 +26,8 @@ import {
   Search,
   Upload
 } from 'lucide-react';
+import { PageLoader, SectionLoader } from '../components/LoadingSpinner';
+import '../styles/Home.css';
 
 /**
  * @typedef {object} Product

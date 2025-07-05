@@ -21,6 +21,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import api, { tasksAPI, authAPI } from '../utils/api';
+import { PageLoader } from '../components/LoadingSpinner';
 import '../styles/Home.css';
 
 const ESTADOS = {
@@ -429,16 +430,7 @@ export default function Tasks() {
   };
 
   if (loading) {
-    return (
-      <div className="app-container">
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="flex items-center gap-3 text-blue-600">
-            <Loader2 className="loading-spinner" style={{ width: '2rem', height: '2rem' }} />
-            <span className="text-lg font-medium">Cargando tareas...</span>
-          </div>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Cargando sistema de tareas..." variant="primary" />;
   }
 
   return (
@@ -469,14 +461,14 @@ export default function Tasks() {
                 <ClipboardList style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Gestión de Tareas</h1>
-                <p className="text-sm text-gray-500">Organiza y supervisa el trabajo del equipo</p>
+                <h1 className="text-xl font-bold text-mp-text">Gestión de Tareas</h1>
+                <p className="text-sm text-mp-text-secondary">Organiza y supervisa el trabajo del equipo</p>
               </div>
             </div>
           </div>
           
           <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-mp-text-secondary">
               Hola, {user?.nombre || 'Usuario'}
             </span>
             <button className="btn btn-outline btn-sm" onClick={handleLogout}>
@@ -492,8 +484,8 @@ export default function Tasks() {
         {/* Header Section */}
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900">Panel de Tareas</h2>
-            <p className="text-gray-600 mt-1">
+            <h2 className="text-3xl font-bold text-mp-text">Panel de Tareas</h2>
+            <p className="text-mp-text-secondary mt-1">
               Gestiona las tareas y proyectos de tu equipo
             </p>
           </div>
@@ -533,8 +525,8 @@ export default function Tasks() {
               <div className="card-content p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold text-blue-600">{estadisticas.total_tareas}</p>
-                    <p className="text-sm text-gray-600">Total</p>
+                    <p className="text-2xl font-bold text-mp-primary">{estadisticas.total_tareas}</p>
+                    <p className="text-sm text-mp-text-secondary">Total</p>
                   </div>
                   <div style={{ 
                     width: '3rem', 
@@ -555,8 +547,8 @@ export default function Tasks() {
               <div className="card-content p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold text-orange-600">{estadisticas.pendientes}</p>
-                    <p className="text-sm text-gray-600">Pendientes</p>
+                    <p className="text-2xl font-bold text-mp-warning">{estadisticas.pendientes}</p>
+                    <p className="text-sm text-mp-text-secondary">Pendientes</p>
                   </div>
                   <div style={{ 
                     width: '3rem', 
@@ -577,8 +569,8 @@ export default function Tasks() {
               <div className="card-content p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold text-blue-600">{estadisticas.en_progreso}</p>
-                    <p className="text-sm text-gray-600">En Progreso</p>
+                    <p className="text-2xl font-bold text-mp-primary">{estadisticas.en_progreso}</p>
+                    <p className="text-sm text-mp-text-secondary">En Progreso</p>
                   </div>
                   <div style={{ 
                     width: '3rem', 
@@ -599,8 +591,8 @@ export default function Tasks() {
               <div className="card-content p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold text-green-600">{estadisticas.completadas}</p>
-                    <p className="text-sm text-gray-600">Completadas</p>
+                    <p className="text-2xl font-bold text-mp-success">{estadisticas.completadas}</p>
+                    <p className="text-sm text-mp-text-secondary">Completadas</p>
                   </div>
                   <div style={{ 
                     width: '3rem', 
@@ -621,8 +613,8 @@ export default function Tasks() {
               <div className="card-content p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold text-red-600">{estadisticas.vencidas}</p>
-                    <p className="text-sm text-gray-600">Vencidas</p>
+                    <p className="text-2xl font-bold text-mp-error">{estadisticas.vencidas}</p>
+                    <p className="text-sm text-mp-text-secondary">Vencidas</p>
                   </div>
                   <div style={{ 
                     width: '3rem', 

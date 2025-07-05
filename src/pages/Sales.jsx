@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { productAPI, customerAPI, salesAPI } from '../utils/api';
+import { PageLoader } from '../components/LoadingSpinner';
 import {
   Package,
   Plus,
@@ -369,18 +370,11 @@ function Sales() {
   };
 
   if (loadingProducts || loadingCustomers) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex items-center gap-3 text-blue-600">
-          <Loader2 className="h-8 w-8 animate-spin" />
-          <span className="text-lg font-medium">Cargando sistema de ventas...</span>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Cargando sistema de ventas..." variant="primary" />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="page-container">
       {/* Mobile Menu */}
       <div className={`fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-300 lg:hidden ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsMenuOpen(false)}>
         <div className={`fixed left-0 top-0 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
@@ -415,7 +409,7 @@ function Sales() {
                 <Menu className="h-5 w-5" />
               </Button>
               <div className="flex items-center space-x-2">
-                <Receipt className="h-6 w-6 text-green-600" />
+                <Receipt className="h-6 w-6 text-mp-success" />
                 <h1 className="text-xl font-bold text-gray-900">Sistema de Ventas</h1>
               </div>
             </div>

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authAPI, businessAPI } from '../utils/api';
+import Dashboard from '../components/Dashboard';
+import { PageLoader } from '../components/LoadingSpinner';
 import { 
   Building2, 
   Plus, 
@@ -34,11 +36,11 @@ const SimpleButton = ({ children, onClick, variant = 'default', size = 'default'
   const baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
   
   const variants = {
-    default: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
-    outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500',
-    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-blue-500',
-    success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500',
-    warning: 'bg-orange-600 text-white hover:bg-orange-700 focus:ring-orange-500'
+    default: 'bg-erp-primary text-white hover:bg-erp-primary-hover focus:ring-erp-primary shadow-erp-primary',
+    outline: 'border border-erp-neutral-300 bg-white text-erp-neutral-700 hover:bg-erp-neutral-50 focus:ring-erp-primary',
+    ghost: 'text-erp-neutral-700 hover:bg-erp-neutral-100 focus:ring-erp-primary',
+    success: 'bg-erp-success text-white hover:bg-erp-success-hover focus:ring-erp-success shadow-erp-success',
+    warning: 'bg-erp-warning text-white hover:bg-erp-warning-hover focus:ring-erp-warning shadow-erp-warning'
   };
   
   const sizes = {
@@ -58,7 +60,7 @@ const SimpleButton = ({ children, onClick, variant = 'default', size = 'default'
 
 // Componente Card simple
 const Card = ({ children, className = '' }) => (
-  <div className={`bg-white border border-gray-200 rounded-lg shadow-sm ${className}`}>
+  <div className={`bg-white border border-erp-neutral-200 rounded-lg shadow-erp-soft hover:shadow-erp-medium transition-all duration-300 ${className}`}>
     {children}
   </div>
 );
@@ -76,7 +78,7 @@ const CardContent = ({ children, className = '' }) => (
 );
 
 const CardTitle = ({ children, className = '' }) => (
-  <h3 className={`text-lg font-semibold text-gray-900 ${className}`}>
+  <h3 className={`text-lg font-semibold text-erp-neutral-900 ${className}`}>
     {children}
   </h3>
 );
@@ -184,6 +186,7 @@ function Home() {
           return;
         }
         console.log('User has approved businesses, can access home');
+        setDataLoaded(true);
       } catch (error) {
         if (error.response?.status === 403) {
           console.log('User pending approval, redirecting');
@@ -241,7 +244,7 @@ function Home() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
-          <div className="text-red-600 text-lg font-medium mb-4">
+          <div className="text-erp-error text-lg font-medium mb-4">
             Error: {error}
           </div>
           <div className="space-y-3">
@@ -259,25 +262,23 @@ function Home() {
   
   // Loading state
   if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="flex items-center gap-3 text-blue-600">
-          <Loader2 className="h-8 w-8 animate-spin" />
-          <span className="text-lg font-medium">Cargando...</span>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Cargando datos del usuario..." variant="primary" />;
+  }
+
+  // Si los datos están cargados, mostrar el Dashboard
+  if (dataLoaded) {
+    return <Dashboard />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="page-container">
       {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b border-gray-200">
+      <nav className="bg-white shadow-sm border-b border-erp-neutral-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg mr-3"></div>
-              <h1 className="text-2xl font-bold text-gray-900">BizFlow Pro</h1>
+              <div className="w-8 h-8 bg-erp-primary rounded-lg mr-3"></div>
+              <h1 className="text-2xl font-bold text-erp-neutral-900">MicroPymes</h1>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -305,215 +306,15 @@ function Home() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
-        <div className="text-center mb-8">
+        <div className="text-center">
           <div className="flex items-center justify-center mb-4">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-              <Bell className="h-8 w-8 text-blue-600" />
-            </div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-erp-primary"></div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Centro de Notificaciones</h1>
-          <p className="text-lg text-gray-600 mb-6">
-            Mantente al día con las novedades de tus negocios
+          <h1 className="text-2xl font-bold text-erp-neutral-900 mb-2">Verificando acceso...</h1>
+          <p className="text-erp-neutral-600">
+            Preparando tu dashboard personalizado
           </p>
-          
-          {!dataLoaded && !loading && (
-            <SimpleButton onClick={loadData} className="bg-blue-600 hover:bg-blue-700 text-white">
-              <Activity className="h-4 w-4 mr-2" />
-              Cargar Notificaciones
-            </SimpleButton>
-          )}
         </div>
-
-        {/* Quick Stats */}
-        {dataLoaded && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Mis Negocios</p>
-                    <p className="text-3xl font-bold text-gray-900">{businessCount}</p>
-                    <p className="text-sm text-blue-600 mt-1">Activos</p>
-                  </div>
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Building2 className="h-6 w-6 text-blue-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Notificaciones</p>
-                    <p className="text-3xl font-bold text-gray-900">{notifications.length}</p>
-                    <p className="text-sm text-orange-600 mt-1">Pendientes</p>
-                  </div>
-                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <Bell className="h-6 w-6 text-orange-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Usuario</p>
-                    <p className="text-lg font-bold text-gray-900">{user?.nombre || 'Usuario'}</p>
-                    <p className="text-sm text-green-600 mt-1">Conectado</p>
-                  </div>
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <User className="h-6 w-6 text-green-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Quick Access */}
-        {dataLoaded && (
-          <div className="mb-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="h-5 w-5 text-blue-600" />
-                  Acceso Rápido
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <SimpleButton
-                    variant="outline"
-                    className="h-20 flex-col space-y-2 hover:bg-blue-50"
-                    onClick={() => navigate('/my-businesses')}
-                  >
-                    <Building2 className="h-6 w-6 text-blue-600" />
-                    <span className="text-sm">Mis Negocios</span>
-                  </SimpleButton>
-                  
-                  <SimpleButton
-                    variant="outline"
-                    className="h-20 flex-col space-y-2 hover:bg-green-50"
-                    onClick={() => navigate('/create-business')}
-                  >
-                    <Plus className="h-6 w-6 text-green-600" />
-                    <span className="text-sm">Crear Negocio</span>
-                  </SimpleButton>
-                  
-                  <SimpleButton
-                    variant="outline"
-                    className="h-20 flex-col space-y-2 hover:bg-purple-50"
-                    onClick={() => alert('Próximamente: Reportes Globales')}
-                  >
-                    <TrendingUp className="h-6 w-6 text-purple-600" />
-                    <span className="text-sm">Reportes</span>
-                  </SimpleButton>
-                  
-                  <SimpleButton
-                    variant="outline"
-                    className="h-20 flex-col space-y-2 hover:bg-orange-50"
-                    onClick={() => alert('Próximamente: Configuración')}
-                  >
-                    <Shield className="h-6 w-6 text-orange-600" />
-                    <span className="text-sm">Configuración</span>
-                  </SimpleButton>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Notifications */}
-        {dataLoaded && notifications.length > 0 && (
-          <div className="mb-8">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Bell className="h-5 w-5 text-blue-600" />
-                    Notificaciones Recientes
-                  </CardTitle>
-                  <SimpleButton variant="ghost" size="sm">
-                    Ver todas
-                  </SimpleButton>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {notifications.map((notification) => {
-                    const IconComponent = notification.icon;
-                    const colorClasses = {
-                      blue: 'bg-blue-50 border-blue-200 text-blue-800',
-                      green: 'bg-green-50 border-green-200 text-green-800',
-                      orange: 'bg-orange-50 border-orange-200 text-orange-800',
-                      red: 'bg-red-50 border-red-200 text-red-800'
-                    };
-                    
-                    return (
-                      <div key={notification.id} className={`flex items-start gap-4 p-4 rounded-lg border ${colorClasses[notification.color]}`}>
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${colorClasses[notification.color]}`}>
-                          <IconComponent className="h-5 w-5" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">{notification.title}</h4>
-                          <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
-                          <p className="text-xs text-gray-500 mt-2">{notification.time}</p>
-                          
-                          {/* Botones de acción para notificaciones de aprobación */}
-                          {notification.type === 'approval' && (
-                            <div className="flex gap-2 mt-3">
-                              <SimpleButton
-                                onClick={() => handleApproveUser(notification)}
-                                className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1"
-                              >
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                Aprobar
-                              </SimpleButton>
-                              <SimpleButton
-                                onClick={() => handleRejectUser(notification)}
-                                variant="outline"
-                                className="border-red-300 text-red-600 hover:bg-red-50 text-xs px-3 py-1"
-                              >
-                                <XCircle className="h-3 w-3 mr-1" />
-                                Rechazar
-                              </SimpleButton>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {dataLoaded && notifications.length === 0 && (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="h-8 w-8 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              ¡Todo al día!
-            </h3>
-            <p className="text-gray-600 mb-6">
-              No tienes notificaciones pendientes en este momento.
-            </p>
-            <SimpleButton 
-              onClick={() => navigate('/my-businesses')}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <Building2 className="h-4 w-4 mr-2" />
-              Ir a Mis Negocios
-            </SimpleButton>
-          </div>
-        )}
       </div>
     </div>
   );

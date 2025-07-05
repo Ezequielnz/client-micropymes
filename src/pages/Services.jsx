@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { serviceAPI, categoryAPI } from '../utils/api';
+import { PageLoader } from '../components/LoadingSpinner';
 import { 
   Settings, 
   Plus, 
@@ -274,9 +275,9 @@ function Services() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="page-container">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+              <div className="page-header">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
@@ -284,14 +285,14 @@ function Services() {
                 variant="outline"
                 size="sm"
                 onClick={() => navigate(`/business/${businessId}`)}
-                className="flex items-center space-x-2 bg-white text-gray-700 hover:text-blue-600 hover:bg-blue-50 border-gray-200"
+                className="flex items-center space-x-2 bg-white text-mp-text-secondary hover:text-mp-primary hover:bg-mp-primary-50 border-gray-200"
               >
                 <ArrowLeft className="h-4 w-4" />
                 <span>Volver al Panel</span>
               </Button>
               <div className="flex items-center space-x-2">
-                <Settings className="h-6 w-6 text-blue-600" />
-                <h1 className="text-2xl font-bold text-gray-900">Services</h1>
+                <Settings className="h-6 w-6 text-mp-primary" />
+                <h1 className="text-2xl font-bold text-mp-text">Services</h1>
               </div>
             </div>
             
@@ -387,9 +388,7 @@ function Services() {
 
         {/* Services Grid */}
         {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          </div>
+          <PageLoader message="Cargando servicios..." variant="primary" />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredServices.length === 0 ? (
