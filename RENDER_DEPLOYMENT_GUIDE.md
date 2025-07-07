@@ -209,13 +209,31 @@ El `index.html` incluye:
 
 ### 4. **Error "Publish directory client/dist does not exist"**
 - **Problema:** Render no encuentra el directorio dist después del build
-- **Causa:** Falta `rootDir` en render.yaml
-- **Solución:** 
+- **Causa:** Configuración incorrecta para repositorio standalone (no monorepo)
+
+#### Si tu repositorio es SOLO el frontend (como `client-micropymes`):
+- **Solución:** NO usar Root Directory
+  1. Ve a Render Dashboard → Settings → Build & Deploy
+  2. **DEJA VACÍO** el campo "Root Directory" 
+  3. Usar este render.yaml:
   ```yaml
   services:
     - type: web
       env: static
-      rootDir: client  # Importante!
+      buildCommand: npm ci --legacy-peer-deps --include=dev && npm run build
+      staticPublishPath: ./dist
+  ```
+
+#### Si tu repositorio es un MONOREPO (con backend/ y client/):
+- **Solución:** Configurar Root Directory
+  1. Ve a Render Dashboard → Settings → Build & Deploy
+  2. En "Root Directory" pon: `client`
+  3. Usar este render.yaml:
+  ```yaml
+  services:
+    - type: web
+      env: static
+      rootDir: client
       buildCommand: npm ci --legacy-peer-deps --include=dev && npm run build
       staticPublishPath: ./dist
   ```
