@@ -169,34 +169,57 @@ El `index.html` incluye:
 
 ## Troubleshooting Común
 
-### 1. **Error ERESOLVE (Conflicto de dependencias)**
+### 1. **Error "vite: not found" durante build**
+- **Problema:** `sh: 1: vite: not found` durante el build
+- **Causa:** `npm ci` no instala devDependencies por defecto, y vite está ahí
+- **Solución:** 
+  ```bash
+  # Opción 1: Incluir devDependencies (recomendado)
+  npm ci --legacy-peer-deps --include=dev && npm run build
+  
+  # Opción 2: Usar npm install en lugar de npm ci
+  npm install --legacy-peer-deps && npm run build
+  
+  # Opción 3: En Render Dashboard, configurar Build Command:
+  # npm ci --legacy-peer-deps --include=dev && npm run build
+  ```
+
+### 2. **Error ERESOLVE (Conflicto de dependencias)**
 - **Problema:** `npm error ERESOLVE could not resolve` con ESLint/TypeScript
 - **Solución:** 
   ```bash
   # Opción 1: Usar --legacy-peer-deps (recomendado)
-  npm ci --legacy-peer-deps
+  npm ci --legacy-peer-deps --include=dev
   
   # Opción 2: Actualizar dependencias en package.json
   # @typescript-eslint/eslint-plugin: "^8.0.0"
   # @typescript-eslint/parser: "^8.0.0"
   
   # Opción 3: Forzar resolución (último recurso)
-  npm ci --force
+  npm ci --force --include=dev
   ```
 
-### 2. **Error 404 en rutas**
+### 3. **Render ignora render.yaml**
+- **Problema:** Render ejecuta comandos diferentes a los configurados
+- **Solución:** 
+  1. Ve a tu servicio en Render Dashboard
+  2. Settings → Build & Deploy
+  3. Asegúrate de que "Build Command" esté vacío (para usar render.yaml)
+  4. O configura manualmente: `npm ci --legacy-peer-deps --include=dev && npm run build`
+
+### 4. **Error 404 en rutas**
 - **Problema:** Las rutas de React Router devuelven 404
 - **Solución:** Verificar que existe `_redirects` en `public/`
 
-### 2. **API calls fallan**
+### 5. **API calls fallan**
 - **Problema:** Errores CORS o 404 en llamadas API
 - **Solución:** Verificar `VITE_API_URL` y CORS en backend
 
-### 3. **Build falla**
+### 6. **Build falla**
 - **Problema:** Errores de TypeScript o ESLint
 - **Solución:** Verificar `npm run build` localmente primero
 
-### 4. **Estilos no se cargan**
+### 7. **Estilos no se cargan**
 - **Problema:** Tailwind CSS no funciona
 - **Solución:** Verificar `postcss.config.js` y `tailwind.config.js`
 

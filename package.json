@@ -9,6 +9,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "build:production": "npm run lint && npm run build",
+    "build:render": "npm ci --legacy-peer-deps --include=dev && npm run build",
     "serve": "npx serve dist -s",
     "check": "tsc --noEmit"
   },
