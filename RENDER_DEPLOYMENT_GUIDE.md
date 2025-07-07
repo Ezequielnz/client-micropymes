@@ -207,19 +207,37 @@ El `index.html` incluye:
   3. Asegúrate de que "Build Command" esté vacío (para usar render.yaml)
   4. O configura manualmente: `npm ci --legacy-peer-deps --include=dev && npm run build`
 
-### 4. **Error 404 en rutas**
+### 4. **Error "Publish directory client/dist does not exist"**
+- **Problema:** Render no encuentra el directorio dist después del build
+- **Causa:** Falta `rootDir` en render.yaml
+- **Solución:** 
+  ```yaml
+  services:
+    - type: web
+      env: static
+      rootDir: client  # Importante!
+      buildCommand: npm ci --legacy-peer-deps --include=dev && npm run build
+      staticPublishPath: ./dist
+  ```
+
+### 5. **Warning: chunks grandes (>500KB)**
+- **Problema:** Advertencia sobre chunks demasiado grandes
+- **Solución:** Ya optimizado en `vite.config.ts` con code splitting granular
+- **No crítico:** El build funciona, es solo una advertencia de rendimiento
+
+### 6. **Error 404 en rutas**
 - **Problema:** Las rutas de React Router devuelven 404
 - **Solución:** Verificar que existe `_redirects` en `public/`
 
-### 5. **API calls fallan**
+### 7. **API calls fallan**
 - **Problema:** Errores CORS o 404 en llamadas API
 - **Solución:** Verificar `VITE_API_URL` y CORS en backend
 
-### 6. **Build falla**
+### 8. **Build falla**
 - **Problema:** Errores de TypeScript o ESLint
 - **Solución:** Verificar `npm run build` localmente primero
 
-### 7. **Estilos no se cargan**
+### 9. **Estilos no se cargan**
 - **Problema:** Tailwind CSS no funciona
 - **Solución:** Verificar `postcss.config.js` y `tailwind.config.js`
 

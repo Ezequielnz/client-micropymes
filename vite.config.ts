@@ -12,12 +12,41 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'router': ['react-router-dom'],
-          'ui-vendor': ['@radix-ui/react-checkbox', '@radix-ui/react-slot', 'lucide-react'],
+        manualChunks: (id) => {
+          // Vendor chunks más granulares
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'react-vendor';
+            }
+            if (id.includes('react-router')) {
+              return 'router';
+            }
+            if (id.includes('@radix-ui')) {
+              return 'radix-ui';
+            }
+            if (id.includes('lucide-react')) {
+              return 'lucide';
+            }
+            if (id.includes('axios')) {
+              return 'http';
+            }
+            if (id.includes('tailwind') || id.includes('clsx') || id.includes('class-variance-authority')) {
+              return 'styles';
+            }
+            // Otras dependencias
+            return 'vendor';
+          }
+          
+          // Chunks de aplicación
+          if (id.includes('/pages/')) {
+            return 'pages';
+          }
+          if (id.includes('/components/')) {
+            return 'components';
+          }
         },
       },
     },
