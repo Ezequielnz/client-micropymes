@@ -80,7 +80,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 ```yaml
 # Configuración básica
 Root Directory: client
-Build Command: npm ci && npm run build
+Build Command: npm ci --legacy-peer-deps && npm run build
 Publish Directory: client/dist
 
 # Configuración avanzada
@@ -169,7 +169,22 @@ El `index.html` incluye:
 
 ## Troubleshooting Común
 
-### 1. **Error 404 en rutas**
+### 1. **Error ERESOLVE (Conflicto de dependencias)**
+- **Problema:** `npm error ERESOLVE could not resolve` con ESLint/TypeScript
+- **Solución:** 
+  ```bash
+  # Opción 1: Usar --legacy-peer-deps (recomendado)
+  npm ci --legacy-peer-deps
+  
+  # Opción 2: Actualizar dependencias en package.json
+  # @typescript-eslint/eslint-plugin: "^8.0.0"
+  # @typescript-eslint/parser: "^8.0.0"
+  
+  # Opción 3: Forzar resolución (último recurso)
+  npm ci --force
+  ```
+
+### 2. **Error 404 en rutas**
 - **Problema:** Las rutas de React Router devuelven 404
 - **Solución:** Verificar que existe `_redirects` en `public/`
 
