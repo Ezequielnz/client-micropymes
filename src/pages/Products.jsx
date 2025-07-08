@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { productAPI, categoryAPI } from '../utils/api';
+import { productAPI, categoryAPI, authAPI } from '../utils/api';
 import ImportProducts from '../components/ImportProducts';
+import PageHeader from '../components/PageHeader';
 import { 
   Package, 
   Plus, 
@@ -77,6 +78,7 @@ function Products() {
   const { businessId } = useParams();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -157,6 +159,16 @@ function Products() {
   }, [businessId]); // Add businessId to dependency array
 
   useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const userData = await authAPI.getCurrentUser();
+        setUser(userData);
+      } catch (err) {
+        console.error('Error loading user data:', err);
+      }
+    };
+    
+    loadUserData();
     fetchCategories();
   }, [fetchCategories]);
 
@@ -372,141 +384,21 @@ function Products() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Link to="/" className="flex-shrink-0 flex items-center">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg mr-3"></div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  BizFlow Pro
-                </h1>
-              </Link>
-            </div>
-            
-            {/* Desktop Navigation */}
-            <div className="hidden md:block">
-              <div className="ml-10 flex items-baseline space-x-8">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => navigate('/home')}
-                  className="text-gray-700 hover:text-blue-600 hover:bg-gray-50"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Inicio
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => navigate(`/business/${businessId}`)}
-                  className="text-gray-700 hover:text-purple-600 hover:bg-purple-50"
-                >
-                  <Package className="h-4 w-4 mr-2" />
-                  Dashboard
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => navigate(`/business/${businessId}/categories`)}
-                  className="text-gray-700 hover:text-green-600 hover:bg-green-50"
-                >
-                  <Tag className="h-4 w-4 mr-2" />
-                  Categorías
-                </Button>
-              </div>
-            </div>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden">
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-gray-600 hover:text-gray-900 focus:outline-none focus:text-gray-900"
-              >
-                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-100">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              <div className="flex flex-col space-y-2 px-3 py-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => navigate('/home')}
-                  className="w-full text-gray-700"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Inicio
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => navigate(`/business/${businessId}`)}
-                  className="w-full text-gray-700"
-                >
-                  <Package className="h-4 w-4 mr-2" />
-                  Dashboard
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => navigate(`/business/${businessId}/categories`)}
-                  className="w-full text-gray-700"
-                >
-                  <Tag className="h-4 w-4 mr-2" />
-                  Categorías
-                </Button>
-                <div className="border-t border-gray-200 pt-2 mt-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => {
-                      setShowImportModal(true);
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full border-green-300 text-green-700 hover:bg-green-50"
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Importar Excel
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    onClick={() => {
-                      setShowForm(!showForm);
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nuevo Producto
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </nav>
+      <PageHeader 
+        title="Gestión de Productos"
+        subtitle="Administra el inventario de tu negocio"
+        icon={Package}
+        backPath={`/business/${businessId}`}
+        userName={user?.nombre || 'Usuario'}
+      />
 
       {/* Main Content */}
       <section className="bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
+          {/* Action Buttons */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-                  Gestión de Productos
-                </h1>
-                <p className="text-lg text-gray-600">
-                  Administra el inventario de tu negocio
-                </p>
-              </div>
+              <div></div>
               <div className="flex gap-3">
                 <Button 
                   onClick={() => setShowImportModal(true)}

@@ -23,7 +23,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // 30 seconds timeout
+  timeout: 60000, // 60 seconds timeout (increased temporarily)
 });
 
 // Error handling interceptor
@@ -479,7 +479,7 @@ export const categoryAPI = {
 
 /**
  * @namespace salesAPI
- * @description Contains functions for managing sales transactions and reports.
+ * @description Contains functions for managing sales and related statistics.
  */
 export const salesAPI = {
   /**
@@ -572,7 +572,45 @@ export const salesAPI = {
   getTopProductsChart: async () => {
     const response = await api.get(`/ventas/top-products-chart`);
     return response.data;
-  }
+  },
+
+  /**
+   * Fetches dashboard statistics including real sales data, estimated profits,
+   * new customers, and top selling items.
+   * @param {string} businessId - The ID of the business to fetch statistics for.
+   * @returns {Promise<object>} A promise that resolves to the dashboard statistics.
+   * @throws {Error} If the API request fails.
+   */
+  getDashboardStatsV2: async (businessId) => {
+    const response = await api.get(`/ventas/dashboard-stats-v2`, {
+      params: { negocio_id: businessId }
+    });
+    return response.data;
+  },
+
+  /**
+   * Fetches recent sales data for the dashboard.
+   * @param {string} businessId - The ID of the business to fetch recent sales for.
+   * @returns {Promise<Array>} A promise that resolves to an array of recent sales.
+   * @throws {Error} If the API request fails.
+   */
+  getRecentSales: async (businessId) => {
+    const response = await api.get(`/ventas/sales`);
+    return response.data;
+  },
+
+  /**
+   * Performs a health check on the sales API to test database connectivity.
+   * @param {string} businessId - The ID of the business to test.
+   * @returns {Promise<object>} A promise that resolves to health check results.
+   * @throws {Error} If the API request fails.
+   */
+  healthCheck: async (businessId) => {
+    const response = await api.get(`/ventas/health-check`, {
+      params: { negocio_id: businessId }
+    });
+    return response.data;
+  },
 };
 
 /**
@@ -1061,6 +1099,17 @@ export const tasksAPI = {
    */
   getCalendarTasks: async (businessId, params) => {
     const response = await api.get(`/businesses/${businessId}/tareas/calendario`, { params });
+    return response.data;
+  },
+
+  /**
+   * Alias for getTaskStatistics to match Dashboard expectations.
+   * @param {string} businessId - The ID of the business.
+   * @returns {Promise<object>} A promise that resolves to task statistics.
+   * @throws {Error} If the API request fails.
+   */
+  getTaskStats: async (businessId) => {
+    const response = await api.get(`/businesses/${businessId}/tareas/estadisticas`);
     return response.data;
   }
 };

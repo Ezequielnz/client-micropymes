@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { productAPI, customerAPI, salesAPI } from '../utils/api';
+import { productAPI, customerAPI, salesAPI, authAPI } from '../utils/api';
 import { PageLoader } from '../components/LoadingSpinner';
+import PageHeader from '../components/PageHeader';
 import {
   Package,
   Plus,
@@ -126,6 +127,7 @@ function Sales() {
   const { businessId } = useParams();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
 
   /** @type {[Array<ProductInSales>, function]} allProducts - State for storing all products fetched from the API. */
   const [allProducts, setAllProducts] = useState([]);
@@ -195,6 +197,16 @@ function Sales() {
   }, [businessId]);
 
   useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const userData = await authAPI.getCurrentUser();
+        setUser(userData);
+      } catch (err) {
+        console.error('Error loading user data:', err);
+      }
+    };
+    
+    loadUserData();
     fetchInitialData();
   }, [fetchInitialData]);
 
@@ -374,56 +386,14 @@ function Sales() {
   }
 
   return (
-    <div className="page-container">
-      {/* Mobile Menu */}
-      <div className={`fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-300 lg:hidden ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsMenuOpen(false)}>
-        <div className={`fixed left-0 top-0 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
-          <div className="p-4 border-b">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Menú</h2>
-              <Button variant="ghost" size="sm" onClick={() => setIsMenuOpen(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          <nav className="p-4 space-y-2">
-            <Link to={`/business/${businessId}`} className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 p-2 rounded-lg hover:bg-gray-100">
-              <ArrowLeft className="h-4 w-4" />
-              <span>Volver al Dashboard</span>
-            </Link>
-          </nav>
-        </div>
-      </div>
-
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="lg:hidden"
-                onClick={() => setIsMenuOpen(true)}
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-              <div className="flex items-center space-x-2">
-                <Receipt className="h-6 w-6 text-mp-success" />
-                <h1 className="text-xl font-bold text-gray-900">Sistema de Ventas</h1>
-              </div>
-            </div>
-            <div className="hidden lg:flex items-center space-x-4">
-              <Link to={`/business/${businessId}`}>
-                <Button variant="outline" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Volver al Dashboard
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <PageHeader 
+        title="Sistema de Ventas"
+        subtitle="Procesar ventas y gestionar transacciones"
+        icon={Receipt}
+        backPath={`/business/${businessId}`}
+        userName={user?.nombre || 'Usuario'}
+      />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

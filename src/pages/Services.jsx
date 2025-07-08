@@ -8,8 +8,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { serviceAPI, categoryAPI } from '../utils/api';
+import { serviceAPI, categoryAPI, authAPI } from '../utils/api';
 import { PageLoader } from '../components/LoadingSpinner';
+import PageHeader from '../components/PageHeader';
 import { 
   Settings, 
   Plus, 
@@ -32,6 +33,7 @@ const initialFormState = {
   nombre: '',
   descripcion: '',
   precio: '',
+  costo: '',
   duracion_minutos: '',
   categoria_id: '',
   activo: true
@@ -45,6 +47,7 @@ function Services() {
   const { businessId } = useParams();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
 
   const [services, setServices] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -108,6 +111,16 @@ function Services() {
   }, [businessId]);
 
   useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const userData = await authAPI.getCurrentUser();
+        setUser(userData);
+      } catch (err) {
+        console.error('Error loading user data:', err);
+      }
+    };
+    
+    loadUserData();
     fetchCategories();
   }, [fetchCategories]);
 
@@ -144,7 +157,8 @@ function Services() {
       const serviceData = { 
         nombre: serviceForm.nombre.trim(), 
         descripcion: serviceForm.descripcion.trim(), 
-        precio: parseFloat(serviceForm.precio), 
+        precio: parseFloat(serviceForm.precio),
+        costo: parseFloat(serviceForm.costo || 0),
         duracion_minutos: serviceForm.duracion_minutos ? parseInt(serviceForm.duracion_minutos, 10) : null,
         categoria_id: serviceForm.categoria_id,
         activo: serviceForm.activo
@@ -176,6 +190,7 @@ function Services() {
       nombre: service.nombre || '',
       descripcion: service.descripcion || '',
       precio: service.precio?.toString() || '',
+      costo: service.costo?.toString() || '0',
       duracion_minutos: service.duracion_minutos?.toString() || '',
       categoria_id: service.categoria_id || '',
       activo: service.activo !== undefined ? service.activo : true
@@ -275,78 +290,35 @@ function Services() {
   };
 
   return (
-    <div className="page-container">
-      {/* Header */}
-              <div className="page-header">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate(`/business/${businessId}`)}
-                className="flex items-center space-x-2 bg-white text-mp-text-secondary hover:text-mp-primary hover:bg-mp-primary-50 border-gray-200"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>Volver al Panel</span>
-              </Button>
-              <div className="flex items-center space-x-2">
-                <Settings className="h-6 w-6 text-mp-primary" />
-                <h1 className="text-2xl font-bold text-mp-text">Services</h1>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Button
-                onClick={() => setShowCategoryModal(true)}
-                variant="outline"
-                size="sm"
-                className="hidden sm:flex items-center space-x-2"
-              >
-                <Tag className="h-4 w-4" />
-                <span>Add Category</span>
-              </Button>
-              <Button
-                onClick={() => setShowForm(true)}
-                className="flex items-center space-x-2"
-              >
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">Add Service</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="sm:hidden"
-              >
-                {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="sm:hidden bg-white border-b shadow-sm">
-          <div className="px-4 py-2 space-y-2">
-            <Button
-              onClick={() => {
-                setShowCategoryModal(true);
-                setIsMenuOpen(false);
-              }}
-              variant="outline"
-              size="sm"
-              className="w-full flex items-center space-x-2"
-            >
-              <Tag className="h-4 w-4" />
-              <span>Add Category</span>
-            </Button>
-          </div>
-        </div>
-      )}
+    <div className="min-h-screen bg-gray-50">
+      <PageHeader 
+        title="Gestión de Servicios"
+        subtitle="Administra los servicios de tu negocio"
+        icon={Settings}
+        backPath={`/business/${businessId}`}
+        userName={user?.nombre || 'Usuario'}
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Action Buttons */}
+        <div className="mb-6 flex justify-end gap-3">
+          <Button
+            onClick={() => setShowCategoryModal(true)}
+            variant="outline"
+            className="flex items-center space-x-2"
+          >
+            <Tag className="h-4 w-4" />
+            <span>Agregar Categoría</span>
+          </Button>
+          <Button
+            onClick={() => setShowForm(true)}
+            className="flex items-center space-x-2"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Nuevo Servicio</span>
+          </Button>
+        </div>
+
         {/* Filters */}
         <div className="mb-6 flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
@@ -516,19 +488,42 @@ function Services() {
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="precio" className="text-gray-700">Precio *</Label>
-                  <Input
-                    id="precio"
-                    name="precio"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={serviceForm.precio}
-                    onChange={handleFormChange}
-                    required
-                    className="text-gray-900"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="precio" className="text-gray-700">Precio *</Label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-2 top-2.5 h-5 w-5 text-gray-500" />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        id="precio"
+                        name="precio"
+                        value={serviceForm.precio}
+                        onChange={handleFormChange}
+                        className="pl-9"
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="costo" className="text-gray-700">Costo</Label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-2 top-2.5 h-5 w-5 text-gray-500" />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        id="costo"
+                        name="costo"
+                        value={serviceForm.costo}
+                        onChange={handleFormChange}
+                        className="pl-9"
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div>

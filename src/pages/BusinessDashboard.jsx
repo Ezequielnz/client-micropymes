@@ -111,28 +111,44 @@ function BusinessDashboard() {
     lowStockProducts: 0,
     pendingOrders: 0
   });
+  const [dashboardStatsV2, setDashboardStatsV2] = useState(null);
+  const [healthCheckResult, setHealthCheckResult] = useState(null);
+  const [healthCheckLoading, setHealthCheckLoading] = useState(false);
   const [recentActivity, setRecentActivity] = useState([]);
   const [monthlySalesData, setMonthlySalesData] = useState(null);
   const [topProductsData, setTopProductsData] = useState(null);
   const [userTasks, setUserTasks] = useState([]);
   const [taskNotifications, setTaskNotifications] = useState([]);
+  const [isLoadingData, setIsLoadingData] = useState(false);
 
   useEffect(() => {
-    loadDashboardData();
+    if (!isLoadingData) {
+      loadDashboardData();
+    }
   }, [businessId]);
 
   const loadDashboardData = async () => {
+    if (isLoadingData) {
+      console.log('[BUSINESS_DASHBOARD] Ya hay una carga en progreso, saltando...');
+      return;
+    }
+
     try {
+      setIsLoadingData(true);
       setLoading(true);
       setError(null);
 
-      // Cargar datos del usuario
-      const userData = await authAPI.getCurrentUser();
-      setUser(userData);
+      console.log('[BUSINESS_DASHBOARD] Iniciando carga de datos...');
 
-      // Cargar datos del negocio
-      const businessData = await businessAPI.getBusinessById(businessId);
+      // Cargar datos básicos primero (críticos)
+      const [userData, businessData] = await Promise.all([
+        authAPI.getCurrentUser(),
+        businessAPI.getBusinessById(businessId)
+      ]);
+      
+      setUser(userData);
       setBusiness(businessData);
+      console.log('[BUSINESS_DASHBOARD] Datos básicos cargados');
 
       // Obtener rol del usuario actual en este negocio
       try {
@@ -140,82 +156,108 @@ function BusinessDashboard() {
         const currentUserInBusiness = businessUsers.find(u => u.usuario?.email === userData.email);
         setUserRole(currentUserInBusiness?.rol || 'empleado');
         setUserPermissions(currentUserInBusiness?.permisos || {});
+        console.log('[BUSINESS_DASHBOARD] Rol de usuario cargado');
       } catch (err) {
-        console.error('Error loading user role:', err);
+        console.error('[BUSINESS_DASHBOARD] Error loading user role:', err);
         setUserRole('empleado'); // Default role
         setUserPermissions({}); // Default permissions
       }
 
-      // Cargar estadísticas reales desde la API
+      // Cargar estadísticas optimizadas desde la API v2
+      let statsDataV2 = null;
       try {
-        const statsData = await salesAPI.getDashboardStats(businessId);
-        setStats(statsData);
-      } catch (err) {
-        console.error('Error loading dashboard stats:', err);
-        // Fallback to default values if stats fail to load
+        console.log('[BUSINESS_DASHBOARD] Cargando estadísticas optimizadas...');
+        statsDataV2 = await salesAPI.getDashboardStatsV2(businessId);
+        setDashboardStatsV2(statsDataV2);
+        console.log('[BUSINESS_DASHBOARD] Estadísticas cargadas exitosamente');
+        
+        // Usar los nuevos campos del endpoint optimizado
         setStats({
-          totalProducts: 0,
-          totalCustomers: 0,
-          totalSales: 0,
-          monthlyRevenue: 0,
-          lowStockProducts: 0,
-          pendingOrders: 0
+          totalProducts: statsDataV2.total_products || 0,
+          totalCustomers: statsDataV2.total_customers || 0,
+          totalSales: Math.round(statsDataV2.month?.total_sales || 0),
+          monthlyRevenue: statsDataV2.month?.total_sales || 0,
+          monthlyProfit: statsDataV2.month?.estimated_profit || 0, // Nuevo campo para ganancias
+          lowStockProducts: statsDataV2.low_stock_products || 0,
+          pendingOrders: 0 // Se calculará desde otros endpoints si es necesario
         });
-      }
 
-      // Cargar actividad reciente
-      try {
-        const activityData = await salesAPI.getRecentActivity();
-        setRecentActivity(activityData.actividades || []);
+        // OPTIMIZACIÓN: Usar los productos más vendidos del endpoint v2 
+        // (evita una llamada API adicional ya que top_items viene incluido)
+        if (statsDataV2?.top_items) {
+          setTopProductsData({
+            datos: statsDataV2.top_items,
+            periodo: 'Este mes'
+          });
+          console.log('[BUSINESS_DASHBOARD] Productos top obtenidos del endpoint v2');
+        }
       } catch (err) {
-        console.error('Error loading recent activity:', err);
-        setRecentActivity([]);
+        console.error('[BUSINESS_DASHBOARD] Error loading dashboard stats v2:', err);
+        // Fallback: intentar con el endpoint anterior
+        try {
+          const statsData = await salesAPI.getDashboardStats(businessId);
+          setStats(statsData);
+        } catch (fallbackErr) {
+          console.error('[BUSINESS_DASHBOARD] Error loading fallback stats:', fallbackErr);
+          setStats({
+            totalProducts: 0,
+            totalCustomers: 0,
+            totalSales: 0,
+            monthlyRevenue: 0,
+            lowStockProducts: 0,
+            pendingOrders: 0
+          });
+        }
       }
 
-      // Cargar datos de gráfico de ventas mensuales
-      try {
-        const monthlySales = await salesAPI.getMonthlySalesChart();
-        setMonthlySalesData(monthlySales);
-      } catch (err) {
-        console.error('Error loading monthly sales chart:', err);
-        setMonthlySalesData(null);
-      }
+      // Cargar datos adicionales en paralelo (no críticos)
+      console.log('[BUSINESS_DASHBOARD] Cargando datos adicionales...');
+      const additionalDataPromises = [
+        // Actividad reciente
+        salesAPI.getRecentActivity().then(data => {
+          setRecentActivity(data.actividades || []);
+          console.log('[BUSINESS_DASHBOARD] Actividad reciente cargada');
+        }).catch(err => {
+          console.error('[BUSINESS_DASHBOARD] Error loading recent activity:', err);
+          setRecentActivity([]);
+        }),
 
-      // Cargar datos de productos más vendidos
-      try {
-        const topProducts = await salesAPI.getTopProductsChart();
-        setTopProductsData(topProducts);
-      } catch (err) {
-        console.error('Error loading top products chart:', err);
-        setTopProductsData(null);
-      }
+        // Gráfico de ventas mensuales
+        salesAPI.getMonthlySalesChart().then(data => {
+          setMonthlySalesData(data);
+          console.log('[BUSINESS_DASHBOARD] Gráfico de ventas cargado');
+        }).catch(err => {
+          console.error('[BUSINESS_DASHBOARD] Error loading monthly sales chart:', err);
+          setMonthlySalesData(null);
+        }),
 
-      // Cargar tareas del usuario
-      try {
-        const tasksData = await tasksAPI.getTasks(businessId, {
+        // Tareas del usuario
+        tasksAPI.getTasks(businessId, {
           por_pagina: 5,
           estado: 'pendiente,en_progreso'
-        });
-        
-        setUserTasks(tasksData.tareas || []);
-        
-        // Filtrar tareas asignadas al usuario actual para notificaciones
-        // Comparar usando el email del usuario ya que es único y está disponible en ambos objetos
-        const userTaskNotifications = (tasksData.tareas || [])
-          .filter(task => {
-            // Solo mostrar notificaciones si la tarea está asignada al usuario actual
-            // y no es el creador de la tarea
-            return task.asignada_a && 
-                   task.asignada_a.email === userData.email &&
-                   task.asignada_a.email !== (task.creada_por?.email || '');
-          })
-          .slice(0, 3); // Máximo 3 notificaciones
-        setTaskNotifications(userTaskNotifications);
-      } catch (err) {
-        console.error('Error loading user tasks:', err);
-        setUserTasks([]);
-        setTaskNotifications([]);
-      }
+        }).then(tasksData => {
+          setUserTasks(tasksData.tareas || []);
+          
+          // Filtrar tareas asignadas al usuario actual para notificaciones
+          const userTaskNotifications = (tasksData.tareas || [])
+            .filter(task => {
+              return task.asignada_a && 
+                     task.asignada_a.email === userData.email &&
+                     task.asignada_a.email !== (task.creada_por?.email || '');
+            })
+            .slice(0, 3);
+          setTaskNotifications(userTaskNotifications);
+          console.log('[BUSINESS_DASHBOARD] Tareas cargadas');
+        }).catch(err => {
+          console.error('[BUSINESS_DASHBOARD] Error loading user tasks:', err);
+          setUserTasks([]);
+          setTaskNotifications([]);
+        })
+      ];
+
+      // Ejecutar todas las promesas en paralelo
+      await Promise.allSettled(additionalDataPromises);
+      console.log('[BUSINESS_DASHBOARD] Todos los datos adicionales procesados');
 
     } catch (err) {
       console.error('Error loading dashboard data:', err);
@@ -229,6 +271,7 @@ function BusinessDashboard() {
       }
     } finally {
       setLoading(false);
+      setIsLoadingData(false);
     }
   };
 
@@ -246,6 +289,34 @@ function BusinessDashboard() {
     navigate('/login');
     
     window.location.href = '/login';
+  };
+
+  const performHealthCheck = async () => {
+    if (!businessId) return;
+    
+    setHealthCheckLoading(true);
+    setHealthCheckResult(null);
+    
+    try {
+      const startTime = Date.now();
+      const result = await salesAPI.healthCheck(businessId);
+      const endTime = Date.now();
+      
+      setHealthCheckResult({
+        ...result,
+        frontend_time: `${endTime - startTime}ms`,
+        status: 'success'
+      });
+    } catch (error) {
+      const endTime = Date.now();
+      setHealthCheckResult({
+        status: 'error',
+        error: error.message,
+        frontend_time: `${endTime - startTime}ms`
+      });
+    } finally {
+      setHealthCheckLoading(false);
+    }
   };
 
   if (loading) {
@@ -315,6 +386,20 @@ function BusinessDashboard() {
               <span className="text-sm text-gray-600">
                 Hola, {user?.nombre || 'Usuario'}
               </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={performHealthCheck}
+                disabled={healthCheckLoading}
+                className="text-blue-600 hover:text-blue-700"
+              >
+                {healthCheckLoading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Activity className="h-4 w-4 mr-2" />
+                )}
+                Diagnóstico
+              </Button>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Salir
@@ -326,6 +411,69 @@ function BusinessDashboard() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Health Check Results */}
+        {healthCheckResult && (
+          <div className="mb-8">
+            <Card className={`border-l-4 ${
+              healthCheckResult.status === 'success' 
+                ? 'border-l-green-500 bg-green-50' 
+                : 'border-l-red-500 bg-red-50'
+            }`}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  {healthCheckResult.status === 'success' ? (
+                    <CheckCircle className="w-6 h-6 text-green-600" />
+                  ) : (
+                    <AlertCircle className="w-6 h-6 text-red-600" />
+                  )}
+                  <h3 className={`text-lg font-semibold ${
+                    healthCheckResult.status === 'success' ? 'text-green-800' : 'text-red-800'
+                  }`}>
+                    Diagnóstico de Conectividad
+                  </h3>
+                </div>
+                
+                {healthCheckResult.status === 'success' ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div className="bg-white p-3 rounded-lg">
+                      <div className="text-gray-600">Ventas</div>
+                      <div className="font-semibold text-green-700">{healthCheckResult.ventas_count}</div>
+                    </div>
+                    <div className="bg-white p-3 rounded-lg">
+                      <div className="text-gray-600">Productos</div>
+                      <div className="font-semibold text-green-700">{healthCheckResult.productos_count}</div>
+                    </div>
+                    <div className="bg-white p-3 rounded-lg">
+                      <div className="text-gray-600">Tiempo Backend</div>
+                      <div className="font-semibold text-green-700">{healthCheckResult.response_time}</div>
+                    </div>
+                    <div className="bg-white p-3 rounded-lg">
+                      <div className="text-gray-600">Tiempo Frontend</div>
+                      <div className="font-semibold text-green-700">{healthCheckResult.frontend_time}</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-white p-4 rounded-lg">
+                    <div className="text-red-700 mb-2">
+                      <strong>Error:</strong> {healthCheckResult.error}
+                    </div>
+                    <div className="text-gray-600 text-sm">
+                      Tiempo transcurrido: {healthCheckResult.frontend_time}
+                    </div>
+                  </div>
+                )}
+                
+                <button
+                  onClick={() => setHealthCheckResult(null)}
+                  className="mt-4 text-sm text-gray-500 hover:text-gray-700 underline"
+                >
+                  Cerrar diagnóstico
+                </button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Header Section */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -408,9 +556,9 @@ function BusinessDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Ingresos</p>
+                    <p className="text-sm font-medium text-gray-600">Ganancias</p>
                     <p className="text-3xl font-bold text-gray-900">
-                      ${(stats.monthlyRevenue || 0).toLocaleString()}
+                      ${(stats.monthlyProfit || 0).toLocaleString()}
                     </p>
                     <p className="text-sm text-green-600 mt-1">+22% este mes</p>
                   </div>
@@ -424,7 +572,7 @@ function BusinessDashboard() {
         </div>
 
         {/* User Tasks Section */}
-        {userTasks.filter(task => 
+        {userTasks && userTasks.filter(task => 
           task.asignada_a && task.asignada_a.email === user?.email
         ).length > 0 && (
           <div className="mb-8">
@@ -446,7 +594,7 @@ function BusinessDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {userTasks
+                  {userTasks && userTasks
                     .filter(task => task.asignada_a && task.asignada_a.email === user?.email)
                     .slice(0, 3)
                     .map((task) => (
@@ -573,7 +721,7 @@ function BusinessDashboard() {
               <CardContent>
                 <div className="space-y-4">
                   {/* Notificaciones de tareas asignadas */}
-                  {taskNotifications.length > 0 && taskNotifications.map((task, index) => (
+                  {taskNotifications && taskNotifications.length > 0 && taskNotifications.map((task, index) => (
                     <div key={task.id} className="flex items-start gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
                       <ClipboardList className="h-5 w-5 text-orange-600 mt-0.5" />
                       <div className="flex-1">
@@ -652,7 +800,7 @@ function BusinessDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {monthlySalesData && monthlySalesData.datos.length > 0 ? (
+                {monthlySalesData && monthlySalesData.datos && monthlySalesData.datos.length > 0 ? (
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4 text-center">
                       <div className="bg-blue-50 p-3 rounded-lg">
@@ -702,7 +850,7 @@ function BusinessDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {topProductsData && topProductsData.datos.length > 0 ? (
+                {topProductsData && topProductsData.datos && topProductsData.datos.length > 0 ? (
                   <div className="space-y-3">
                     {topProductsData.datos.map((item, index) => (
                       <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -749,7 +897,7 @@ function BusinessDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {recentActivity.length > 0 ? (
+            {recentActivity && recentActivity.length > 0 ? (
               <div className="space-y-4">
                 {recentActivity.map((actividad, index) => {
                   const getIcon = (tipo) => {

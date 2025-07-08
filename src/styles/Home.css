@@ -754,7 +754,8 @@
   color: #0ea5e9; /* erp-primary */
 }
 
-button {
+/* Only apply to buttons without ANY Tailwind classes */
+button:not([class]) {
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 0.375rem;
@@ -765,12 +766,12 @@ button {
   transition: all 0.2s ease-in-out;
 }
 
-button:hover {
+button:not([class]):hover {
   background-color: #0284c7; /* erp-primary-hover */
   transform: translateY(-1px);
 }
 
-button:disabled {
+button:not([class]):disabled {
   background-color: #d4d4d4; /* erp-neutral-300 */
   cursor: not-allowed;
   transform: none;
