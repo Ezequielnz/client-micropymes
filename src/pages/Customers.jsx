@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { customerAPI, authAPI } from '../utils/api';
 import { getErrorMessage, isForbiddenError } from '../utils/errorHandler';
 import PermissionGuard from '../components/PermissionGuard';
-import PageHeader from '../components/PageHeader';
+import Layout from '../components/Layout';
 import { 
   Users, 
   Plus, 
@@ -18,12 +18,7 @@ import {
   Search,
   AlertTriangle,
   User,
-  Menu,
-  X,
-  ArrowLeft,
-  Loader2,
-  Package,
-  FileText
+  Loader2
 } from 'lucide-react';
 
 /**
@@ -56,11 +51,9 @@ import {
  * Handles API interactions for these CRUD operations and manages related state
  * (loading, errors, form data).
  */
-function Customers() {
+function Customers({ currentBusiness }) {
   const { businessId } = useParams();
   const navigate = useNavigate();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState(null);
 
   /** @type {[Array<Customer>, function]} customers - State for the list of customers displayed in the table. */
   const [customers, setCustomers] = useState([]);
@@ -104,7 +97,8 @@ function Customers() {
    * @param {string} [query] - Optional search query to filter customers.
    */
   const fetchCustomers = useCallback(async (query) => {
-    if (!businessId) {
+    const effectiveBusinessId = businessId || currentBusiness?.id;
+    if (!effectiveBusinessId) {
       setError('Business ID is missing.');
       setLoading(false);
       return;
@@ -113,7 +107,7 @@ function Customers() {
     setError('');
     try {
       const params = query ? { q: query } : {};
-      const data = await customerAPI.getCustomers(businessId, params);
+      const data = await customerAPI.getCustomers(effectiveBusinessId, params);
       setCustomers(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching customers:', err);
@@ -126,20 +120,10 @@ function Customers() {
     } finally {
       setLoading(false);
     }
-  }, [businessId]); // Add businessId to dependency array
+  }, [businessId, currentBusiness?.id]); // Add currentBusiness?.id to dependency array
 
   // Effect for initial fetch and when searchTerm changes
   useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        const userData = await authAPI.getCurrentUser();
-        setUser(userData);
-      } catch (err) {
-        console.error('Error loading user data:', err);
-      }
-    };
-    
-    loadUserData();
     fetchCustomers(searchTerm);
   }, [searchTerm, fetchCustomers]);
 
@@ -212,7 +196,8 @@ function Customers() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
-    if (!businessId) {
+    const effectiveBusinessId = businessId || currentBusiness?.id;
+    if (!effectiveBusinessId) {
       setFormError('Business ID is missing.');
       return;
     }
@@ -251,9 +236,9 @@ function Customers() {
       );
 
       if (isEditing && currentCustomer) {
-        await customerAPI.updateCustomer(businessId, currentCustomer.id, finalData);
+        await customerAPI.updateCustomer(effectiveBusinessId, currentCustomer.id, finalData);
       } else {
-        await customerAPI.createCustomer(businessId, finalData);
+        await customerAPI.createCustomer(effectiveBusinessId, finalData);
       }
       setShowForm(false);
       setFormData(initialFormState);
@@ -274,13 +259,14 @@ function Customers() {
    */
   const handleDelete = async (customerId) => {
     if (window.confirm('Are you sure you want to delete this customer?')) {
-      if (!businessId) {
+      const effectiveBusinessId = businessId || currentBusiness?.id;
+      if (!effectiveBusinessId) {
         setError('Business ID is missing.');
         return;
       }
       setLoading(true); // Indicate loading state for delete operation
       try {
-        await customerAPI.deleteCustomer(businessId, customerId);
+        await customerAPI.deleteCustomer(effectiveBusinessId, customerId);
         // Refresh the list with the current search term
         fetchCustomers(searchTerm); 
       } catch (err) {
@@ -293,320 +279,318 @@ function Customers() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <PageHeader 
-        title="Gestión de Clientes"
-        subtitle="Administra la base de clientes de tu negocio"
-        icon={Users}
-        backPath={`/business/${businessId}`}
-        userName={user?.nombre || 'Usuario'}
-      />
+    <Layout activeSection="clients">
+      <div className="p-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Gestión de Clientes
+          </h1>
+          <p className="text-gray-600">
+            Administra la base de clientes de tu negocio
+          </p>
+        </div>
 
-      {/* Main Content */}
-      <section className="bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Action Button */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div></div>
-              <div className="flex gap-3">
-                <Button 
-                  onClick={handleShowAddForm}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nuevo Cliente
-                </Button>
-              </div>
+        {/* Action Button */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div></div>
+            <div className="flex gap-3">
+              <Button 
+                onClick={handleShowAddForm}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Nuevo Cliente
+              </Button>
             </div>
-
-            {error && (
-              <Alert variant="destructive" className="mb-6">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
           </div>
 
-          {/* Search */}
+          {error && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+        </div>
+
+        {/* Search */}
+        <Card className="border border-gray-200 shadow-sm mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Search className="h-5 w-5 text-blue-600" />
+              Buscar Clientes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Label htmlFor="search" className="text-sm font-medium text-gray-700">
+                Buscar por nombre, apellido, email o documento
+              </Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="search"
+                  type="text"
+                  placeholder="Buscar clientes..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Customer Form */}
+        {showForm && (
           <Card className="border border-gray-200 shadow-sm mb-6">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
-                <Search className="h-5 w-5 text-blue-600" />
-                Buscar Clientes
+                <User className="h-5 w-5 text-blue-600" />
+                {isEditing ? 'Editar Cliente' : 'Nuevo Cliente'}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <Label htmlFor="search" className="text-sm font-medium text-gray-700">
-                  Buscar por nombre, apellido, email o documento
-                </Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="search"
-                    type="text"
-                    placeholder="Buscar clientes..."
-                    value={searchQuery}
-                    onChange={handleSearchChange}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Customer Form */}
-          {showForm && (
-            <Card className="border border-gray-200 shadow-sm mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <User className="h-5 w-5 text-blue-600" />
-                  {isEditing ? 'Editar Cliente' : 'Nuevo Cliente'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {formError && (
-                  <Alert variant="destructive" className="mb-4">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>{formError}</AlertDescription>
-                  </Alert>
-                )}
-                <form onSubmit={handleFormSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="nombre" className="text-sm font-medium text-gray-700">
-                        Nombre <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="nombre"
-                        name="nombre"
-                        type="text"
-                        value={formData.nombre}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="apellido" className="text-sm font-medium text-gray-700">
-                        Apellido <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="apellido"
-                        name="apellido"
-                        type="text"
-                        value={formData.apellido}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                        Email
-                      </Label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        className="w-full"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="telefono" className="text-sm font-medium text-gray-700">
-                        Teléfono
-                      </Label>
-                      <Input
-                        id="telefono"
-                        name="telefono"
-                        type="tel"
-                        value={formData.telefono}
-                        onChange={handleInputChange}
-                        className="w-full"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="documento_tipo" className="text-sm font-medium text-gray-700">
-                        Tipo de Documento
-                      </Label>
-                      <Input
-                        id="documento_tipo"
-                        name="documento_tipo"
-                        type="text"
-                        value={formData.documento_tipo}
-                        onChange={handleInputChange}
-                        placeholder="DNI, CUIT, etc."
-                        className="w-full"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="documento_numero" className="text-sm font-medium text-gray-700">
-                        Número de Documento
-                      </Label>
-                      <Input
-                        id="documento_numero"
-                        name="documento_numero"
-                        type="text"
-                        value={formData.documento_numero}
-                        onChange={handleInputChange}
-                        className="w-full"
-                      />
-                    </div>
-                  </div>
+              {formError && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>{formError}</AlertDescription>
+                </Alert>
+              )}
+              <form onSubmit={handleFormSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="direccion" className="text-sm font-medium text-gray-700">
-                      Dirección
+                    <Label htmlFor="nombre" className="text-sm font-medium text-gray-700">
+                      Nombre <span className="text-red-500">*</span>
                     </Label>
                     <Input
-                      id="direccion"
-                      name="direccion"
+                      id="nombre"
+                      name="nombre"
                       type="text"
-                      value={formData.direccion}
+                      value={formData.nombre}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="apellido" className="text-sm font-medium text-gray-700">
+                      Apellido <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="apellido"
+                      name="apellido"
+                      type="text"
+                      value={formData.apellido}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                      Email
+                    </Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
                       onChange={handleInputChange}
                       className="w-full"
                     />
                   </div>
-                  <div className="flex gap-3 pt-4">
-                    <Button 
-                      type="submit" 
-                      disabled={submittingForm}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      {submittingForm ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          {isEditing ? 'Actualizando...' : 'Creando...'}
-                        </>
-                      ) : (
-                        <>
-                          {isEditing ? 'Actualizar Cliente' : 'Crear Cliente'}
-                        </>
-                      )}
-                    </Button>
-                    <Button 
-                      type="button" 
-                      variant="outline"
-                      onClick={() => {
-                        setShowForm(false);
-                        setFormError('');
-                      }}
-                      disabled={submittingForm}
-                    >
-                      Cancelar
-                    </Button>
+                  <div className="space-y-2">
+                    <Label htmlFor="telefono" className="text-sm font-medium text-gray-700">
+                      Teléfono
+                    </Label>
+                    <Input
+                      id="telefono"
+                      name="telefono"
+                      type="tel"
+                      value={formData.telefono}
+                      onChange={handleInputChange}
+                      className="w-full"
+                    />
                   </div>
-                </form>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Customers List */}
-          <Card className="border border-gray-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Users className="h-5 w-5 text-blue-600" />
-                Lista de Clientes
-                {customers.length > 0 && (
-                  <Badge variant="secondary" className="ml-2">
-                    {customers.length}
-                  </Badge>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                  <span className="ml-2 text-gray-600">Cargando clientes...</span>
+                  <div className="space-y-2">
+                    <Label htmlFor="documento_tipo" className="text-sm font-medium text-gray-700">
+                      Tipo de Documento
+                    </Label>
+                    <Input
+                      id="documento_tipo"
+                      name="documento_tipo"
+                      type="text"
+                      value={formData.documento_tipo}
+                      onChange={handleInputChange}
+                      placeholder="DNI, CUIT, etc."
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="documento_numero" className="text-sm font-medium text-gray-700">
+                      Número de Documento
+                    </Label>
+                    <Input
+                      id="documento_numero"
+                      name="documento_numero"
+                      type="text"
+                      value={formData.documento_numero}
+                      onChange={handleInputChange}
+                      className="w-full"
+                    />
+                  </div>
                 </div>
-              ) : customers.length === 0 ? (
-                <div className="text-center py-8">
-                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">
-                    {searchTerm ? 'No se encontraron clientes que coincidan con tu búsqueda.' : 'No hay clientes registrados aún.'}
-                  </p>
-                  {!searchTerm && (
-                    <Button 
-                      onClick={handleShowAddForm}
-                      className="mt-4 bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Agregar Primer Cliente
-                    </Button>
-                  )}
+                <div className="space-y-2">
+                  <Label htmlFor="direccion" className="text-sm font-medium text-gray-700">
+                    Dirección
+                  </Label>
+                  <Input
+                    id="direccion"
+                    name="direccion"
+                    type="text"
+                    value={formData.direccion}
+                    onChange={handleInputChange}
+                    className="w-full"
+                  />
                 </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Nombre</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Email</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Teléfono</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Documento</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Dirección</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {customers.map(customer => (
-                        <tr key={customer.id} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="py-3 px-4">
-                            <div className="font-medium text-gray-900">
-                              {customer.nombre} {customer.apellido}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 text-gray-600">
-                            {customer.email || 'N/A'}
-                          </td>
-                          <td className="py-3 px-4 text-gray-600">
-                            {customer.telefono || 'N/A'}
-                          </td>
-                          <td className="py-3 px-4 text-gray-600">
-                            {customer.documento_tipo && customer.documento_numero 
-                              ? `${customer.documento_tipo}: ${customer.documento_numero}` 
-                              : 'N/A'
-                            }
-                          </td>
-                          <td className="py-3 px-4 text-gray-600">
-                            {customer.direccion || 'N/A'}
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleEditClick(customer)}
-                                disabled={loading || submittingForm}
-                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDelete(customer.id)}
-                                disabled={loading || submittingForm}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="flex gap-3 pt-4">
+                  <Button 
+                    type="submit" 
+                    disabled={submittingForm}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {submittingForm ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        {isEditing ? 'Actualizando...' : 'Creando...'}
+                      </>
+                    ) : (
+                      <>
+                        {isEditing ? 'Actualizar Cliente' : 'Crear Cliente'}
+                      </>
+                    )}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={() => {
+                      setShowForm(false);
+                      setFormError('');
+                    }}
+                    disabled={submittingForm}
+                  >
+                    Cancelar
+                  </Button>
                 </div>
-              )}
+              </form>
             </CardContent>
           </Card>
-        </div>
-      </section>
-    </div>
+        )}
+
+        {/* Customers List */}
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Users className="h-5 w-5 text-blue-600" />
+              Lista de Clientes
+              {customers.length > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {customers.length}
+                </Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                <span className="ml-2 text-gray-600">Cargando clientes...</span>
+              </div>
+            ) : customers.length === 0 ? (
+              <div className="text-center py-8">
+                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">
+                  {searchTerm ? 'No se encontraron clientes que coincidan con tu búsqueda.' : 'No hay clientes registrados aún.'}
+                </p>
+                {!searchTerm && (
+                  <Button 
+                    onClick={handleShowAddForm}
+                    className="mt-4 bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Agregar Primer Cliente
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">Nombre</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">Email</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">Teléfono</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">Documento</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">Dirección</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {customers.map(customer => (
+                      <tr key={customer.id} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-3 px-4">
+                          <div className="font-medium text-gray-900">
+                            {customer.nombre} {customer.apellido}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-gray-600">
+                          {customer.email || 'N/A'}
+                        </td>
+                        <td className="py-3 px-4 text-gray-600">
+                          {customer.telefono || 'N/A'}
+                        </td>
+                        <td className="py-3 px-4 text-gray-600">
+                          {customer.documento_tipo && customer.documento_numero 
+                            ? `${customer.documento_tipo}: ${customer.documento_numero}` 
+                            : 'N/A'
+                          }
+                        </td>
+                        <td className="py-3 px-4 text-gray-600">
+                          {customer.direccion || 'N/A'}
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditClick(customer)}
+                              disabled={loading || submittingForm}
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDelete(customer.id)}
+                              disabled={loading || submittingForm}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </Layout>
   );
 }
 

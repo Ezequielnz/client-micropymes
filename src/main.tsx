@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import './styles/Home.css';
 import App from './App';
+import { AuthProvider } from './contexts/AuthContext';
 
 /**
  * Main entry point for the React application.
@@ -27,6 +28,8 @@ const root = createRoot(rootElement);
 // It activates additional checks and warnings for its descendants.
 root.render(
   <StrictMode>
-    <App />
+    <AuthProvider>
+      <App />
+    </AuthProvider>
   </StrictMode>
 ); 

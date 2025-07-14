@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { salesAPI, customerAPI } from '../utils/api';
 import { PageLoader, SectionLoader } from '../components/LoadingSpinner';
+import Layout from '../components/Layout';
+import PermissionGuard from '../components/PermissionGuard';
 import {
   TrendingUp,
   DollarSign,
@@ -137,10 +139,9 @@ const Badge = ({ children, variant = 'default', className = '' }) => {
  * It fetches sales records and associated customer data to present a comprehensive report.
  * Users can filter sales by a date range.
  */
-function SalesReports() {
+function SalesReportsComponent({ currentBusiness }) {
   const { businessId } = useParams();
   const navigate = useNavigate();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   /** @type {[Array<SaleRecord>, function]} sales - State for storing the list of sales records. */
   const [sales, setSales] = useState([]);
@@ -167,17 +168,18 @@ function SalesReports() {
    * Errors during this fetch are logged but do not necessarily block sales data loading.
    */
   const fetchAllCustomers = useCallback(async () => {
-    if (!businessId) {
+    const effectiveBusinessId = businessId || currentBusiness?.id;
+    if (!effectiveBusinessId) {
       return;
     }
     try {
-      const customersData = await customerAPI.getCustomers(businessId);
+      const customersData = await customerAPI.getCustomers(effectiveBusinessId);
       setCustomers(Array.isArray(customersData) ? customersData : []);
     } catch (err) {
       console.error('Error fetching customers for report:', err);
       // Not setting main error, as sales might still load
     }
-  }, [businessId]);
+  }, [businessId, currentBusiness?.id]);
 
   /**
    * Fetches sales data and report analytics from the API.
@@ -187,7 +189,8 @@ function SalesReports() {
    * @param {string} currentEndDate - The end date for filtering sales (YYYY-MM-DD).
    */
   const fetchSalesData = useCallback(async (currentStartDate, currentEndDate) => {
-    if (!businessId) {
+    const effectiveBusinessId = businessId || currentBusiness?.id;
+    if (!effectiveBusinessId) {
       setError('Business ID is missing.');
       setLoading(false);
       return;
@@ -201,8 +204,8 @@ function SalesReports() {
       
       // Fetch both sales list and report data
       const [salesData, reportData] = await Promise.all([
-        salesAPI.getSales(businessId, params),
-        salesAPI.getSalesReport(businessId, params)
+        salesAPI.getSales(effectiveBusinessId, params),
+        salesAPI.getSalesReport(effectiveBusinessId, params)
       ]);
       
       setSales(Array.isArray(salesData) ? salesData : []);
@@ -215,7 +218,7 @@ function SalesReports() {
     } finally {
       setLoading(false);
     }
-  }, [businessId]);
+  }, [businessId, currentBusiness?.id]);
 
   /**
    * useEffect hook for initial data fetching.
@@ -269,384 +272,288 @@ function SalesReports() {
     }
   };
 
-  return (
-    <div className="page-container">
-      {/* Navigation */}
-              <nav className="page-header sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Link to="/" className="flex-shrink-0 flex items-center">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg mr-3 flex items-center justify-center">
-                  <Building2 className="h-5 w-5 text-white" />
-                </div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  BizFlow Pro
-                </h1>
-              </Link>
-            </div>
-            
-            {/* Desktop Navigation */}
-            <div className="hidden md:block">
-              <div className="ml-10 flex items-baseline space-x-8">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => navigate('/home')}
-                  className="text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Inicio
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => navigate(`/business/${businessId}`)}
-                  className="text-gray-700 hover:text-purple-600 hover:bg-purple-50"
-                >
-                  <Package className="h-4 w-4 mr-2" />
-                  Dashboard
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => navigate(`/business/${businessId}/pos`)}
-                  className="text-gray-700 hover:text-green-600 hover:bg-green-50"
-                >
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  POS
-                </Button>
-              </div>
-            </div>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden">
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-gray-600 hover:text-gray-900 focus:outline-none focus:text-gray-900"
-              >
-                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </button>
-            </div>
+  if (loading) {
+    return (
+      <Layout activeSection="reports">
+        <div className="p-8">
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <span className="ml-2 text-gray-600">Cargando reportes de ventas...</span>
           </div>
         </div>
+      </Layout>
+    );
+  }
 
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-100">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              <div className="flex flex-col space-y-2 px-3 py-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => navigate('/home')}
-                  className="w-full text-gray-700"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Inicio
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => navigate(`/business/${businessId}`)}
-                  className="w-full text-gray-700"
-                >
-                  <Package className="h-4 w-4 mr-2" />
-                  Dashboard
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => navigate(`/business/${businessId}/pos`)}
-                  className="w-full text-gray-700"
-                >
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  POS
+  return (
+    <Layout activeSection="reports">
+      <div className="p-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Reportes de Ventas
+          </h1>
+          <p className="text-gray-600">
+            Análisis detallado de ventas y ganancias
+          </p>
+        </div>
+
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertTriangle className="h-4 w-4 mr-2" />
+            {error}
+          </Alert>
+        )}
+
+        {/* Filters */}
+        <Card className="border border-gray-200 shadow-sm mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="h-5 w-5 text-blue-600" />
+              Filtros de Fecha
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleFilterApply} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Fecha Inicio
+                </label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <input 
+                    type="date" 
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Fecha Fin
+                </label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <input 
+                    type="date" 
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div>
+                <Button type="submit" disabled={loading} className="w-full">
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Cargando...
+                    </>
+                  ) : (
+                    <>
+                      <Filter className="h-4 w-4 mr-2" />
+                      Aplicar Filtros
+                    </>
+                  )}
                 </Button>
               </div>
-            </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Sales Analytics Cards */}
+        {!loading && reportData && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <Card className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total Ventas</p>
+                    <p className="text-3xl font-bold text-gray-900">{reportData.total_ventas}</p>
+                    <p className="text-sm text-blue-600 mt-1">Transacciones</p>
+                  </div>
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <ShoppingCart className="h-6 w-6 text-blue-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Ingresos Totales</p>
+                    <p className="text-3xl font-bold text-gray-900">
+                      ${Number(reportData.total_ingresos || 0).toFixed(2)}
+                    </p>
+                    <p className="text-sm text-green-600 mt-1">Bruto</p>
+                  </div>
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <DollarSign className="h-6 w-6 text-green-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Ganancias Netas</p>
+                    <p className="text-3xl font-bold text-gray-900">
+                      ${Number(reportData.ganancias_netas || 0).toFixed(2)}
+                    </p>
+                    <p className="text-sm text-purple-600 mt-1">Después de costos</p>
+                  </div>
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <TrendingUp className="h-6 w-6 text-purple-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Promedio por Venta</p>
+                    <p className="text-3xl font-bold text-gray-900">
+                      ${reportData.total_ventas > 0 ? Number(reportData.total_ingresos / reportData.total_ventas).toFixed(2) : '0.00'}
+                    </p>
+                    <p className="text-sm text-orange-600 mt-1">Ticket promedio</p>
+                  </div>
+                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <BarChart3 className="h-6 w-6 text-orange-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
-      </nav>
 
-      {/* Main Content */}
-      <section className="bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-                  Reportes de Ventas
-                </h1>
-                <p className="text-lg text-gray-600">
-                  Análisis detallado de ventas y ganancias
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <Button variant="outline">
-                  <Download className="h-4 w-4 mr-2" />
-                  Exportar
-                </Button>
-              </div>
-            </div>
-
-            {error && (
-              <Alert variant="destructive" className="mb-6">
-                <AlertTriangle className="h-4 w-4 mr-2" />
-                {error}
-              </Alert>
-            )}
-          </div>
-
-          {/* Filters */}
-          <Card className="border border-gray-200 shadow-sm mb-8">
+        {/* Top Products */}
+        {!loading && reportData && reportData.productos_mas_vendidos && reportData.productos_mas_vendidos.length > 0 && (
+          <Card className="mb-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Filter className="h-5 w-5 text-blue-600" />
-                Filtros de Fecha
+                <PieChart className="h-5 w-5 text-green-600" />
+                Productos Más Vendidos
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleFilterApply} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Fecha Inicio
-                  </label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <input 
-                      type="date" 
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                    />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {reportData.productos_mas_vendidos.slice(0, 6).map((producto, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium text-gray-900">{producto.nombre}</h4>
+                      <Badge variant="default">#{index + 1}</Badge>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Cantidad:</span>
+                        <span className="font-medium">{producto.cantidad}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Total:</span>
+                        <span className="font-medium text-green-600">
+                          ${Number(producto.total).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Fecha Fin
-                  </label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <input 
-                      type="date" 
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Button type="submit" disabled={loading} className="w-full">
-                    {loading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Cargando...
-                      </>
-                    ) : (
-                      <>
-                        <Filter className="h-4 w-4 mr-2" />
-                        Aplicar Filtros
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </form>
+                ))}
+              </div>
             </CardContent>
           </Card>
+        )}
+        
+        {!loading && sales.length === 0 && !error && (
+          <Card>
+            <CardContent className="text-center py-12">
+              <BarChart3 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No se encontraron ventas
+              </h3>
+              <p className="text-gray-600">
+                No hay ventas para los criterios seleccionados.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
-          {loading && (
-            <SectionLoader message="Cargando reportes de ventas..." variant="primary" />
-          )}
-
-          {/* Sales Analytics Cards */}
-          {!loading && reportData && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <Card className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Total Ventas</p>
-                      <p className="text-3xl font-bold text-gray-900">{reportData.total_ventas}</p>
-                      <p className="text-sm text-blue-600 mt-1">Transacciones</p>
-                    </div>
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <ShoppingCart className="h-6 w-6 text-blue-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Ingresos Totales</p>
-                      <p className="text-3xl font-bold text-gray-900">
-                        ${Number(reportData.total_ingresos || 0).toFixed(2)}
-                      </p>
-                      <p className="text-sm text-green-600 mt-1">Bruto</p>
-                    </div>
-                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                      <DollarSign className="h-6 w-6 text-green-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Ganancias Netas</p>
-                      <p className="text-3xl font-bold text-gray-900">
-                        ${Number(reportData.ganancias_netas || 0).toFixed(2)}
-                      </p>
-                      <p className="text-sm text-purple-600 mt-1">Después de costos</p>
-                    </div>
-                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <TrendingUp className="h-6 w-6 text-purple-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Promedio por Venta</p>
-                      <p className="text-3xl font-bold text-gray-900">
-                        ${reportData.total_ventas > 0 ? Number(reportData.total_ingresos / reportData.total_ventas).toFixed(2) : '0.00'}
-                      </p>
-                      <p className="text-sm text-orange-600 mt-1">Ticket promedio</p>
-                    </div>
-                    <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                      <BarChart3 className="h-6 w-6 text-orange-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Top Products */}
-          {!loading && reportData && reportData.productos_mas_vendidos && reportData.productos_mas_vendidos.length > 0 && (
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <PieChart className="h-5 w-5 text-green-600" />
-                  Productos Más Vendidos
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {reportData.productos_mas_vendidos.slice(0, 6).map((producto, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium text-gray-900">{producto.nombre}</h4>
-                        <Badge variant="default">#{index + 1}</Badge>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Cantidad:</span>
-                          <span className="font-medium">{producto.cantidad}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Total:</span>
-                          <span className="font-medium text-green-600">
-                            ${Number(producto.total).toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {!loading && sales.length === 0 && !error && (
-            <Card>
-              <CardContent className="text-center py-12">
-                <BarChart3 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No se encontraron ventas
-                </h3>
-                <p className="text-gray-600">
-                  No hay ventas para los criterios seleccionados.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Sales Table */}
-          {!loading && sales.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-blue-600" />
-                  Listado Detallado de Ventas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-3 px-4 font-medium text-gray-900">ID</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900">Fecha</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900">Cliente</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900">Método de Pago</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900">Total</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900">Estado</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900">Items</th>
+        {/* Sales Table */}
+        {!loading && sales.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-blue-600" />
+                Listado Detallado de Ventas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900">ID</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900">Fecha</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900">Cliente</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900">Método de Pago</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900">Total</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900">Estado</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900">Items</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sales.map(sale => (
+                      <tr key={sale.id} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-3 px-4 font-medium text-blue-600">#{sale.id}</td>
+                        <td className="py-3 px-4 text-gray-600">{formatDate(sale.fecha)}</td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center">
+                            <Users className="h-4 w-4 text-gray-400 mr-2" />
+                            {getCustomerName(sale.cliente_id)}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <Badge variant="default">
+                            {sale.medio_pago === 'efectivo' && '💵'}
+                            {sale.medio_pago === 'tarjeta' && '💳'}
+                            {sale.medio_pago === 'transferencia' && '🏦'}
+                            {' '}
+                            {sale.medio_pago || 'N/A'}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-4 font-semibold text-green-600">
+                          ${Number(sale.total).toFixed(2)}
+                        </td>
+                        <td className="py-3 px-4">
+                          <Badge variant={sale.estado === 'completada' ? 'success' : 'warning'}>
+                            {sale.estado}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-4 text-gray-600">
+                          {sale.venta_detalle?.reduce((acc, item) => acc + item.cantidad, 0) || 0} productos
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {sales.map(sale => (
-                        <tr key={sale.id} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="py-3 px-4 font-medium text-blue-600">#{sale.id}</td>
-                          <td className="py-3 px-4 text-gray-600">{formatDate(sale.fecha)}</td>
-                          <td className="py-3 px-4">
-                            <div className="flex items-center">
-                              <Users className="h-4 w-4 text-gray-400 mr-2" />
-                              {getCustomerName(sale.cliente_id)}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <Badge variant="default">
-                              {sale.medio_pago === 'efectivo' && '💵'}
-                              {sale.medio_pago === 'tarjeta' && '💳'}
-                              {sale.medio_pago === 'transferencia' && '🏦'}
-                              {' '}
-                              {sale.medio_pago || 'N/A'}
-                            </Badge>
-                          </td>
-                          <td className="py-3 px-4 font-semibold text-green-600">
-                            ${Number(sale.total).toFixed(2)}
-                          </td>
-                          <td className="py-3 px-4">
-                            <Badge variant={sale.estado === 'completada' ? 'success' : 'warning'}>
-                              {sale.estado}
-                            </Badge>
-                          </td>
-                          <td className="py-3 px-4 text-gray-600">
-                            {sale.venta_detalle?.reduce((acc, item) => acc + item.cantidad, 0) || 0} productos
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </section>
-    </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </Layout>
   );
 }
 
-export default SalesReports;
+export default function ProtectedSalesReports() {
+  return (
+    <PermissionGuard requiredModule="ventas" requiredAction="ver">
+      <SalesReportsComponent />
+    </PermissionGuard>
+  );
+}

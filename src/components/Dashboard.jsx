@@ -7,26 +7,25 @@ import {
   DollarSign,
   Package,
   AlertTriangle,
-  CheckCircle,
-  Users,
   ShoppingCart,
-  Plus,
+  Users,
   FileText,
+  Plus,
   Upload,
-  MessageSquare,
-  Mail,
-  Eye,
-  Send,
-  Filter,
-  MoreHorizontal,
-  LogOut,
-  Building2,
+  Activity,
   Clock,
   Target,
-  Activity,
   Zap,
-  Calendar,
-  ArrowRight
+  LogOut,
+  Building2,
+  LayoutDashboard,
+  Warehouse,
+  Settings,
+  ChevronDown,
+  CheckCircle,
+  Moon,
+  Sun,
+  ChevronRight
 } from 'lucide-react';
 import { salesAPI, tasksAPI, productAPI, customerAPI, authAPI, businessAPI } from '../utils/api';
 import { PageLoader } from './LoadingSpinner';
@@ -36,11 +35,11 @@ const Button = ({ children, onClick, variant = 'default', size = 'default', clas
   const baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
   
   const variants = {
-    default: 'bg-erp-primary text-white hover:bg-erp-primary-hover focus:ring-erp-primary shadow-erp-primary',
-    outline: 'border border-erp-neutral-300 bg-white text-erp-neutral-700 hover:bg-erp-neutral-50 focus:ring-erp-primary',
-    ghost: 'text-erp-neutral-700 hover:bg-erp-neutral-100 focus:ring-erp-primary',
-    success: 'bg-erp-success text-white hover:bg-erp-success-hover focus:ring-erp-success shadow-erp-success',
-    warning: 'bg-erp-warning text-white hover:bg-erp-warning-hover focus:ring-erp-warning shadow-erp-warning'
+    default: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
+    outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500',
+    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-blue-500',
+    success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500',
+    warning: 'bg-yellow-600 text-white hover:bg-yellow-700 focus:ring-yellow-500'
   };
   
   const sizes = {
@@ -59,7 +58,7 @@ const Button = ({ children, onClick, variant = 'default', size = 'default', clas
 };
 
 const Card = ({ children, className = '' }) => (
-  <div className={`bg-white border border-erp-neutral-200 rounded-lg shadow-erp-soft hover:shadow-erp-medium transition-all duration-300 ${className}`}>
+  <div className={`bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ${className}`}>
     {children}
   </div>
 );
@@ -77,24 +76,24 @@ const CardContent = ({ children, className = '' }) => (
 );
 
 const CardTitle = ({ children, className = '' }) => (
-  <h3 className={`text-lg font-semibold text-erp-neutral-900 ${className}`}>
+  <h3 className={`text-lg font-semibold text-gray-900 ${className}`}>
     {children}
   </h3>
 );
 
 const CardDescription = ({ children, className = '' }) => (
-  <p className={`text-sm text-erp-neutral-600 ${className}`}>
+  <p className={`text-sm text-gray-600 ${className}`}>
     {children}
   </p>
 );
 
 const Badge = ({ children, variant = 'default', className = '' }) => {
   const variants = {
-    default: 'bg-erp-neutral-100 text-erp-neutral-800',
-    secondary: 'bg-erp-neutral-100 text-erp-neutral-800',
-    success: 'bg-erp-success-100 text-erp-success-800',
-    warning: 'bg-erp-warning-100 text-erp-warning-800',
-    destructive: 'bg-erp-error-100 text-erp-error-800'
+    default: 'bg-blue-100 text-blue-800',
+    secondary: 'bg-gray-100 text-gray-800',
+    success: 'bg-green-100 text-green-800',
+    warning: 'bg-yellow-100 text-yellow-800',
+    destructive: 'bg-red-100 text-red-800'
   };
   
   return (
@@ -104,134 +103,355 @@ const Badge = ({ children, variant = 'default', className = '' }) => {
   );
 };
 
-const Avatar = ({ children, className = '' }) => (
-  <div className={`inline-flex items-center justify-center w-8 h-8 bg-erp-neutral-200 rounded-full ${className}`}>
-    {children}
+// Sidebar Component
+const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
+  const navigate = useNavigate();
+  const [showSalesDropdown, setShowSalesDropdown] = useState(false);
+  const [showInventoryDropdown, setShowInventoryDropdown] = useState(false);
+  
+  // Helper function to safely navigate with business validation
+  const safeNavigate = (path) => {
+    if (!currentBusiness?.id) {
+      console.error('No business selected for navigation');
+      alert('Por favor selecciona un negocio antes de continuar');
+      return;
+    }
+    navigate(path);
+  };
+  
+  const sidebarItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'businesses', label: 'Negocios', icon: Building2, onClick: () => navigate('/business-users') },
+    { 
+      id: 'inventory', 
+      label: 'Inventario', 
+      icon: Package, 
+      hasDropdown: true,
+      subItems: [
+        { id: 'products-list', label: 'Productos y Servicios', icon: Package, onClick: () => safeNavigate(`/business/${currentBusiness?.id}/products-and-services`) },
+        { id: 'categories', label: 'Categorías', icon: Warehouse, onClick: () => safeNavigate(`/business/${currentBusiness?.id}/categories`) }
+      ]
+    },
+    { 
+      id: 'sales', 
+      label: 'Ventas', 
+      icon: ShoppingCart, 
+      hasDropdown: true,
+      subItems: [
+        { id: 'pos', label: 'POS', icon: ShoppingCart, onClick: () => safeNavigate(`/business/${currentBusiness?.id}/pos`) },
+        { id: 'reports', label: 'Reporte de Ventas', icon: Activity, onClick: () => safeNavigate(`/business/${currentBusiness?.id}/reports`) }
+      ]
+    },
+    { id: 'clients', label: 'Clientes', icon: Users, onClick: () => safeNavigate(`/business/${currentBusiness?.id}/customers`) },
+    { id: 'tasks', label: 'Tareas', icon: Clock, onClick: () => safeNavigate(`/business/${currentBusiness?.id}/tasks`) },
+    { id: 'billing', label: 'Facturación', icon: FileText, disabled: true },
+    { id: 'finances', label: 'Finanzas', icon: DollarSign, disabled: true },
+    { id: 'settings', label: 'Configuración', icon: Settings, disabled: true },
+  ];
+
+  return (
+    <div className="fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col z-40" style={{ backgroundColor: '#ffffff' }}>
+      <div className="p-6 border-b border-gray-200" style={{ backgroundColor: '#f8fafc' }}>
+        <h1 className="text-2xl font-bold text-gray-900">
+          MicroPymes
+        </h1>
+        <p className="text-sm text-gray-600 mt-1">
+          Sistema de Gestión
+        </p>
+  </div>
+      
+      <nav className="flex-1 p-4 space-y-2" style={{ backgroundColor: '#ffffff' }}>
+        {sidebarItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeSection === item.id || (item.subItems && item.subItems.some(subItem => activeSection === subItem.id));
+          const isDisabled = item.disabled;
+          
+          if (item.hasDropdown) {
+            return (
+              <div key={item.id} className="space-y-1">
+                <button
+                  onClick={() => {
+                    if (isDisabled) return;
+                    if (item.id === 'sales') {
+                      setShowSalesDropdown(!showSalesDropdown);
+                    } else if (item.id === 'inventory') {
+                      setShowInventoryDropdown(!showInventoryDropdown);
+                    }
+                  }}
+                  disabled={isDisabled}
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition-all duration-200 ${
+                    isActive
+                      ? "text-blue-700 shadow-sm"
+                      : isDisabled
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-gray-700 hover:text-gray-900"
+                  }`}
+                  style={{
+                    backgroundColor: isActive ? '#dbeafe' : isDisabled ? 'transparent' : 'transparent'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive && !isDisabled) {
+                      e.target.style.backgroundColor = '#f1f5f9';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive && !isDisabled) {
+                      e.target.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                >
+                  <Icon className={`h-5 w-5 transition-colors ${
+                    isActive ? "text-blue-600" : isDisabled ? "text-gray-400" : "text-gray-500"
+                  }`} />
+                  <span className="font-medium flex-1">{item.label}</span>
+                  {(showSalesDropdown && item.id === 'sales') || (showInventoryDropdown && item.id === 'inventory') ? (
+                    <ChevronDown className="h-4 w-4 text-gray-500" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 text-gray-500" />
+                  )}
+                  {isDisabled && (
+                    <span className="ml-auto text-xs text-gray-400">Próximamente</span>
+                  )}
+                </button>
+                
+                {((showSalesDropdown && item.id === 'sales') || (showInventoryDropdown && item.id === 'inventory')) && item.subItems && (
+                  <div className="ml-8 space-y-1">
+                    {item.subItems.map((subItem) => {
+                      const SubIcon = subItem.icon;
+                      const isSubActive = activeSection === subItem.id;
+                      
+                      return (
+                        <button
+                          key={subItem.id}
+                          onClick={() => {
+                            if (subItem.onClick) {
+                              subItem.onClick();
+                            } else {
+                              setActiveSection(subItem.id);
+                            }
+                          }}
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all duration-200 ${
+                            isSubActive
+                              ? "text-blue-700 shadow-sm"
+                              : "text-gray-600 hover:text-gray-900"
+                          }`}
+                          style={{
+                            backgroundColor: isSubActive ? '#dbeafe' : 'transparent'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isSubActive) {
+                              e.target.style.backgroundColor = '#f1f5f9';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isSubActive) {
+                              e.target.style.backgroundColor = 'transparent';
+                            }
+                          }}
+                          title={!currentBusiness?.id ? 'Selecciona un negocio para acceder' : ''}
+                        >
+                          <SubIcon className={`h-4 w-4 transition-colors ${
+                            isSubActive ? "text-blue-600" : "text-gray-500"
+                          }`} />
+                          <span className="font-medium text-sm">{subItem.label}</span>
+                          {!currentBusiness?.id && (
+                            <span className="ml-auto text-xs text-orange-500">Sin negocio</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
   </div>
 );
-
-const AvatarFallback = ({ children }) => (
-  <span className="text-sm font-medium text-erp-neutral-600">{children}</span>
-);
-
-const DropdownMenu = ({ children }) => (
-  <div className="relative inline-block text-left">
-    {children}
-  </div>
-);
-
-const DropdownMenuTrigger = ({ children, ...props }) => (
-  <div {...props}>
-    {children}
-  </div>
-);
-
-const DropdownMenuContent = ({ children, className = '' }) => (
-  <div className={`absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 ${className}`}>
-    <div className="py-1">
-      {children}
+          }
+          
+          return (
+            <button
+              key={item.id}
+              onClick={() => {
+                if (isDisabled) return;
+                if (item.onClick) {
+                  item.onClick();
+                } else {
+                  setActiveSection(item.id);
+                }
+              }}
+              disabled={isDisabled}
+              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition-all duration-200 ${
+                isActive
+                  ? "text-blue-700 shadow-sm"
+                  : isDisabled
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-gray-700 hover:text-gray-900"
+              }`}
+              style={{
+                backgroundColor: isActive ? '#dbeafe' : isDisabled ? 'transparent' : 'transparent'
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive && !isDisabled) {
+                  e.target.style.backgroundColor = '#f1f5f9';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive && !isDisabled) {
+                  e.target.style.backgroundColor = 'transparent';
+                }
+              }}
+              title={!currentBusiness?.id && ['products', 'clients', 'tasks'].includes(item.id) ? 'Selecciona un negocio para acceder' : ''}
+            >
+              <Icon className={`h-5 w-5 transition-colors ${
+                isActive ? "text-blue-600" : isDisabled ? "text-gray-400" : "text-gray-500"
+              }`} />
+              <span className="font-medium">{item.label}</span>
+              {isDisabled && (
+                <span className="ml-auto text-xs text-gray-400">Próximamente</span>
+              )}
+              {!currentBusiness?.id && ['products', 'clients', 'tasks'].includes(item.id) && (
+                <span className="ml-auto text-xs text-orange-500">Sin negocio</span>
+              )}
+            </button>
+          );
+        })}
+      </nav>
+      
+      <div className="p-4 border-t border-gray-200" style={{ backgroundColor: '#f8fafc' }}>
+        <div className="text-xs text-gray-500 text-center">
+          © 2025 MicroPymes v2.1
+        </div>
     </div>
   </div>
 );
+};
 
-const DropdownMenuItem = ({ children, onClick, className = '' }) => (
+// Header Component
+const Header = ({ currentBusiness, businesses, onBusinessChange, onLogout }) => {
+  const [showBusinessDropdown, setShowBusinessDropdown] = useState(false);
+  
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showBusinessDropdown && !event.target.closest('.business-dropdown')) {
+        setShowBusinessDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showBusinessDropdown]);
+
+  return (
+    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6" style={{ backgroundColor: '#ffffff' }}>
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">📊</span>
+          <span className="font-medium text-gray-700">
+            Negocio actual:
+          </span>
+          <div className="relative business-dropdown">
   <button
-    onClick={onClick}
-    className={`block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ${className}`}
-  >
-    {children}
+              onClick={() => setShowBusinessDropdown(!showBusinessDropdown)}
+              className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg transition-colors"
+              style={{ 
+                backgroundColor: '#f8fafc',
+                borderColor: '#d1d5db'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#f1f5f9';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = '#f8fafc';
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-blue-600">
+                  {currentBusiness?.nombre || 'Seleccionar negocio'}
+                </span>
+                {currentBusiness?.tipo && (
+                  <span className="text-xs text-gray-500">
+                    ({currentBusiness.tipo})
+                  </span>
+                )}
+              </div>
+              <ChevronDown className="h-4 w-4 text-gray-500" />
   </button>
-);
+            
+            {showBusinessDropdown && (
+              <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50" style={{ backgroundColor: '#ffffff' }}>
+                <div className="py-1">
+                  {businesses.map((business) => (
+                    <button
+                      key={business.id}
+                      onClick={() => {
+                        onBusinessChange(business);
+                        setShowBusinessDropdown(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-left transition-colors"
+                      style={{ backgroundColor: 'transparent' }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#f8fafc';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      <span className="font-medium">{business.nombre}</span>
+                      <span className="text-xs text-gray-500">({business.tipo})</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
+      <div className="flex items-center gap-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onLogout}
+          className="flex items-center gap-2"
+        >
+          <LogOut className="h-4 w-4" />
+          Cerrar Sesión
+        </Button>
+      </div>
+    </header>
+  );
+};
+
+// Main Dashboard Component
 export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [businesses, setBusinesses] = useState([]);
   const [currentBusiness, setCurrentBusiness] = useState(null);
-  const [selectedPeriod, setSelectedPeriod] = useState('today');
-  const [taskFilter, setTaskFilter] = useState('all');
+  const [activeSection, setActiveSection] = useState('dashboard');
+  const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(false);
   const [error, setError] = useState('');
   
-  // Estados para datos reales con cache por período
-  const [dashboardStatsCache, setDashboardStatsCache] = useState({
-    today: null,
-    week: null,
-    month: null
+  // Estados para datos reales
+  const [dashboardStats, setDashboardStats] = useState({
+    total_sales: 0,
+    estimated_profit: 0,
+    new_customers: 0
   });
-  const [topItemsCache, setTopItemsCache] = useState({
-    today: null,
-    week: null,
-    month: null
-  });
-  
-  // Estados para datos que se cargan una sola vez
+  const [topItems, setTopItems] = useState([]);
   const [recentSales, setRecentSales] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [taskStats, setTaskStats] = useState(null);
+  const [taskStats, setTaskStats] = useState({
+    total: 0,
+    pendientes: 0,
+    completadas: 0,
+    en_progreso: 0
+  });
   const [products, setProducts] = useState([]);
   const [customers, setCustomers] = useState([]);
-  
-  // Estados para diagnóstico de rendimiento
   const [healthCheckResult, setHealthCheckResult] = useState(null);
   const [healthCheckLoading, setHealthCheckLoading] = useState(false);
-
-  // Datos simulados para alertas y notificaciones
-  const alerts = [
-    {
-      id: 1,
-      type: 'warning',
-      icon: '🚨',
-      message: 'Algunos productos tienen stock bajo',
-      priority: 'high',
-    },
-    {
-      id: 2,
-      type: 'error',
-      icon: '⏱️',
-      message: 'Tienes tareas pendientes por completar',
-      priority: 'high',
-    },
-    {
-      id: 3,
-      type: 'info',
-      icon: '💰',
-      message: 'Considera revisar los precios de tus productos',
-      priority: 'medium',
-    },
-    {
-      id: 4,
-      type: 'warning',
-      icon: '📄',
-      message: 'Hay ventas pendientes de facturar',
-      priority: 'medium',
-    },
-  ];
-
-  const notifications = [
-    {
-      id: 1,
-      type: 'whatsapp',
-      message: 'Sistema de notificaciones activo',
-      status: 'sent',
-      time: 'Hace 1 hora',
-    },
-    {
-      id: 2,
-      type: 'email',
-      message: 'Bienvenido al dashboard',
-      status: 'delivered',
-      time: 'Hace 2 horas',
-    },
-    {
-      id: 3,
-      type: 'whatsapp',
-      message: 'Dashboard configurado correctamente',
-      status: 'delivered',
-      time: 'Hace 3 horas',
-    },
-  ];
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -242,9 +462,7 @@ export default function Dashboard() {
     if (currentBusiness) {
       loadBusinessData();
     }
-  }, [currentBusiness]);
-
-  // Los datos se cargan todos juntos en loadStatsForPeriod, no necesitamos pre-carga adicional
+  }, [currentBusiness, selectedPeriod]);
 
   const loadInitialData = async () => {
     try {
@@ -273,126 +491,58 @@ export default function Dashboard() {
     if (!currentBusiness?.id) return;
 
     try {
-      setLoading(true);
+      setStatsLoading(true);
       
-      // Cargar datos en paralelo
-      const dataPromises = [
-        // Cargar estadísticas (esto carga todos los períodos)
-        loadStatsForPeriod(selectedPeriod),
-        
-        // Cargar otros datos estáticos
-        salesAPI.getRecentSales(currentBusiness.id).then(data => {
-          setRecentSales(Array.isArray(data) ? data.slice(0, 5) : []);
-        }).catch(error => {
-          console.error('Error loading recent sales:', error);
-          setRecentSales([]);
-        }),
-        
-        tasksAPI.getTaskStats(currentBusiness.id).then(setTaskStats).catch(error => {
-          console.error('Error loading task stats:', error);
-          setTaskStats({ total: 0, pendientes: 0, completadas: 0, en_progreso: 0 });
-        }),
-        
-        productAPI.getProducts(currentBusiness.id).then(setProducts).catch(error => {
-          console.error('Error loading products:', error);
-          setProducts([]);
-        }),
-        
-        customerAPI.getCustomers(currentBusiness.id).then(setCustomers).catch(error => {
-          console.error('Error loading customers:', error);
-          setCustomers([]);
-        })
-      ];
+      // Cargar estadísticas del dashboard
+      const statsResponse = await salesAPI.getDashboardStatsV2(currentBusiness.id);
+      if (statsResponse) {
+        setDashboardStats(statsResponse[selectedPeriod] || {
+          total_sales: 0,
+          estimated_profit: 0,
+          new_customers: 0
+        });
+        setTopItems(statsResponse.top_items || []);
+      }
 
-      // Esperar a que terminen las cargas principales
-      await Promise.allSettled(dataPromises);
+      // Cargar otros datos en paralelo
+      const [
+        recentSalesData,
+        taskStatsData,
+        productsData,
+        customersData
+      ] = await Promise.allSettled([
+        salesAPI.getRecentSales(currentBusiness.id),
+        tasksAPI.getTaskStats(currentBusiness.id),
+        productAPI.getProducts(currentBusiness.id),
+        customerAPI.getCustomers(currentBusiness.id)
+      ]);
+
+      if (recentSalesData.status === 'fulfilled') {
+        setRecentSales(Array.isArray(recentSalesData.value) ? recentSalesData.value.slice(0, 5) : []);
+      }
+      
+      if (taskStatsData.status === 'fulfilled') {
+        setTaskStats(taskStatsData.value || { total: 0, pendientes: 0, completadas: 0, en_progreso: 0 });
+      }
+      
+      if (productsData.status === 'fulfilled') {
+        setProducts(productsData.value || []);
+      }
+      
+      if (customersData.status === 'fulfilled') {
+        setCustomers(customersData.value || []);
+      }
 
     } catch (error) {
       console.error('Error loading business data:', error);
       setError('Error al cargar los datos del negocio');
     } finally {
-      setLoading(false);
-    }
-  };
-
-  // Función optimizada para cargar estadísticas por período
-  const loadStatsForPeriod = async (period) => {
-    // Si ya tenemos los datos en cache, no hacer nada
-    if (dashboardStatsCache[period]) {
-      return;
-    }
-
-    if (!currentBusiness?.id) return;
-
-    setStatsLoading(true);
-    try {
-      const statsResponse = await salesAPI.getDashboardStatsV2(currentBusiness.id);
-      
-      // La respuesta contiene todos los períodos, así que los cacheamos todos
-      if (statsResponse) {
-        // Cachear todas las estadísticas por período
-        setDashboardStatsCache(prev => ({
-          ...prev,
-          today: statsResponse.today || { total_sales: 0, estimated_profit: 0, new_customers: 0 },
-          week: statsResponse.week || { total_sales: 0, estimated_profit: 0, new_customers: 0 },
-          month: statsResponse.month || { total_sales: 0, estimated_profit: 0, new_customers: 0 }
-        }));
-        
-        // Cachear los top items (son los mismos para todos los períodos por ahora)
-        setTopItemsCache(prev => ({
-          ...prev,
-          today: statsResponse.top_items || [],
-          week: statsResponse.top_items || [],
-          month: statsResponse.top_items || []
-        }));
-      }
-
-    } catch (error) {
-      console.error(`Error loading stats for ${period}:`, error);
-      // Set empty data on error solo para el período solicitado
-      setDashboardStatsCache(prev => ({
-        ...prev,
-        [period]: { total_sales: 0, estimated_profit: 0, new_customers: 0 }
-      }));
-      setTopItemsCache(prev => ({
-        ...prev,
-        [period]: []
-      }));
-    } finally {
       setStatsLoading(false);
     }
   };
 
-  // Manejar cambio de período - ahora es instantáneo si ya tenemos los datos
-  const handlePeriodChange = async (period) => {
-    setSelectedPeriod(period);
-    
-    // Solo cargar si no tenemos los datos en cache
-    if (!dashboardStatsCache[period]) {
-      await loadStatsForPeriod(period);
-    }
-  };
-
-  const generateSalesData = (products) => {
-    const baseRevenue = products.reduce((sum, product) => sum + product.precio_venta, 0);
-    
-    return {
-      today: {
-        sales: Math.floor(baseRevenue * 0.1),
-        profit: Math.floor(baseRevenue * 0.03),
-        orders: Math.floor(Math.random() * 10) + 1
-      },
-      week: {
-        sales: Math.floor(baseRevenue * 0.7),
-        profit: Math.floor(baseRevenue * 0.2),
-        orders: Math.floor(Math.random() * 50) + 10
-      },
-      month: {
-        sales: Math.floor(baseRevenue * 3),
-        profit: Math.floor(baseRevenue * 0.8),
-        orders: Math.floor(Math.random() * 200) + 50
-      }
-    };
+  const handleBusinessChange = (business) => {
+    setCurrentBusiness(business);
   };
 
   const handleLogout = () => {
@@ -429,103 +579,77 @@ export default function Dashboard() {
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'completada':
-      case 'sent':
-      case 'delivered':
-        return 'badge-success';
-      case 'pendiente':
-      case 'failed':
-        return 'badge-error';
-      case 'en_progreso':
-        return 'badge-warning';
-      default:
-        return 'badge-info';
-    }
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS'
+    }).format(amount);
   };
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'alta':
-      case 'urgente':
-        return 'border-l-red-500';
-      case 'media':
-        return 'border-l-yellow-500';
-      case 'baja':
-        return 'border-l-green-500';
-      default:
-        return 'border-l-gray-300';
-    }
-  };
-
-  const getTaskPriorityColor = (priority) => {
-    switch (priority) {
-      case 'alta':
-      case 'urgente':
-        return 'badge-error';
-      case 'media':
-        return 'badge-warning';
-      case 'baja':
-        return 'badge-success';
-      default:
-        return 'badge-info';
-    }
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleString('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   if (loading) return <PageLoader />;
   if (error) return <div className="text-red-500">Error: {error}</div>;
 
-  // Obtener datos actuales del cache
-  const currentStats = dashboardStatsCache[selectedPeriod] || {
-    total_sales: 0,
-    estimated_profit: 0,
-    new_customers: 0
-  };
-  
-  const topItems = topItemsCache[selectedPeriod] || [];
+  const statCards = [
+    {
+      title: 'Ventas del Mes',
+      value: formatCurrency(dashboardStats.total_sales || 0),
+      description: 'Total acumulado este mes',
+      icon: DollarSign,
+      trend: '+12.5%',
+      trendUp: true
+    },
+    {
+      title: 'Facturas Emitidas',
+      value: '0',
+      description: 'Próximamente disponible',
+      icon: FileText,
+      trend: 'N/A',
+      trendUp: false
+    },
+    {
+      title: 'Productos Activos',
+      value: products.length.toString(),
+      description: 'Productos en catálogo',
+      icon: Package,
+      trend: `+${products.length}`,
+      trendUp: true
+    },
+    {
+      title: 'Clientes Registrados',
+      value: customers.length.toString(),
+      description: 'Total de clientes',
+      icon: Users,
+      trend: `+${customers.length}`,
+      trendUp: true
+    }
+  ];
 
-  return (
-    <div className="min-h-screen bg-gray-50">
+  const renderDashboardContent = () => (
+    <div className="flex-1 space-y-6 p-6">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600">Bienvenido de vuelta, aquí tienes el resumen de tu negocio</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={performHealthCheck}
-              disabled={healthCheckLoading}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-colors disabled:opacity-50"
-            >
-              {healthCheckLoading ? (
-                <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
-              ) : (
-                <Activity className="w-4 h-4" />
-              )}
-              Diagnóstico
-            </button>
-            <button
-              onClick={() => navigate('/my-businesses')}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors"
-            >
-              <Building2 className="w-4 h-4" />
-              Mis Negocios
-            </button>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-red-600 transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              Cerrar Sesión
-            </button>
-          </div>
-        </div>
+      <div className="space-y-2">
+        <h2 className="text-3xl font-bold text-gray-900">
+          Dashboard - {currentBusiness?.nombre || 'Sin negocio'}
+        </h2>
+            <p className="text-gray-600">
+          Resumen ejecutivo de {currentBusiness?.tipo || 'negocio'} | {new Date().toLocaleDateString('es-AR', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}
+        </p>
       </div>
 
-      <div className="p-6">
         {/* Resultados del Diagnóstico */}
         {healthCheckResult && (
           <div className="mb-8">
@@ -589,341 +713,270 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Resumen del Negocio */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Resumen del Negocio</h2>
+      {/* Controles de período y diagnóstico */}
+      <div className="flex justify-between items-center">
             <div className="flex gap-2">
               <button
-                onClick={() => handlePeriodChange('today')}
+            onClick={() => setSelectedPeriod('today')}
                 disabled={statsLoading}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
                   selectedPeriod === 'today' 
-                    ? 'bg-indigo-600 text-white' 
+                ? 'bg-blue-600 text-white' 
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                 }`}
               >
-                {statsLoading && selectedPeriod === 'today' && (
-                  <div className="inline-block w-3 h-3 mr-2 border border-white border-t-transparent rounded-full animate-spin"></div>
-                )}
                 Hoy
               </button>
               <button
-                onClick={() => handlePeriodChange('week')}
+            onClick={() => setSelectedPeriod('week')}
                 disabled={statsLoading}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
                   selectedPeriod === 'week' 
-                    ? 'bg-indigo-600 text-white' 
+                ? 'bg-blue-600 text-white' 
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                 }`}
               >
-                {statsLoading && selectedPeriod === 'week' && (
-                  <div className="inline-block w-3 h-3 mr-2 border border-white border-t-transparent rounded-full animate-spin"></div>
-                )}
                 Semana
               </button>
               <button
-                onClick={() => handlePeriodChange('month')}
+            onClick={() => setSelectedPeriod('month')}
                 disabled={statsLoading}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
                   selectedPeriod === 'month' 
-                    ? 'bg-indigo-600 text-white' 
+                ? 'bg-blue-600 text-white' 
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                 }`}
               >
-                {statsLoading && selectedPeriod === 'month' && (
-                  <div className="inline-block w-3 h-3 mr-2 border border-white border-t-transparent rounded-full animate-spin"></div>
-                )}
                 Mes
               </button>
-            </div>
           </div>
 
-          {/* Cards de estadísticas */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            {/* Ventas Totales */}
-            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-emerald-600" />
-                  <span className="text-sm font-medium text-gray-600">Ventas Totales</span>
-                </div>
-              </div>
-              <div className="space-y-1">
-                {statsLoading ? (
-                  <div className="animate-pulse">
-                    <div className="h-8 bg-gray-200 rounded w-24 mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-32"></div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="text-2xl font-bold text-gray-900">
-                      ${(currentStats.total_sales || 0).toLocaleString()}
-                    </div>
-                    <div className="flex items-center gap-1 text-sm text-emerald-600">
-                      <TrendingUp className="w-4 h-4" />
-                      <span>+12% vs período anterior</span>
-                    </div>
-                  </>
-                )}
-              </div>
+        <Button
+          onClick={performHealthCheck}
+          disabled={healthCheckLoading}
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          {healthCheckLoading ? (
+            <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+          ) : (
+            <Activity className="w-4 h-4" />
+          )}
+          Diagnóstico
+        </Button>
             </div>
 
-            {/* Ganancia Neta */}
-            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-green-600" />
-                  <span className="text-sm font-medium text-gray-600">Ganancia Neta</span>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {statCards.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <Card key={stat.title} className="hover:shadow-lg transition-shadow duration-200">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-gray-600">
+                  {stat.title}
+                </CardTitle>
+                <Icon className="h-4 w-4 text-gray-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-gray-900 mb-1">
+                  {stat.value}
                 </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-gray-600">
+                    {stat.description}
+                  </p>
+                  <Badge variant={stat.trendUp ? "default" : "secondary"} className="text-xs">
+                    <TrendingUp className={`h-3 w-3 mr-1 ${stat.trendUp ? '' : 'rotate-180'}`} />
+                    {stat.trend}
+                  </Badge>
               </div>
-              <div className="space-y-1">
-                {statsLoading ? (
-                  <div className="animate-pulse">
-                    <div className="h-8 bg-gray-200 rounded w-24 mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-20"></div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="text-2xl font-bold text-gray-900">
-                      ${(currentStats.estimated_profit || 0).toLocaleString()}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Margen: {currentStats.total_sales > 0 
-                        ? Math.round((currentStats.estimated_profit / currentStats.total_sales) * 100) 
-                        : 0}%
-                    </div>
-                  </>
-                )}
-              </div>
+              </CardContent>
+            </Card>
+          );
+        })}
             </div>
 
-            {/* Nuevos Clientes */}
-            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-violet-600" />
-                  <span className="text-sm font-medium text-gray-600">Nuevos Clientes</span>
-                </div>
-              </div>
-              <div className="space-y-1">
-                {statsLoading ? (
-                  <div className="animate-pulse">
-                    <div className="h-8 bg-gray-200 rounded w-16 mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-28"></div>
+      {/* Acciones Rápidas */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            Acciones Rápidas
+          </CardTitle>
+          <CardDescription>
+            Accede rápidamente a las funciones más usadas
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <button 
+              onClick={() => navigate(`/business/${currentBusiness?.id}/pos`)}
+              className="flex flex-col items-center gap-3 p-4 rounded-lg bg-white border border-gray-200 hover:border-green-300 hover:shadow-md transition-all duration-200 group"
+            >
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                <ShoppingCart className="w-5 h-5 text-green-600" />
                   </div>
-                ) : (
-                  <>
-                    <div className="text-2xl font-bold text-gray-900">
-                      {currentStats.new_customers || 0}
-                    </div>
-                    <div className="flex items-center gap-1 text-sm text-red-600">
-                      <TrendingDown className="w-4 h-4" />
-                      <span>-3% vs período anterior</span>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
+              <span className="text-sm font-medium text-gray-900">Nueva Venta</span>
+            </button>
 
-            {/* Productos Top */}
-            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Package className="w-5 h-5 text-amber-600" />
-                  <span className="text-sm font-medium text-gray-600">Productos Top</span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                {statsLoading ? (
-                  <div className="animate-pulse space-y-2">
-                    <div className="h-4 bg-gray-200 rounded"></div>
-                    <div className="h-4 bg-gray-200 rounded"></div>
+            <Button
+              onClick={() => navigate(`/business/${currentBusiness?.id}/products-and-services`)}
+              variant="outline"
+              size="sm"
+              className="bg-white hover:bg-blue-50 border-blue-200 text-blue-600 hover:text-blue-700"
+            >
+              <Package className="h-4 w-4 mr-2" />
+              Ver Productos
+            </Button>
+
+            <Button
+              onClick={() => navigate(`/business/${currentBusiness?.id}/customers`)}
+              variant="outline"
+              size="sm"
+              className="bg-white hover:bg-green-50 border-green-200 text-green-600 hover:text-green-700"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Ver Clientes
+            </Button>
+
+            <Button
+              onClick={() => navigate(`/business/${currentBusiness?.id}/products-and-services`)}
+              variant="outline"
+              size="sm"
+              className="bg-white hover:bg-purple-50 border-purple-200 text-purple-600 hover:text-purple-700"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Importar Productos
+            </Button>
                   </div>
-                ) : (
-                  <>
-                    {topItems.slice(0, 2).map((item, index) => (
-                      <div key={index} className="flex justify-between items-center">
-                        <span className="text-sm text-gray-700 truncate">{item.nombre}</span>
-                        <span className="text-sm font-medium text-gray-900">{item.cantidad_total}</span>
-                      </div>
-                    ))}
-                    {topItems.length === 0 && (
-                      <div className="text-sm text-gray-500">Sin datos</div>
-                    )}
-                  </>
-                )}
+        </CardContent>
+      </Card>
+
+      {/* Productos Top y Ventas Recientes */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Productos Top
+            </CardTitle>
+            <CardDescription>
+              Productos más vendidos este {selectedPeriod === 'today' ? 'día' : selectedPeriod === 'week' ? 'semana' : 'mes'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {topItems.length > 0 ? (
+              topItems.slice(0, 5).map((item, index) => (
+                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-medium text-blue-600">{index + 1}</span>
+                </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{item.nombre}</p>
+                      <p className="text-xs text-gray-500">Vendidos: {item.cantidad_total}</p>
               </div>
             </div>
+                  <Badge variant="default">
+                    {formatCurrency(item.precio_venta || 0)}
+                  </Badge>
           </div>
-        </div>
-
-        {/* Grid de contenido principal */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Alertas Inteligentes */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-orange-500" />
-                  <h3 className="text-lg font-semibold text-gray-900">Alertas Inteligentes</h3>
-                </div>
-                <p className="text-sm text-gray-600 mt-1">Tu COO virtual detectó estas situaciones importantes</p>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Package className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                <p>No hay datos de productos para este período</p>
               </div>
-              <div className="p-6">
-                <div className="space-y-4">
-                  {/* Alert Items */}
-                  <div className="flex items-start gap-4 p-4 border-l-4 border-red-400 bg-white rounded-lg border border-gray-100">
-                    <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">El stock de Producto A se agotará en 3 días</p>
-                      <span className="inline-block px-2 py-1 text-xs font-medium text-red-600 bg-white border border-red-200 rounded-full mt-2">
-                        Alta
-                      </span>
-                    </div>
-                    <button 
-                      className="text-gray-400 hover:text-gray-600 transition-colors"
-                      style={{ 
-                        backgroundColor: 'transparent',
-                        border: 'none',
-                        padding: '4px',
-                        color: '#9ca3af'
-                      }}
-                    >
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                  </div>
+            )}
+          </CardContent>
+        </Card>
 
-                  <div className="flex items-start gap-4 p-4 border-l-4 border-red-400 bg-white rounded-lg border border-gray-100">
-                    <Clock className="w-5 h-5 text-red-500 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">Juan Pérez tiene 3 tareas atrasadas</p>
-                      <span className="inline-block px-2 py-1 text-xs font-medium text-red-600 bg-white border border-red-200 rounded-full mt-2">
-                        Alta
-                      </span>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Ventas Recientes
+            </CardTitle>
+            <CardDescription>
+              Últimas transacciones registradas
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {recentSales.length > 0 ? (
+              recentSales.map((sale, index) => (
+                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <DollarSign className="w-4 h-4 text-green-600" />
                     </div>
-                    <button 
-                      className="text-gray-400 hover:text-gray-600 transition-colors"
-                      style={{ 
-                        backgroundColor: 'transparent',
-                        border: 'none',
-                        padding: '4px',
-                        color: '#9ca3af'
-                      }}
-                    >
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <div className="flex items-start gap-4 p-4 border-l-4 border-yellow-400 bg-white rounded-lg border border-gray-100">
-                    <DollarSign className="w-5 h-5 text-yellow-600 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">Podés aumentar el precio de Servicio Premium en 15%</p>
-                      <span className="inline-block px-2 py-1 text-xs font-medium text-yellow-600 bg-white border border-yellow-200 rounded-full mt-2">
-                        Media
-                      </span>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        Venta #{sale.id}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {formatDate(sale.fecha_venta)}
+                      </p>
                     </div>
-                    <button 
-                      className="text-gray-400 hover:text-gray-600 transition-colors"
-                      style={{ 
-                        backgroundColor: 'transparent',
-                        border: 'none',
-                        padding: '4px',
-                        color: '#9ca3af'
-                      }}
-                    >
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <div className="flex items-start gap-4 p-4 border-l-4 border-gray-300 bg-white rounded-lg border border-gray-100">
-                    <FileText className="w-5 h-5 text-gray-500 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">Falta facturar la venta a Cliente XYZ por $2,500</p>
-                      <span className="inline-block px-2 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-full mt-2">
-                        Baja
-                      </span>
                     </div>
-                    <button 
-                      className="text-gray-400 hover:text-gray-600 transition-colors"
-                      style={{ 
-                        backgroundColor: 'transparent',
-                        border: 'none',
-                        padding: '4px',
-                        color: '#9ca3af'
-                      }}
-                    >
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                  </div>
+                  <Badge variant="success">
+                    {formatCurrency(sale.total)}
+                  </Badge>
+                    </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <ShoppingCart className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                <p>No hay ventas registradas aún</p>
                 </div>
+            )}
+          </CardContent>
+        </Card>
               </div>
             </div>
-          </div>
+  );
 
-          {/* Acciones Rápidas */}
-          <div>
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-              <div className="p-6 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Acciones Rápidas</h3>
-                <p className="text-sm text-gray-600 mt-1">Accede rápidamente a las funciones más usadas</p>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <button 
-                    onClick={() => navigate(`/business/${currentBusiness?.id}/pos`)}
-                    className="flex flex-col items-center gap-3 p-4 rounded-lg bg-white border border-gray-200 hover:border-emerald-300 hover:shadow-md transition-all duration-200 group"
-                  >
-                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
-                      <ShoppingCart className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <span className="text-sm font-medium text-gray-900">Nueva Venta</span>
-                  </button>
-
-                  <button 
-                    onClick={() => navigate(`/business/${currentBusiness?.id}/products`)}
-                    className="flex flex-col items-center gap-3 p-4 rounded-lg bg-white border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 group"
-                  >
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                      <Package className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <span className="text-sm font-medium text-gray-900">Nuevo Producto</span>
-                  </button>
-
-                  <button 
-                    onClick={() => navigate(`/business/${currentBusiness?.id}/customers`)}
-                    className="flex flex-col items-center gap-3 p-4 rounded-lg bg-white border border-gray-200 hover:border-violet-300 hover:shadow-md transition-all duration-200 group"
-                  >
-                    <div className="w-10 h-10 bg-violet-100 rounded-lg flex items-center justify-center group-hover:bg-violet-200 transition-colors">
-                      <Users className="w-5 h-5 text-violet-600" />
-                    </div>
-                    <span className="text-sm font-medium text-gray-900">Añadir Cliente</span>
-                  </button>
-
-                  <button 
-                    onClick={() => navigate(`/business/${currentBusiness?.id}/tasks`)}
-                    className="flex flex-col items-center gap-3 p-4 rounded-lg bg-white border border-gray-200 hover:border-orange-300 hover:shadow-md transition-all duration-200 group"
-                  >
-                    <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center group-hover:bg-orange-200 transition-colors">
-                      <Plus className="w-5 h-5 text-orange-600" />
-                    </div>
-                    <span className="text-sm font-medium text-gray-900">Asignar Tarea</span>
-                  </button>
-
-                  <button 
-                    onClick={() => navigate(`/business/${currentBusiness?.id}/products/import`)}
-                    className="flex flex-col items-center gap-3 p-4 rounded-lg bg-white border border-gray-200 hover:border-indigo-300 hover:shadow-md transition-all duration-200 group col-span-2"
-                  >
-                    <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-                      <Upload className="w-5 h-5 text-indigo-600" />
-                    </div>
-                    <span className="text-sm font-medium text-gray-900">Importar desde Excel</span>
-                  </button>
-                </div>
-              </div>
-            </div>
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'dashboard':
+        return renderDashboardContent();
+      case 'products':
+        return (
+          <div className="flex-1 p-6">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Productos y Servicios
+            </h2>
+            <div className="bg-white rounded-xl p-8 border border-gray-200">
+              <p className="text-gray-600">
+                Redirigiendo a la gestión de productos...
+              </p>
           </div>
         </div>
+        );
+      default:
+        return renderDashboardContent();
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 flex">
+      <Sidebar 
+        activeSection={activeSection} 
+        setActiveSection={setActiveSection}
+        currentBusiness={currentBusiness}
+      />
+      
+      <div className="flex-1 ml-64">
+        <Header
+          currentBusiness={currentBusiness}
+          businesses={businesses}
+          onBusinessChange={handleBusinessChange}
+          onLogout={handleLogout}
+        />
+        <main className="flex-1">
+          {renderContent()}
+        </main>
       </div>
     </div>
   );

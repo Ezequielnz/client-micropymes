@@ -1,47 +1,97 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { businessAPI, authAPI } from '../utils/api';
+import { PageLoader } from '../components/LoadingSpinner';
 import {
-  ArrowLeft,
-  LogOut,
-  Users,
-  Settings,
-  Check,
-  X,
+  Building2,
+  Plus,
   Edit,
-  Save,
-  UserCheck,
-  Shield,
+  Trash2,
+  Users,
   AlertCircle,
-  Loader2
+  CheckCircle,
+  Loader2,
+  ArrowLeft
 } from 'lucide-react';
 
+// Componentes UI simples
+const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', disabled = false, ...props }) => {
+  const baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
+  
+  const variants = {
+    default: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
+    outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500',
+    destructive: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
+    success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500'
+  };
+  
+  const sizes = {
+    sm: 'h-8 px-3 text-sm',
+    default: 'h-10 px-4 py-2',
+    lg: 'h-12 px-6 text-lg'
+  };
+  
+  const classes = `${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`;
+  
+  return (
+    <button className={classes} onClick={onClick} disabled={disabled} {...props}>
+      {children}
+    </button>
+  );
+};
+
+const Card = ({ children, className = '' }) => (
+  <div className={`bg-white border border-gray-200 rounded-lg shadow-sm ${className}`}>
+    {children}
+  </div>
+);
+
+const CardHeader = ({ children, className = '' }) => (
+  <div className={`p-6 pb-4 ${className}`}>
+    {children}
+  </div>
+);
+
+const CardContent = ({ children, className = '' }) => (
+  <div className={`p-6 pt-0 ${className}`}>
+    {children}
+  </div>
+);
+
+const CardTitle = ({ children, className = '' }) => (
+  <h3 className={`text-lg font-semibold text-gray-900 ${className}`}>
+    {children}
+  </h3>
+);
+
 function BusinessUsers() {
-  const { businessId } = useParams();
   const navigate = useNavigate();
   
-  const [business, setBusiness] = useState(null);
-  const [users, setUsers] = useState([]);
-  const [pendingUsers, setPendingUsers] = useState([]);
+  const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [editingUser, setEditingUser] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newBusiness, setNewBusiness] = useState({
+    nombre: '',
+    tipo: '',
+    descripcion: ''
+  });
+  const [creating, setCreating] = useState(false);
 
-  // Permisos disponibles
-  const availablePermissions = {
-    productos: { label: 'Productos y Servicios', actions: ['ver', 'editar', 'eliminar'] },
-    clientes: { label: 'Clientes', actions: ['ver', 'editar', 'eliminar'] },
-    categorias: { label: 'Categorías', actions: ['ver', 'editar', 'eliminar'] },
-    ventas: { label: 'Ventas (POS)', actions: ['ver', 'editar', 'eliminar'] },
-    stock: { label: 'Gestión de Stock', actions: ['ver', 'editar'] },
-    facturacion: { label: 'Facturación', actions: ['ver', 'editar'] },
-    tareas: { label: 'Tareas (Solo asignar)', actions: ['asignar'] }
-  };
+  const businessTypes = [
+    'Comercio',
+    'Servicio',
+    'Restaurante',
+    'Tienda',
+    'Consultorio',
+    'Taller',
+    'Otro'
+  ];
 
   useEffect(() => {
     loadData();
-  }, [businessId]);
+  }, []);
 
   const loadData = async () => {
     try {
@@ -52,30 +102,9 @@ function BusinessUsers() {
       const userData = await authAPI.getCurrentUser();
       setCurrentUser(userData);
 
-      // Cargar datos del negocio
-      const businessData = await businessAPI.getBusinessById(businessId);
-      setBusiness(businessData);
-
-      // Verificar que el usuario actual sea admin
-      const businessUsers = await businessAPI.getBusinessUsers(businessId);
-      const currentUserInBusiness = businessUsers.find(u => u.usuario?.email === userData.email);
-      
-      if (currentUserInBusiness?.rol !== 'admin') {
-        setError('No tienes permisos para acceder a esta página');
-        return;
-      }
-
-      // Cargar usuarios del negocio
-      setUsers(businessUsers);
-
-      // Cargar usuarios pendientes
-      try {
-        const pendingData = await businessAPI.getPendingUsers(businessId);
-        setPendingUsers(pendingData);
-      } catch (err) {
-        console.error('Error loading pending users:', err);
-        setPendingUsers([]);
-      }
+      // Cargar negocios del usuario
+      const businessData = await businessAPI.getBusinesses();
+      setBusinesses(businessData || []);
 
     } catch (err) {
       console.error('Error loading data:', err);
@@ -85,89 +114,61 @@ function BusinessUsers() {
     }
   };
 
-  const handleApproveUser = async (userBusinessId, permissions) => {
+  const handleCreateBusiness = async (e) => {
+    e.preventDefault();
+    
+    if (!newBusiness.nombre.trim() || !newBusiness.tipo) {
+      alert('Por favor completa todos los campos obligatorios');
+      return;
+    }
+
     try {
-      await businessAPI.approveUser(businessId, userBusinessId, permissions);
-      await loadData(); // Recargar datos
+      setCreating(true);
+      await businessAPI.createBusiness(newBusiness);
+      setNewBusiness({ nombre: '', tipo: '', descripcion: '' });
+      setShowCreateForm(false);
+      await loadData(); // Recargar la lista
     } catch (err) {
-      console.error('Error approving user:', err);
-      alert('Error al aprobar usuario: ' + (err.response?.data?.detail || err.message));
+      console.error('Error creating business:', err);
+      alert('Error al crear el negocio: ' + (err.response?.data?.detail || err.message));
+    } finally {
+      setCreating(false);
     }
   };
 
-  const handleRejectUser = async (userBusinessId) => {
-    if (!confirm('¿Estás seguro de que quieres rechazar este usuario?')) return;
+  const handleDeleteBusiness = async (businessId, businessName) => {
+    if (!confirm(`¿Estás seguro de que quieres eliminar el negocio "${businessName}"? Esta acción no se puede deshacer.`)) {
+      return;
+    }
     
     try {
-      await businessAPI.rejectUser(businessId, userBusinessId);
-      await loadData(); // Recargar datos
+      await businessAPI.deleteBusiness(businessId);
+      await loadData(); // Recargar la lista
     } catch (err) {
-      console.error('Error rejecting user:', err);
-      alert('Error al rechazar usuario: ' + (err.response?.data?.detail || err.message));
+      console.error('Error deleting business:', err);
+      alert('Error al eliminar el negocio: ' + (err.response?.data?.detail || err.message));
     }
-  };
-
-  const handleUpdatePermissions = async (userBusinessId, newPermissions) => {
-    try {
-      await businessAPI.updateUserPermissions(businessId, userBusinessId, newPermissions);
-      setEditingUser(null);
-      await loadData(); // Recargar datos
-    } catch (err) {
-      console.error('Error updating permissions:', err);
-      alert('Error al actualizar permisos: ' + (err.response?.data?.detail || err.message));
-    }
-  };
-
-  const handleRemoveUser = async (userBusinessId) => {
-    if (!confirm('¿Estás seguro de que quieres remover este usuario del negocio?')) return;
-    
-    try {
-      await businessAPI.removeUser(businessId, userBusinessId);
-      await loadData(); // Recargar datos
-    } catch (err) {
-      console.error('Error removing user:', err);
-      alert('Error al remover usuario: ' + (err.response?.data?.detail || err.message));
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.clear();
-    navigate('/login');
-    window.location.href = '/login';
   };
 
   if (loading) {
-    return (
-      <div className="app-container">
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="flex items-center gap-3 text-blue-600">
-            <Loader2 className="h-8 w-8 animate-spin" />
-            <span className="text-lg font-medium">Cargando usuarios...</span>
-          </div>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Cargando negocios..." variant="primary" />;
   }
 
   if (error) {
     return (
-      <div className="app-container">
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="card max-w-md mx-auto">
-            <div className="text-center p-8">
-              <AlertCircle className="h-12 w-12 text-red-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Error</h3>
-              <p className="text-gray-600 mb-4">{error}</p>
-              <div className="flex gap-2">
-                <button onClick={loadData} className="btn btn-primary flex-1">
-                  Reintentar
-                </button>
-                <button onClick={() => navigate(`/business/${businessId}`)} className="btn btn-outline flex-1">
-                  Volver
-                </button>
-              </div>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="card max-w-md mx-auto">
+          <div className="text-center p-8">
+            <AlertCircle className="h-12 w-12 text-red-600 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Error</h3>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <div className="flex gap-2">
+              <Button onClick={loadData} className="flex-1">
+                Reintentar
+              </Button>
+              <Button onClick={() => navigate('/home')} variant="outline" className="flex-1">
+                Volver
+              </Button>
             </div>
           </div>
         </div>
@@ -176,329 +177,190 @@ function BusinessUsers() {
   }
 
   return (
-    <div className="app-container">
-      {/* Navigation */}
-      <nav className="nav">
-        <div className="nav-container">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate(`/business/${businessId}`)}
-              className="btn btn-outline btn-sm"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Volver al Dashboard
-            </button>
-            
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-indigo-600 rounded-lg mr-3 flex items-center justify-center">
-                <UserCheck className="h-5 w-5 text-white" />
-              </div>
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/home')}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Volver al Dashboard
+              </Button>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">
-                  Gestión de Usuarios
-                </h1>
-                <p className="text-sm text-gray-500">{business?.nombre}</p>
+                <h1 className="text-xl font-semibold text-gray-900">Mis Negocios</h1>
+                <p className="text-sm text-gray-600">Gestiona tus negocios registrados</p>
               </div>
             </div>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-600">
-              Hola, {currentUser?.nombre || 'Usuario'}
-            </span>
-            <button onClick={handleLogout} className="btn btn-outline btn-sm">
-              <LogOut className="h-4 w-4 mr-2" />
-              Salir
-            </button>
+            
+            <Button
+              onClick={() => setShowCreateForm(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Nuevo Negocio
+            </Button>
           </div>
         </div>
-      </nav>
+      </div>
 
       {/* Main Content */}
-      <div className="container">
-        {/* Header */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Usuarios del Negocio
-          </h2>
-          <p className="text-gray-600">
-            Gestiona los usuarios y sus permisos para acceder a las diferentes secciones del sistema
-          </p>
-        </div>
-
-        {/* Usuarios Pendientes */}
-        {pendingUsers.length > 0 && (
-          <div className="mb-8">
-            <div className="card">
-              <div className="card-header">
-                <h3 className="card-title flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5 text-orange-600" />
-                  Usuarios Pendientes de Aprobación ({pendingUsers.length})
-                </h3>
-              </div>
-              <div className="card-content">
-                <div className="space-y-4">
-                  {pendingUsers.map((pendingUser) => (
-                    <PendingUserCard
-                      key={pendingUser.id}
-                      user={pendingUser}
-                      availablePermissions={availablePermissions}
-                      onApprove={handleApproveUser}
-                      onReject={handleRejectUser}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* Formulario de creación */}
+        {showCreateForm && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Crear Nuevo Negocio</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleCreateBusiness} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nombre del Negocio *
+                    </label>
+                    <input
+                      type="text"
+                      value={newBusiness.nombre}
+                      onChange={(e) => setNewBusiness(prev => ({ ...prev, nombre: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Ej: Mi Tienda"
+                      required
                     />
-                  ))}
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tipo de Negocio *
+                    </label>
+                    <select
+                      value={newBusiness.tipo}
+                      onChange={(e) => setNewBusiness(prev => ({ ...prev, tipo: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    >
+                      <option value="">Seleccionar tipo</option>
+                      {businessTypes.map(type => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Descripción
+                  </label>
+                  <textarea
+                    value={newBusiness.descripcion}
+                    onChange={(e) => setNewBusiness(prev => ({ ...prev, descripcion: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows="3"
+                    placeholder="Descripción opcional del negocio"
+                  />
+                </div>
+                
+                <div className="flex gap-2 pt-4">
+                  <Button type="submit" disabled={creating}>
+                    {creating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Creando...
+                      </>
+                    ) : (
+                      'Crear Negocio'
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowCreateForm(false);
+                      setNewBusiness({ nombre: '', tipo: '', descripcion: '' });
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
         )}
 
-        {/* Usuarios Activos */}
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title flex items-center gap-2">
-              <Users className="h-5 w-5 text-blue-600" />
-              Usuarios Activos ({users.length})
-            </h3>
-          </div>
-          <div className="card-content">
-            {users.length === 0 ? (
-              <div className="text-center py-8">
-                <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">No hay usuarios activos</p>
+        {/* Lista de Negocios */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-blue-600" />
+              Mis Negocios ({businesses.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {businesses.length === 0 ? (
+              <div className="text-center py-12">
+                <Building2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No tienes negocios registrados</h3>
+                <p className="text-gray-500 mb-6">Crea tu primer negocio para comenzar a gestionar tus productos y ventas</p>
+                <Button onClick={() => setShowCreateForm(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Crear mi primer negocio
+                </Button>
               </div>
             ) : (
-              <div className="space-y-4">
-                {users.map((user) => (
-                  <UserCard
-                    key={user.id}
-                    user={user}
-                    availablePermissions={availablePermissions}
-                    editingUser={editingUser}
-                    currentUser={currentUser}
-                    onEdit={setEditingUser}
-                    onSave={handleUpdatePermissions}
-                    onCancel={() => setEditingUser(null)}
-                    onRemove={handleRemoveUser}
-                  />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {businesses.map((business) => (
+                  <div key={business.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <Building2 className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{business.nombre}</h3>
+                          <p className="text-sm text-gray-500">{business.tipo}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleDeleteBusiness(business.id, business.nombre)}
+                          className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                          title="Eliminar negocio"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {business.descripcion && (
+                      <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                        {business.descripcion}
+                      </p>
+                    )}
+                    
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        Activo
+                      </div>
+                      
+                      <div className="text-xs text-gray-400">
+                        ID: {business.id}
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
-    </div>
-  );
-}
-
-// Componente para usuarios pendientes
-function PendingUserCard({ user, availablePermissions, onApprove, onReject }) {
-  const [selectedPermissions, setSelectedPermissions] = useState({});
-
-  const handlePermissionChange = (module, action, checked) => {
-    setSelectedPermissions(prev => ({
-      ...prev,
-      [`puede_${action}_${module}`]: checked
-    }));
-  };
-
-  const handleApprove = () => {
-    onApprove(user.id, selectedPermissions);
-  };
-
-  return (
-    <div className="border border-orange-200 bg-orange-50 rounded-lg p-4">
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <h4 className="font-medium text-gray-900">
-            {user.usuario?.nombre} {user.usuario?.apellido}
-          </h4>
-          <p className="text-sm text-gray-600">{user.usuario?.email}</p>
-          <span className="badge badge-pending mt-1">Pendiente</span>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={handleApprove}
-            className="btn btn-success btn-sm"
-          >
-            <Check className="h-4 w-4 mr-1" />
-            Aprobar
-          </button>
-          <button
-            onClick={() => onReject(user.id)}
-            className="btn btn-destructive btn-sm"
-          >
-            <X className="h-4 w-4 mr-1" />
-            Rechazar
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {Object.entries(availablePermissions).map(([module, config]) => (
-          <div key={module} className="bg-white p-3 rounded border">
-            <h5 className="font-medium text-sm mb-2">{config.label}</h5>
-            <div className="space-y-1">
-              {config.actions.map((action) => (
-                <label key={action} className="flex items-center text-sm">
-                  <input
-                    type="checkbox"
-                    className="mr-2"
-                    onChange={(e) => handlePermissionChange(module, action, e.target.checked)}
-                  />
-                  {action === 'ver' ? 'Ver' : 
-                   action === 'editar' ? 'Editar' : 
-                   action === 'eliminar' ? 'Eliminar' : 
-                   action === 'asignar' ? 'Asignar' : action}
-                </label>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Componente para usuarios activos
-function UserCard({ user, availablePermissions, editingUser, currentUser, onEdit, onSave, onCancel, onRemove }) {
-  const [permissions, setPermissions] = useState({});
-  const isEditing = editingUser?.id === user.id;
-  const isCurrentUser = user.usuario?.email === currentUser?.email;
-
-  useEffect(() => {
-    if (isEditing && user.permisos) {
-      setPermissions(user.permisos);
-    }
-  }, [isEditing, user.permisos]);
-
-  const handlePermissionChange = (permissionKey, checked) => {
-    setPermissions(prev => ({
-      ...prev,
-      [permissionKey]: checked
-    }));
-  };
-
-  const handleSave = () => {
-    onSave(user.id, permissions);
-  };
-
-  return (
-    <div className="border border-gray-200 rounded-lg p-4 bg-white">
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <h4 className="font-medium text-gray-900 flex items-center gap-2">
-            {user.usuario?.nombre} {user.usuario?.apellido}
-            {user.rol === 'admin' && (
-              <span className="badge" style={{backgroundColor: '#e0e7ff', color: '#3730a3'}}>
-                <Shield className="h-3 w-3 mr-1" />
-                Admin
-              </span>
-            )}
-            {isCurrentUser && (
-              <span className="badge" style={{backgroundColor: '#dcfce7', color: '#166534'}}>
-                Tú
-              </span>
-            )}
-          </h4>
-          <p className="text-sm text-gray-600">{user.usuario?.email}</p>
-          <span className="badge" style={{backgroundColor: '#d1fae5', color: '#065f46'}}>
-            Activo
-          </span>
-        </div>
-        
-        {!isCurrentUser && user.rol !== 'admin' && (
-          <div className="flex gap-2">
-            {isEditing ? (
-              <>
-                <button onClick={handleSave} className="btn btn-success btn-sm">
-                  <Save className="h-4 w-4 mr-1" />
-                  Guardar
-                </button>
-                <button onClick={onCancel} className="btn btn-outline btn-sm">
-                  Cancelar
-                </button>
-              </>
-            ) : (
-              <>
-                <button onClick={() => onEdit(user)} className="btn btn-outline btn-sm">
-                  <Edit className="h-4 w-4 mr-1" />
-                  Editar
-                </button>
-                <button onClick={() => onRemove(user.id)} className="btn btn-destructive btn-sm">
-                  <X className="h-4 w-4 mr-1" />
-                  Remover
-                </button>
-              </>
-            )}
-          </div>
-        )}
-      </div>
-
-      {user.rol === 'admin' ? (
-        <div className="bg-blue-50 p-3 rounded border">
-          <p className="text-sm text-blue-800 flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            Este usuario tiene acceso total como administrador
-          </p>
-        </div>
-      ) : isEditing ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Object.entries(availablePermissions).map(([module, config]) => (
-            <div key={module} className="bg-gray-50 p-3 rounded border">
-              <h5 className="font-medium text-sm mb-2">{config.label}</h5>
-              <div className="space-y-1">
-                {config.actions.map((action) => {
-                  const permissionKey = `puede_${action}_${module}`;
-                  return (
-                    <label key={action} className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        className="mr-2"
-                        checked={permissions[permissionKey] || false}
-                        onChange={(e) => handlePermissionChange(permissionKey, e.target.checked)}
-                      />
-                      {action === 'ver' ? 'Ver' : 
-                       action === 'editar' ? 'Editar' : 
-                       action === 'eliminar' ? 'Eliminar' : 
-                       action === 'asignar' ? 'Asignar' : action}
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Object.entries(availablePermissions).map(([module, config]) => (
-            <div key={module} className="bg-gray-50 p-3 rounded border">
-              <h5 className="font-medium text-sm mb-2">{config.label}</h5>
-              <div className="space-y-1">
-                {config.actions.map((action) => {
-                  const permissionKey = `puede_${action}_${module}`;
-                  const hasPermission = user.permisos?.[permissionKey];
-                  return (
-                    <div key={action} className="flex items-center text-sm">
-                      {hasPermission ? (
-                        <Check className="h-4 w-4 text-green-600 mr-2" />
-                      ) : (
-                        <X className="h-4 w-4 text-red-600 mr-2" />
-                      )}
-                      <span className={hasPermission ? 'text-green-700' : 'text-red-700'}>
-                        {action === 'ver' ? 'Ver' : 
-                         action === 'editar' ? 'Editar' : 
-                         action === 'eliminar' ? 'Eliminar' : 
-                         action === 'asignar' ? 'Asignar' : action}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

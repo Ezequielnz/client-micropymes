@@ -142,6 +142,43 @@ export const authAPI = {
     const response = await api.get('/auth/me');
     return response.data;
   },
+
+  /**
+   * Updates the current user's profile information.
+   * @param {object} profileData - An object containing the profile data to update.
+   * @param {string} [profileData.nombre] - The user's first name.
+   * @param {string} [profileData.apellido] - The user's last name.
+   * @param {string} [profileData.telefono] - The user's phone number.
+   * @returns {Promise<object>} A promise that resolves to the updated user data.
+   * @throws {Error} If the API request fails.
+   */
+  updateProfile: async (profileData) => {
+    const response = await api.put('/auth/profile', profileData);
+    return response.data;
+  },
+
+  /**
+   * Changes the current user's password.
+   * @param {object} passwordData - An object containing password change data.
+   * @param {string} passwordData.currentPassword - The user's current password.
+   * @param {string} passwordData.newPassword - The new password.
+   * @returns {Promise<object>} A promise that resolves to a success message.
+   * @throws {Error} If the API request fails (e.g., current password is incorrect).
+   */
+  changePassword: async (passwordData) => {
+    const response = await api.put('/auth/change-password', passwordData);
+    return response.data;
+  },
+
+  /**
+   * Logs out the current user by removing the token from localStorage.
+   * This is a client-side operation that doesn't require an API call.
+   */
+  logout: () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.clear();
+  },
 };
 
 /**

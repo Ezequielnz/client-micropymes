@@ -1,6 +1,6 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, LogOut, Home } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { ArrowLeft, LogOut, Home, User, Settings, ChevronDown } from 'lucide-react';
 import { authAPI } from '../utils/api';
 
 const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', disabled = false, ...props }) => {
@@ -33,7 +33,7 @@ const PageHeader = ({
   title, 
   subtitle, 
   icon: Icon, 
-  backPath = '/home',
+  backPath = null, // Ahora es opcional
   showBackButton = true,
   showHomeButton = true,
   showLogoutButton = true,
@@ -41,10 +41,50 @@ const PageHeader = ({
   children 
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [userInfo, setUserInfo] = useState({ 
+    nombre: userName, 
+    email: 'usuario@ejemplo.com' 
+  });
+
+  // Obtener información real del usuario
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const userData = await authAPI.getCurrentUser();
+        setUserInfo({
+          nombre: userData.nombre || userData.email?.split('@')[0] || userName,
+          email: userData.email || 'usuario@ejemplo.com'
+        });
+      } catch (error) {
+        console.error('Error al obtener información del usuario:', error);
+        // Mantener valores por defecto si hay error
+      }
+    };
+
+    fetchUserInfo();
+  }, [userName]);
 
   const handleLogout = () => {
     authAPI.logout();
     navigate('/login');
+  };
+
+  const handleEditProfile = () => {
+    setShowUserDropdown(false);
+    navigate('/profile');
+  };
+
+  // Función para manejar el botón volver de forma inteligente
+  const handleBack = () => {
+    if (backPath) {
+      // Si se especifica una ruta específica, usarla
+      navigate(backPath);
+    } else {
+      // Si no, volver a la página anterior
+      navigate(-1);
+    }
   };
 
   return (
@@ -56,7 +96,7 @@ const PageHeader = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigate(backPath)}
+                onClick={handleBack}
                 className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
@@ -94,21 +134,160 @@ const PageHeader = ({
               </Button>
             )}
             
-            <span className="text-sm text-gray-600">
-              Hola, {userName}
-            </span>
-            
-            {showLogoutButton && (
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Salir
-              </Button>
-            )}
+            {/* User Profile Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowUserDropdown(!showUserDropdown)}
+                style={{ 
+                  backgroundColor: '#ffffff !important',
+                  border: '1px solid #e5e5e5 !important',
+                  borderRadius: '0.5rem',
+                  padding: '0.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  color: '#374151 !important',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  boxShadow: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = '#f9fafb !important';
+                  e.target.style.color = '#374151 !important';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = '#ffffff !important';
+                  e.target.style.color = '#374151 !important';
+                }}
+                className=""
+              >
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                  <User className="h-4 w-4 text-white" />
+                </div>
+                <ChevronDown className={`h-4 w-4 transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {showUserDropdown && (
+                <div 
+                  className="absolute right-0 top-12 w-64 border border-gray-200 rounded-lg shadow-lg z-50"
+                  style={{ 
+                    backgroundColor: '#ffffff',
+                    color: '#374151'
+                  }}
+                >
+                  <div 
+                    className="p-4 border-b border-gray-100"
+                    style={{ 
+                      backgroundColor: '#ffffff',
+                      color: '#374151'
+                    }}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div>
+                        <p 
+                          className="font-medium"
+                          style={{ color: '#111827' }}
+                        >
+                          {userInfo.nombre}
+                        </p>
+                        <p 
+                          className="text-sm"
+                          style={{ color: '#6b7280' }}
+                        >
+                          {userInfo.email}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div style={{ backgroundColor: '#ffffff', padding: '0.5rem' }}>
+                    <button
+                      onClick={() => {
+                        setShowUserDropdown(false);
+                        navigate('/profile');
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem',
+                        color: '#374151',
+                        backgroundColor: '#ffffff',
+                        border: 'none',
+                        borderRadius: '0.375rem',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        outline: 'none',
+                        boxShadow: 'none',
+                        textDecoration: 'none'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#f3f4f6';
+                        e.target.style.color = '#374151';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = '#ffffff';
+                        e.target.style.color = '#374151';
+                      }}
+                      className=""
+                    >
+                      <Settings style={{ width: '1rem', height: '1rem', color: '#374151' }} />
+                      Editar perfil
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setShowUserDropdown(false);
+                        handleLogout();
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem',
+                        color: '#374151',
+                        backgroundColor: '#ffffff',
+                        border: 'none',
+                        borderRadius: '0.375rem',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        outline: 'none',
+                        boxShadow: 'none',
+                        textDecoration: 'none'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#f3f4f6';
+                        e.target.style.color = '#374151';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = '#ffffff';
+                        e.target.style.color = '#374151';
+                      }}
+                      className=""
+                    >
+                      <LogOut style={{ width: '1rem', height: '1rem', color: '#374151' }} />
+                      Cerrar sesión
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
             
             {children}
           </div>
         </div>
       </div>
+      
+      {/* Overlay to close dropdown when clicking outside */}
+      {showUserDropdown && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setShowUserDropdown(false)}
+        />
+      )}
     </nav>
   );
 };

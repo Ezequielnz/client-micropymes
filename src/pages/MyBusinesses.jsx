@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authAPI, businessAPI } from '../utils/api';
+import PageHeader from '../components/PageHeader';
 import { 
   Building2, 
   Plus, 
@@ -336,36 +337,13 @@ function MyBusinesses() {
 
   return (
     <div className="page-container">
-      {/* Navigation */}
-              <nav className="page-header">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg mr-3"></div>
-              <h1 className="text-2xl font-bold text-gray-900">BizFlow Pro</h1>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <SimpleButton 
-                variant="outline" 
-                size="sm"
-                onClick={() => navigate('/home')}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Centro de Notificaciones
-              </SimpleButton>
-              <SimpleButton 
-                variant="outline" 
-                size="sm" 
-                onClick={handleLogout}
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Cerrar Sesión
-              </SimpleButton>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <PageHeader 
+        title="Mis Negocios"
+        subtitle="Gestiona todos tus negocios desde un solo lugar"
+        icon={Building2}
+        backPath="/home"
+        userName={user?.nombre || 'Usuario'}
+      />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -399,12 +377,13 @@ function MyBusinesses() {
                   🔧 Reparar
                 </SimpleButton>
               )}
-              <Link to="/create-business">
-                <SimpleButton className="bg-blue-600 hover:bg-blue-700 text-white">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Crear Nuevo Negocio
-                </SimpleButton>
-              </Link>
+              <SimpleButton 
+                onClick={() => navigate('/create-business')}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Nuevo Negocio
+              </SimpleButton>
             </div>
           </div>
 

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
+// import { Checkbox } from '@/components/ui/checkbox';
 import { productAPI } from '../utils/api';
 import { 
   Upload, 
@@ -414,10 +414,12 @@ const ImportProducts = ({ businessId, onImportComplete, onClose }) => {
                 return (
                   <tr key={product.id} className={hasErrors ? 'bg-red-50' : ''}>
                     <td className="px-4 py-3">
-                      <Checkbox
+                      <input
+                        type="checkbox"
                         checked={selectedProducts.includes(product.id)}
-                        onCheckedChange={() => handleProductToggle(product.id)}
+                        onChange={() => handleProductToggle(product.id)}
                         disabled={hasErrors}
+                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
                     </td>
                     <td className="px-4 py-3">
@@ -500,10 +502,12 @@ const ImportProducts = ({ businessId, onImportComplete, onClose }) => {
 
       <div className="space-y-4">
         <div className="flex items-center space-x-2">
-          <Checkbox
+          <input
+            type="checkbox"
             id="createCategories"
             checked={createNewCategories}
-            onCheckedChange={setCreateNewCategories}
+            onChange={(e) => setCreateNewCategories(e.target.checked)}
+            className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
           />
           <Label htmlFor="createCategories" className="text-sm">
             Crear categorías nuevas automáticamente
@@ -511,10 +515,12 @@ const ImportProducts = ({ businessId, onImportComplete, onClose }) => {
         </div>
 
         <div className="flex items-center space-x-2">
-          <Checkbox
+          <input
+            type="checkbox"
             id="overwriteExisting"
             checked={overwriteExisting}
-            onCheckedChange={setOverwriteExisting}
+            onChange={(e) => setOverwriteExisting(e.target.checked)}
+            className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
           />
           <Label htmlFor="overwriteExisting" className="text-sm">
             Sobrescribir productos existentes (por código)

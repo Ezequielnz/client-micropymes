@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import api, { tasksAPI, authAPI } from '../utils/api';
 import { PageLoader } from '../components/LoadingSpinner';
+import Layout from '../components/Layout';
+import PermissionGuard from '../components/PermissionGuard';
 import '../styles/Home.css';
 
 const ESTADOS = {
@@ -56,7 +58,7 @@ const useDebounce = (value, delay) => {
   return debouncedValue;
 };
 
-export default function Tasks() {
+function TasksComponent({ currentBusiness }) {
   console.log('🚀 Tasks component initialized');
   
   const { businessId } = useParams();
@@ -102,37 +104,41 @@ export default function Tasks() {
   // Efecto para cargar datos iniciales
   useEffect(() => {
     console.log('🔄 Initial data load - businessId:', businessId);
-    if (businessId) {
+    const effectiveBusinessId = businessId || currentBusiness?.id;
+    if (effectiveBusinessId) {
       cargarDatosIniciales();
     } else {
       console.log('❌ No businessId found, not loading data');
     }
-  }, [businessId]);
+  }, [businessId, currentBusiness?.id]);
 
   // Efecto separado para búsqueda con debounce
   useEffect(() => {
     console.log('🔍 Search effect triggered - debouncedSearchTerm:', debouncedSearchTerm);
-    if (businessId) {
+    const effectiveBusinessId = businessId || currentBusiness?.id;
+    if (effectiveBusinessId) {
       // Actualizar filtros con el término de búsqueda debounced
       setFiltros(prev => ({
         ...prev,
         busqueda: debouncedSearchTerm
       }));
     }
-  }, [debouncedSearchTerm, businessId]);
+  }, [debouncedSearchTerm, businessId, currentBusiness?.id]);
 
   // Efecto para filtros (excluyendo búsqueda que se maneja arriba)
   useEffect(() => {
     console.log('🔄 Filters effect triggered - filtros:', filtros);
-    if (businessId && (filtros.estado || filtros.prioridad || filtros.asignada_a_id || filtros.busqueda !== searchInput)) {
+    const effectiveBusinessId = businessId || currentBusiness?.id;
+    if (effectiveBusinessId && (filtros.estado || filtros.prioridad || filtros.asignada_a_id || filtros.busqueda !== searchInput)) {
       cargarTareas();
     }
-  }, [filtros.estado, filtros.prioridad, filtros.asignada_a_id, filtros.busqueda, businessId]);
+  }, [filtros.estado, filtros.prioridad, filtros.asignada_a_id, filtros.busqueda, businessId, currentBusiness?.id]);
 
   const cargarDatosIniciales = async () => {
     try {
       setLoading(true);
       setError('');
+      const effectiveBusinessId = businessId || currentBusiness?.id;
       
       // Cargar datos del usuario
       try {
@@ -145,7 +151,7 @@ export default function Tasks() {
       // Cargar empleados
       console.log('🔄 Cargando empleados...');
       try {
-        const empleadosData = await tasksAPI.getEmployees(businessId);
+        const empleadosData = await tasksAPI.getEmployees(effectiveBusinessId);
         console.log('✅ Empleados cargados:', empleadosData);
         setEmpleados(empleadosData.empleados || []);
       } catch (err) {
@@ -156,7 +162,7 @@ export default function Tasks() {
       // Cargar estadísticas
       console.log('🔄 Cargando estadísticas...');
       try {
-        const estadisticasData = await tasksAPI.getTaskStatistics(businessId);
+        const estadisticasData = await tasksAPI.getTaskStatistics(effectiveBusinessId);
         console.log('✅ Estadísticas cargadas:', estadisticasData);
         setEstadisticas(estadisticasData);
       } catch (err) {
@@ -178,6 +184,7 @@ export default function Tasks() {
   const cargarTareas = async () => {
     try {
       setSearchLoading(true);
+      const effectiveBusinessId = businessId || currentBusiness?.id;
       
       // Filtrar parámetros vacíos
       const filtrosLimpios = Object.fromEntries(
@@ -185,7 +192,7 @@ export default function Tasks() {
       );
       console.log('📋 Filtros a enviar:', filtrosLimpios);
       
-      const tareasData = await tasksAPI.getTasks(businessId, filtrosLimpios);
+      const tareasData = await tasksAPI.getTasks(effectiveBusinessId, filtrosLimpios);
       console.log('✅ Tareas cargadas:', tareasData);
       setTareas(tareasData.tareas || []);
       
@@ -210,79 +217,32 @@ export default function Tasks() {
 
   const handleSubmitTarea = async (e) => {
     e.preventDefault();
-    setError('');
     
-    // Validación básica
     if (!formData.titulo.trim()) {
-      setError('El título es requerido');
-      return;
-    }
-    
-    if (formData.titulo.length > 200) {
-      setError('El título no puede exceder 200 caracteres');
-      return;
-    }
-    
-    if (formData.descripcion && formData.descripcion.length > 1000) {
-      setError('La descripción no puede exceder 1000 caracteres');
+      setError('El título es obligatorio');
       return;
     }
     
     try {
-      // Convertir fechas al formato correcto para el backend
-      let fechaInicio = null;
-      let fechaFin = null;
+      setLoading(true);
+      const effectiveBusinessId = businessId || currentBusiness?.id;
       
-      if (formData.fecha_inicio) {
-        // datetime-local devuelve formato YYYY-MM-DDTHH:mm
-        // Necesitamos convertir a ISO string con timezone
-        fechaInicio = new Date(formData.fecha_inicio).toISOString();
-      }
-      
-      if (formData.fecha_fin) {
-        // datetime-local devuelve formato YYYY-MM-DDTHH:mm
-        // Necesitamos convertir a ISO string con timezone
-        fechaFin = new Date(formData.fecha_fin).toISOString();
-      }
-      
-      const data = {
-        titulo: formData.titulo.trim(),
-        descripcion: formData.descripcion?.trim() || null,
-        fecha_inicio: fechaInicio,
-        fecha_fin: fechaFin,
-        estado: formData.estado,
-        prioridad: formData.prioridad,
+      const tareaData = {
+        ...formData,
+        fecha_inicio: formData.fecha_inicio || null,
+        fecha_fin: formData.fecha_fin || null,
         asignada_a_id: formData.asignada_a_id || null
       };
-
-      console.log('📤 Enviando datos de tarea:', data);
-      console.log('📤 Tipos de datos:', {
-        titulo: typeof data.titulo,
-        descripcion: typeof data.descripcion,
-        fecha_inicio: typeof data.fecha_inicio,
-        fecha_fin: typeof data.fecha_fin,
-        estado: typeof data.estado,
-        prioridad: typeof data.prioridad,
-        asignada_a_id: typeof data.asignada_a_id
-      });
-      console.log('📤 Valores exactos:', {
-        titulo: `"${data.titulo}"`,
-        descripcion: data.descripcion ? `"${data.descripcion}"` : 'null',
-        fecha_inicio: data.fecha_inicio ? `"${data.fecha_inicio}"` : 'null',
-        fecha_fin: data.fecha_fin ? `"${data.fecha_fin}"` : 'null',
-        estado: `"${data.estado}"`,
-        prioridad: `"${data.prioridad}"`,
-        asignada_a_id: data.asignada_a_id ? `"${data.asignada_a_id}"` : 'null'
-      });
-
+      
       if (tareaEditando) {
-        await tasksAPI.updateTask(businessId, tareaEditando.id, data);
+        console.log('🔄 Actualizando tarea:', tareaEditando.id, tareaData);
+        await tasksAPI.updateTask(effectiveBusinessId, tareaEditando.id, tareaData);
       } else {
-        await tasksAPI.createTask(businessId, data);
+        console.log('🔄 Creando nueva tarea:', tareaData);
+        await tasksAPI.createTask(effectiveBusinessId, tareaData);
       }
       
-      setMostrarFormulario(false);
-      setTareaEditando(null);
+      // Resetear formulario
       setFormData({
         titulo: '',
         descripcion: '',
@@ -292,67 +252,17 @@ export default function Tasks() {
         prioridad: 'media',
         asignada_a_id: ''
       });
+      setMostrarFormulario(false);
+      setTareaEditando(null);
       
-      // Recargar solo las tareas y estadísticas
-      await cargarTareas();
-      
-      // Actualizar estadísticas
-      try {
-        const estadisticasData = await tasksAPI.getTaskStatistics(businessId);
-        setEstadisticas(estadisticasData);
-      } catch (err) {
-        console.error('❌ Error actualizando estadísticas:', err);
-      }
+      // Recargar datos
+      await cargarDatosIniciales();
       
     } catch (err) {
-      console.error('❌ Error al guardar tarea:', err);
-      
-      // Manejar diferentes tipos de errores de forma segura
-      let errorMessage = 'Error al guardar la tarea';
-      
-      try {
-        if (err.response?.data) {
-          const errorData = err.response.data;
-          
-          // Si es un error de validación de Pydantic (422)
-          if (err.response.status === 422 && errorData.detail) {
-            if (Array.isArray(errorData.detail)) {
-              // Formatear errores de validación de Pydantic
-              const validationErrors = errorData.detail.map(error => {
-                const field = error.loc ? error.loc.join('.') : 'campo';
-                return `${field}: ${error.msg}`;
-              }).join(', ');
-              errorMessage = `Error de validación: ${validationErrors}`;
-            } else if (typeof errorData.detail === 'string') {
-              errorMessage = errorData.detail;
-            } else {
-              errorMessage = 'Error de validación en los datos enviados';
-            }
-          } else if (typeof errorData.detail === 'string') {
-            errorMessage = errorData.detail;
-          } else if (typeof errorData === 'string') {
-            errorMessage = errorData;
-          }
-        } else if (err.message && typeof err.message === 'string') {
-          errorMessage = err.message;
-        }
-      } catch (parseError) {
-        console.error('❌ Error procesando mensaje de error:', parseError);
-        errorMessage = 'Error al procesar la respuesta del servidor';
-      }
-      
-      // Detectar error de restricción única temporal
-      if (errorMessage.includes('duplicate key') || errorMessage.includes('unique constraint') || 
-          errorMessage.includes('tareas_negocio_id_key') || err.response?.status === 409) {
-        errorMessage = 'Error temporal: La base de datos tiene una restricción que permite solo una tarea por negocio. Contacta al administrador para solucionarlo.';
-      }
-      
-      // Asegurar que errorMessage sea siempre un string
-      if (typeof errorMessage !== 'string') {
-        errorMessage = 'Error desconocido al guardar la tarea';
-      }
-      
-      setError(errorMessage);
+      console.error('❌ Error guardando tarea:', err);
+      setError(err.response?.data?.detail || 'Error al guardar la tarea');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -381,38 +291,36 @@ export default function Tasks() {
   };
 
   const handleEliminarTarea = async (tareaId) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta tarea?')) return;
+    if (!window.confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
+      return;
+    }
     
     try {
-      await tasksAPI.deleteTask(businessId, tareaId);
-      await cargarTareas();
-      
-      // Actualizar estadísticas
-      try {
-        const estadisticasData = await tasksAPI.getTaskStatistics(businessId);
-        setEstadisticas(estadisticasData);
-      } catch (err) {
-        console.error('❌ Error actualizando estadísticas:', err);
-      }
+      setLoading(true);
+      const effectiveBusinessId = businessId || currentBusiness?.id;
+      console.log('🗑️ Eliminando tarea:', tareaId);
+      await tasksAPI.deleteTask(effectiveBusinessId, tareaId);
+      await cargarDatosIniciales();
     } catch (err) {
-      setError('Error al eliminar la tarea');
+      console.error('❌ Error eliminando tarea:', err);
+      setError(err.response?.data?.detail || 'Error al eliminar la tarea');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleCambiarEstado = async (tareaId, nuevoEstado) => {
     try {
-      await tasksAPI.updateTask(businessId, tareaId, { estado: nuevoEstado });
-      await cargarTareas();
-      
-      // Actualizar estadísticas
-      try {
-        const estadisticasData = await tasksAPI.getTaskStatistics(businessId);
-        setEstadisticas(estadisticasData);
-      } catch (err) {
-        console.error('❌ Error actualizando estadísticas:', err);
-      }
+      setLoading(true);
+      const effectiveBusinessId = businessId || currentBusiness?.id;
+      console.log('🔄 Cambiando estado de tarea:', tareaId, 'a', nuevoEstado);
+      await tasksAPI.updateTask(effectiveBusinessId, tareaId, { estado: nuevoEstado });
+      await cargarDatosIniciales();
     } catch (err) {
-      setError('Error al actualizar el estado de la tarea');
+      console.error('❌ Error cambiando estado:', err);
+      setError(err.response?.data?.detail || 'Error al cambiar el estado');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -421,7 +329,6 @@ export default function Tasks() {
     localStorage.removeItem('user');
     localStorage.clear();
     navigate('/login');
-    window.location.href = '/login';
   };
 
   const formatearFecha = (fecha) => {
@@ -434,59 +341,16 @@ export default function Tasks() {
   }
 
   return (
-    <div className="app-container">
-      {/* Navigation */}
-      <nav className="nav">
-        <div className="nav-container">
-          <div className="flex items-center gap-4">
-            <button
-              className="btn btn-outline btn-sm"
-              onClick={() => navigate(`/business/${businessId}`)}
-            >
-              <ArrowLeft style={{ width: '1rem', height: '1rem', marginRight: '0.5rem' }} />
-              Volver al Dashboard
-            </button>
-            
-            <div className="flex items-center">
-              <div style={{ 
-                width: '2rem', 
-                height: '2rem', 
-                backgroundColor: '#d97706', 
-                borderRadius: '0.5rem',
-                marginRight: '0.75rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <ClipboardList style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-mp-text">Gestión de Tareas</h1>
-                <p className="text-sm text-mp-text-secondary">Organiza y supervisa el trabajo del equipo</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-mp-text-secondary">
-              Hola, {user?.nombre || 'Usuario'}
-            </span>
-            <button className="btn btn-outline btn-sm" onClick={handleLogout}>
-              <LogOut style={{ width: '1rem', height: '1rem', marginRight: '0.5rem' }} />
-              Salir
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* Main Content */}
-      <div className="container">
+    <Layout activeSection="tasks">
+      <div className="p-8">
         {/* Header Section */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="mb-8 flex justify-between items-center">
           <div>
-            <h2 className="text-3xl font-bold text-mp-text">Panel de Tareas</h2>
-            <p className="text-mp-text-secondary mt-1">
-              Gestiona las tareas y proyectos de tu equipo
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Gestión de Tareas
+            </h1>
+            <p className="text-gray-600">
+              Organiza y gestiona las tareas de tu equipo
             </p>
           </div>
           <div className="flex gap-2">
@@ -525,8 +389,8 @@ export default function Tasks() {
               <div className="card-content p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold text-mp-primary">{estadisticas.total_tareas}</p>
-                    <p className="text-sm text-mp-text-secondary">Total</p>
+                    <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2563eb' }}>{estadisticas.total_tareas}</p>
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Total</p>
                   </div>
                   <div style={{ 
                     width: '3rem', 
@@ -547,8 +411,8 @@ export default function Tasks() {
               <div className="card-content p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold text-mp-warning">{estadisticas.pendientes}</p>
-                    <p className="text-sm text-mp-text-secondary">Pendientes</p>
+                    <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#d97706' }}>{estadisticas.pendientes}</p>
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Pendientes</p>
                   </div>
                   <div style={{ 
                     width: '3rem', 
@@ -569,8 +433,8 @@ export default function Tasks() {
               <div className="card-content p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold text-mp-primary">{estadisticas.en_progreso}</p>
-                    <p className="text-sm text-mp-text-secondary">En Progreso</p>
+                    <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2563eb' }}>{estadisticas.en_progreso}</p>
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>En Progreso</p>
                   </div>
                   <div style={{ 
                     width: '3rem', 
@@ -591,8 +455,8 @@ export default function Tasks() {
               <div className="card-content p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold text-mp-success">{estadisticas.completadas}</p>
-                    <p className="text-sm text-mp-text-secondary">Completadas</p>
+                    <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#059669' }}>{estadisticas.completadas}</p>
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Completadas</p>
                   </div>
                   <div style={{ 
                     width: '3rem', 
@@ -613,8 +477,8 @@ export default function Tasks() {
               <div className="card-content p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold text-mp-error">{estadisticas.vencidas}</p>
-                    <p className="text-sm text-mp-text-secondary">Vencidas</p>
+                    <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#dc2626' }}>{estadisticas.vencidas}</p>
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Vencidas</p>
                   </div>
                   <div style={{ 
                     width: '3rem', 
@@ -833,122 +697,130 @@ export default function Tasks() {
             </div>
           </div>
         )}
-      </div>
 
-      {/* Modal Formulario */}
-      {mostrarFormulario && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2 className="text-xl font-bold mb-4 text-gray-900">
-              {tareaEditando ? 'Editar Tarea' : 'Nueva Tarea'}
-            </h2>
-            
-            <form onSubmit={handleSubmitTarea} className="grid gap-4">
-              <div className="form-group">
-                <label className="form-label">Título *</label>
-                <input
-                  className="form-input"
-                  required
-                  value={formData.titulo}
-                  onChange={(e) => setFormData({...formData, titulo: e.target.value})}
-                  placeholder="Título de la tarea"
-                />
-              </div>
+        {/* Modal Formulario */}
+        {mostrarFormulario && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <h2 className="text-xl font-bold mb-4 text-gray-900">
+                {tareaEditando ? 'Editar Tarea' : 'Nueva Tarea'}
+              </h2>
               
-              <div className="form-group">
-                <label className="form-label">Descripción</label>
-                <textarea
-                  className="form-textarea"
-                  value={formData.descripcion}
-                  onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
-                  placeholder="Descripción de la tarea"
-                  rows={3}
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
+              <form onSubmit={handleSubmitTarea} className="grid gap-4">
                 <div className="form-group">
-                  <label className="form-label">Fecha y Hora de Inicio</label>
+                  <label className="form-label">Título *</label>
                   <input
                     className="form-input"
-                    type="datetime-local"
-                    value={formData.fecha_inicio}
-                    onChange={(e) => setFormData({...formData, fecha_inicio: e.target.value})}
+                    required
+                    value={formData.titulo}
+                    onChange={(e) => setFormData({...formData, titulo: e.target.value})}
+                    placeholder="Título de la tarea"
                   />
                 </div>
+                
                 <div className="form-group">
-                  <label className="form-label">Fecha y Hora de Fin</label>
-                  <input
-                    className="form-input"
-                    type="datetime-local"
-                    value={formData.fecha_fin}
-                    onChange={(e) => setFormData({...formData, fecha_fin: e.target.value})}
+                  <label className="form-label">Descripción</label>
+                  <textarea
+                    className="form-textarea"
+                    value={formData.descripcion}
+                    onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
+                    placeholder="Descripción de la tarea"
+                    rows={3}
                   />
                 </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="form-group">
+                    <label className="form-label">Fecha y Hora de Inicio</label>
+                    <input
+                      className="form-input"
+                      type="datetime-local"
+                      value={formData.fecha_inicio}
+                      onChange={(e) => setFormData({...formData, fecha_inicio: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Fecha y Hora de Fin</label>
+                    <input
+                      className="form-input"
+                      type="datetime-local"
+                      value={formData.fecha_fin}
+                      onChange={(e) => setFormData({...formData, fecha_fin: e.target.value})}
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="form-group">
+                    <label className="form-label">Estado</label>
+                    <select
+                      className="form-select"
+                      value={formData.estado}
+                      onChange={(e) => setFormData({...formData, estado: e.target.value})}
+                    >
+                      {Object.entries(ESTADOS).map(([key, estado]) => (
+                        <option key={key} value={key}>{estado.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Prioridad</label>
+                    <select
+                      className="form-select"
+                      value={formData.prioridad}
+                      onChange={(e) => setFormData({...formData, prioridad: e.target.value})}
+                    >
+                      {Object.entries(PRIORIDADES).map(([key, prioridad]) => (
+                        <option key={key} value={key}>{prioridad.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
                 <div className="form-group">
-                  <label className="form-label">Estado</label>
+                  <label className="form-label">Asignar a</label>
                   <select
                     className="form-select"
-                    value={formData.estado}
-                    onChange={(e) => setFormData({...formData, estado: e.target.value})}
+                    value={formData.asignada_a_id}
+                    onChange={(e) => setFormData({...formData, asignada_a_id: e.target.value})}
                   >
-                    {Object.entries(ESTADOS).map(([key, estado]) => (
-                      <option key={key} value={key}>{estado.label}</option>
+                    <option value="">Sin asignar</option>
+                    {empleados.map((empleado) => (
+                      <option key={empleado.id} value={empleado.id}>
+                        {empleado.nombre_completo} ({empleado.rol})
+                      </option>
                     ))}
                   </select>
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Prioridad</label>
-                  <select
-                    className="form-select"
-                    value={formData.prioridad}
-                    onChange={(e) => setFormData({...formData, prioridad: e.target.value})}
+                
+                <div className="flex gap-2 pt-4">
+                  <button type="submit" className="btn btn-primary w-full">
+                    {tareaEditando ? 'Actualizar' : 'Crear'} Tarea
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={() => {
+                      setMostrarFormulario(false);
+                      setTareaEditando(null);
+                    }}
                   >
-                    {Object.entries(PRIORIDADES).map(([key, prioridad]) => (
-                      <option key={key} value={key}>{prioridad.label}</option>
-                    ))}
-                  </select>
+                    Cancelar
+                  </button>
                 </div>
-              </div>
-              
-              <div className="form-group">
-                <label className="form-label">Asignar a</label>
-                <select
-                  className="form-select"
-                  value={formData.asignada_a_id}
-                  onChange={(e) => setFormData({...formData, asignada_a_id: e.target.value})}
-                >
-                  <option value="">Sin asignar</option>
-                  {empleados.map((empleado) => (
-                    <option key={empleado.id} value={empleado.id}>
-                      {empleado.nombre_completo} ({empleado.rol})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="flex gap-2 pt-4">
-                <button type="submit" className="btn btn-primary w-full">
-                  {tareaEditando ? 'Actualizar' : 'Crear'} Tarea
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  onClick={() => {
-                    setMostrarFormulario(false);
-                    setTareaEditando(null);
-                  }}
-                >
-                  Cancelar
-                </button>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </Layout>
+  );
+}
+
+export default function ProtectedTasks() {
+  return (
+    <PermissionGuard requiredModule="tareas" requiredAction="ver">
+      <TasksComponent />
+    </PermissionGuard>
   );
 } 
