@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { businessAPI, authAPI } from '../utils/api';
+import { useBusinessContext } from '../contexts/BusinessContext';
 import {
   AlertCircle,
   Loader2,
@@ -10,8 +11,11 @@ import {
 } from 'lucide-react';
 
 function PermissionGuard({ children, requiredModule, requiredAction = 'ver' }) {
-  const { businessId } = useParams();
   const navigate = useNavigate();
+  
+  // ✅ FIXED: Use BusinessContext instead of useParams
+  const { currentBusiness } = useBusinessContext();
+  const businessId = currentBusiness?.id;
   
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
@@ -19,8 +23,14 @@ function PermissionGuard({ children, requiredModule, requiredAction = 'ver' }) {
   const [business, setBusiness] = useState(null);
 
   useEffect(() => {
-    checkPermissions();
-  }, [businessId, requiredModule, requiredAction]);
+    if (currentBusiness && businessId) {
+      checkPermissions();
+    } else {
+      // If no business is selected, we can't check permissions
+      setLoading(false);
+      setHasAccess(false);
+    }
+  }, [businessId, requiredModule, requiredAction, currentBusiness]);
 
   const checkPermissions = async () => {
     try {
@@ -30,9 +40,8 @@ function PermissionGuard({ children, requiredModule, requiredAction = 'ver' }) {
       const userData = await authAPI.getCurrentUser();
       setUser(userData);
 
-      // Cargar datos del negocio
-      const businessData = await businessAPI.getBusinessById(businessId);
-      setBusiness(businessData);
+      // Use currentBusiness from context instead of fetching
+      setBusiness(currentBusiness);
 
       // Verificar permisos del usuario en este negocio
       const businessUsers = await businessAPI.getBusinessUsers(businessId);
@@ -61,6 +70,38 @@ function PermissionGuard({ children, requiredModule, requiredAction = 'ver' }) {
       setLoading(false);
     }
   };
+
+  // ✅ FIXED: Handle case when no business is selected
+  if (!currentBusiness) {
+    return (
+      <div className="app-container">
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="card max-w-md mx-auto">
+            <div className="text-center p-8">
+              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="h-8 w-8 text-yellow-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                No hay negocio seleccionado
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Para acceder a esta página necesitas seleccionar un negocio desde el menú superior.
+              </p>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => navigate('/home')} 
+                  className="btn btn-primary flex-1"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Volver al Dashboard
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -97,7 +138,7 @@ function PermissionGuard({ children, requiredModule, requiredAction = 'ver' }) {
               </p>
               <div className="flex gap-2">
                 <button 
-                  onClick={() => navigate(`/business/${businessId}`)} 
+                  onClick={() => navigate('/home')} 
                   className="btn btn-primary flex-1"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />

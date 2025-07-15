@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useBusinessContext } from '../contexts/BusinessContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productAPI, customerAPI, salesAPI, serviceAPI } from '../utils/api';
 import PermissionGuard from '../components/PermissionGuard';
 import Layout from '../components/Layout';
@@ -118,22 +120,14 @@ const Alert = ({ children, variant = 'default', className = '' }) => {
 /**
  * Point of Sale (POS) component with modern design.
  */
-function POS({ currentBusiness }) {
-  const { businessId } = useParams();
+function POS() {
+  const { currentBusiness } = useBusinessContext();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const businessId = currentBusiness?.id;
 
-  /** @type {[Array<ProductInPOS>, function]} allProducts - State for storing all products fetched from the API. */
-  const [allProducts, setAllProducts] = useState([]);
-  /** @type {[Array<ServiceInPOS>, function]} allServices - State for storing all services fetched from the API. */
-  const [allServices, setAllServices] = useState([]);
-  /** @type {[Array<ProductInPOS>, function]} availableProducts - State for products currently displayed to the user, potentially filtered by search. */
-  const [availableProducts, setAvailableProducts] = useState([]);
-  /** @type {[Array<ServiceInPOS>, function]} availableServices - State for services currently displayed to the user, potentially filtered by search. */
-  const [availableServices, setAvailableServices] = useState([]);
   /** @type {[Array<CartItem>, function]} cart - State representing the current shopping cart, an array of CartItem objects. */
   const [cart, setCart] = useState([]);
-  /** @type {[Array<CustomerInPOS>, function]} customers - State for the list of customers available for selection. */
-  const [customers, setCustomers] = useState([]);
   /** @type {[string, function]} selectedCustomer - State for the ID of the customer selected for the current sale. Empty string if no customer is selected. */
   const [selectedCustomer, setSelectedCustomer] = useState('');
   
@@ -142,14 +136,6 @@ function POS({ currentBusiness }) {
   /** @type {[string, function]} activeTab - State for the currently active tab (productos or servicios). */
   const [activeTab, setActiveTab] = useState('productos');
   
-  /** @type {[boolean, function]} loadingProducts - State to indicate if product data is currently being fetched. */
-  const [loadingProducts, setLoadingProducts] = useState(true);
-  /** @type {[boolean, function]} loadingServices - State to indicate if service data is currently being fetched. */
-  const [loadingServices, setLoadingServices] = useState(true);
-  /** @type {[boolean, function]} loadingCustomers - State to indicate if customer data is currently being fetched. */
-  const [loadingCustomers, setLoadingCustomers] = useState(true);
-  /** @type {[boolean, function]} submittingSale - State to indicate if a sale is currently being submitted to the API. */
-  const [submittingSale, setSubmittingSale] = useState(false);
   /** @type {[string, function]} error - State for storing general page-level error messages (e.g., initial data load failure, sale submission failure). */
   const [error, setError] = useState('');
   /** @type {[string, function]} cartError - State for storing errors specific to cart operations (e.g., insufficient stock). */
@@ -159,88 +145,109 @@ function POS({ currentBusiness }) {
   /** @type {[string, function]} paymentMethod - State for the selected payment method. */
   const [paymentMethod, setPaymentMethod] = useState('efectivo');
 
-  /**
-   * Fetches initial data required for the POS system, including all products,
-   * services, and a list of customers. This function is called on component mount.
-   * It updates loading states and handles potential errors during data fetching.
-   */
-  const fetchInitialData = useCallback(async () => {
-    const effectiveBusinessId = businessId || currentBusiness?.id;
-    if (!effectiveBusinessId) {
-      setError('Business ID is missing.');
-      setLoadingProducts(false);
-      setLoadingServices(false);
-      setLoadingCustomers(false);
-      return;
-    }
+  // ✅ OPTIMIZED: React Query for products with smart caching
+  const { 
+    data: allProducts = [], 
+    isLoading: loadingProducts,
+    error: productsError
+  } = useQuery({
+    queryKey: ['products', businessId],
+    queryFn: () => productAPI.getProducts(businessId),
+    enabled: !!businessId && !!currentBusiness, // Only fetch when we have a valid business
+    staleTime: 2 * 60 * 1000, // 2 minutes (more dynamic data)
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+    retry: 2,
+  });
 
-    setLoadingProducts(true);
-    setLoadingServices(true);
-    setLoadingCustomers(true);
-    setError(''); // Clear general errors
-    setSaleSuccessMessage(''); // Clear previous success messages
-    // cartError is managed per operation
-    try {
-      const [productsData, servicesData, customersData] = await Promise.all([
-        productAPI.getProducts(effectiveBusinessId),
-        serviceAPI.getServices(effectiveBusinessId),
-        customerAPI.getCustomers(effectiveBusinessId),
-      ]);
-      setAllProducts(Array.isArray(productsData) ? productsData : []);
-      setAvailableProducts(Array.isArray(productsData) ? productsData : []);
-      setAllServices(Array.isArray(servicesData) ? servicesData : []);
-      setAvailableServices(Array.isArray(servicesData) ? servicesData : []);
-      setCustomers(Array.isArray(customersData) ? customersData : []);
-    } catch (err) {
-      console.error('Error fetching initial data:', err);
-      setError('Failed to load initial data. Please try refreshing.');
-      setAllProducts([]);
-      setAvailableProducts([]);
-      setAllServices([]);
-      setAvailableServices([]);
-      setCustomers([]);
-    } finally {
-      setLoadingProducts(false);
-      setLoadingServices(false);
-      setLoadingCustomers(false);
-    }
-  }, [businessId, currentBusiness?.id]);
+  // ✅ OPTIMIZED: React Query for services with smart caching
+  const { 
+    data: allServices = [], 
+    isLoading: loadingServices,
+    error: servicesError
+  } = useQuery({
+    queryKey: ['services', businessId],
+    queryFn: () => serviceAPI.getServices(businessId),
+    enabled: !!businessId && !!currentBusiness, // Only fetch when we have a valid business
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+    retry: 2,
+  });
 
-  useEffect(() => {
-    fetchInitialData();
-  }, [fetchInitialData]);
+  // ✅ OPTIMIZED: React Query for customers with smart caching
+  const { 
+    data: customers = [], 
+    isLoading: loadingCustomers,
+    error: customersError
+  } = useQuery({
+    queryKey: ['customers', businessId],
+    queryFn: () => customerAPI.getCustomers(businessId),
+    enabled: !!businessId && !!currentBusiness, // Only fetch when we have a valid business
+    staleTime: 5 * 60 * 1000, // 5 minutes (less dynamic)
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    retry: 2,
+  });
 
-  /**
-   * useEffect hook to filter `availableProducts` based on `searchTerm`.
-   * This runs whenever `searchTerm` or the master `allProducts` list changes.
-   */
-  useEffect(() => {
-    if (!searchTerm) {
-      setAvailableProducts(allProducts);
-    } else {
-      setAvailableProducts(
-        allProducts.filter(product =>
-          product.nombre.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      );
+  // ✅ OPTIMIZED: Record sale mutation
+  const recordSaleMutation = useMutation({
+    mutationFn: async (saleData) => {
+      if (!businessId) throw new Error('Business ID is missing');
+      return await salesAPI.recordSale(saleData);
+    },
+    onSuccess: () => {
+      setSaleSuccessMessage('¡Venta registrada exitosamente!');
+      setCart([]);
+      setSelectedCustomer('');
+      setSearchTerm('');
+      setError('');
+      setCartError('');
+      // Invalidate products to update stock levels
+      queryClient.invalidateQueries(['products', businessId]);
+    },
+    onError: (err) => {
+      console.error('Error recording sale:', err);
+      setError(err.response?.data?.detail || err.message || 'Error al registrar la venta.');
+      setSaleSuccessMessage('');
     }
-  }, [searchTerm, allProducts]);
+  });
 
-  /**
-   * useEffect hook to filter `availableServices` based on `searchTerm`.
-   * This runs whenever `searchTerm` or the master `allServices` list changes.
-   */
-  useEffect(() => {
-    if (!searchTerm) {
-      setAvailableServices(allServices);
-    } else {
-      setAvailableServices(
-        allServices.filter(service =>
-          service.nombre.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      );
+  // ✅ OPTIMIZED: Memoized filtered products
+  const availableProducts = useMemo(() => {
+    if (!searchTerm) return allProducts;
+    return allProducts.filter(product =>
+      product.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [allProducts, searchTerm]);
+
+  // ✅ OPTIMIZED: Memoized filtered services
+  const availableServices = useMemo(() => {
+    if (!searchTerm) return allServices;
+    return allServices.filter(service =>
+      service.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [allServices, searchTerm]);
+
+  // ✅ OPTIMIZED: Memoized computed error state
+  const currentError = useMemo(() => {
+    if (error) return error;
+    if (activeTab === 'productos' && productsError) {
+      return `Error al cargar productos: ${productsError.message}`;
     }
-  }, [searchTerm, allServices]);
+    if (activeTab === 'servicios' && servicesError) {
+      return `Error al cargar servicios: ${servicesError.message}`;
+    }
+    if (customersError) {
+      return `Error al cargar clientes: ${customersError.message}`;
+    }
+    return '';
+  }, [error, activeTab, productsError, servicesError, customersError]);
+
+  // ✅ OPTIMIZED: Memoized loading state
+  const isLoading = useMemo(() => {
+    return loadingProducts || loadingServices || loadingCustomers || recordSaleMutation.isPending;
+  }, [loadingProducts, loadingServices, loadingCustomers, recordSaleMutation.isPending]);
 
   /**
    * Adds a product to the cart or updates its quantity if already present.
@@ -248,7 +255,7 @@ function POS({ currentBusiness }) {
    * @param {ProductInPOS} product - The product object to add to the cart.
    * @param {number} [quantity=1] - The quantity of the product to add. Defaults to 1.
    */
-  const handleAddToCart = (product, quantity = 1) => {
+  const handleAddToCart = useCallback((product, quantity = 1) => {
     setCartError('');
     if (quantity <= 0) return;
 
@@ -277,7 +284,7 @@ function POS({ currentBusiness }) {
         item_total: quantity * parseFloat(product.precio_venta),
       }]);
     }
-  };
+  }, [cart]);
 
   /**
    * Adds a service to the cart or updates its quantity if already present.
@@ -285,7 +292,7 @@ function POS({ currentBusiness }) {
    * @param {ServiceInPOS} service - The service object to add to the cart.
    * @param {number} [quantity=1] - The quantity of the service to add. Defaults to 1.
    */
-  const handleAddServiceToCart = (service, quantity = 1) => {
+  const handleAddServiceToCart = useCallback((service, quantity = 1) => {
     setCartError('');
     if (quantity <= 0) return;
 
@@ -307,7 +314,7 @@ function POS({ currentBusiness }) {
         item_total: quantity * parseFloat(service.precio),
       }]);
     }
-  };
+  }, [cart]);
 
   /**
    * Updates the quantity of an item in the cart.
@@ -316,7 +323,7 @@ function POS({ currentBusiness }) {
    * @param {string} tipo - The type of the item (producto or servicio).
    * @param {number} newQuantity - The new quantity for the item.
    */
-  const handleUpdateCartQuantity = (itemId, tipo, newQuantity) => {
+  const handleUpdateCartQuantity = useCallback((itemId, tipo, newQuantity) => {
     setCartError('');
     const itemToUpdate = cart.find(item => item.item_id === itemId && item.tipo === tipo);
     if (!itemToUpdate) return;
@@ -347,14 +354,14 @@ function POS({ currentBusiness }) {
         ? { ...item, quantity: newQuantity, item_total: newQuantity * item.precio_at_sale }
         : item
     ));
-  };
+  }, [cart, allProducts]);
 
   /**
    * Removes an item completely from the cart.
    * @param {string} itemId - The ID of the item to remove from the cart.
    * @param {string} tipo - The type of the item (producto or servicio).
    */
-  const handleRemoveFromCart = (itemId, tipo = null) => {
+  const handleRemoveFromCart = useCallback((itemId, tipo = null) => {
     setCartError('');
     if (tipo) {
       setCart(cart.filter(item => !(item.item_id === itemId && item.tipo === tipo)));
@@ -362,7 +369,7 @@ function POS({ currentBusiness }) {
       // Fallback for backward compatibility
       setCart(cart.filter(item => item.item_id !== itemId));
     }
-  };
+  }, [cart]);
 
   /**
    * Calculates the total amount for the current cart.
@@ -374,22 +381,14 @@ function POS({ currentBusiness }) {
 
   /**
    * Handles the completion of the sale.
-   * Constructs the sale data object and submits it to the `salesAPI.recordSale`.
-   * On success, it clears the cart, resets selected customer and search terms,
-   * displays a success message, and re-fetches initial data (to update stock levels).
-   * On failure, it displays an error message.
+   * Constructs the sale data object and submits it via mutation.
    */
-  const handleCompleteSale = async () => {
+  const handleCompleteSale = useCallback(async () => {
     if (cart.length === 0) {
       setError('No se puede completar una venta con carrito vacío.');
       return;
     }
-    const effectiveBusinessId = businessId || currentBusiness?.id;
-    if (!effectiveBusinessId) {
-      setError('Business ID is missing.');
-      return;
-    }
-    setSubmittingSale(true);
+
     setError('');
     setSaleSuccessMessage('');
     setCartError('');
@@ -407,26 +406,17 @@ function POS({ currentBusiness }) {
     };
 
     try {
-      const response = await salesAPI.recordSale(saleData);
-      setSaleSuccessMessage('¡Venta registrada exitosamente!');
-      setCart([]);
-      setSelectedCustomer('');
-      setSearchTerm('');
-      // Re-fetch products to update stock, and customers just in case.
-      // This is a simple way to reflect stock changes.
-      await fetchInitialData(); 
+      await recordSaleMutation.mutateAsync(saleData);
     } catch (err) {
-      console.error('Error recording sale:', err);
-      setError(err.response?.data?.detail || err.message || 'Error al registrar la venta.');
-    } finally {
-      setSubmittingSale(false);
+      // Error handling is done in the mutation onError callback
+      console.error('Sale completion error:', err);
     }
-  };
+  }, [cart, selectedCustomer, paymentMethod, recordSaleMutation]);
 
-  return (
-    <Layout activeSection="sales">
+  // ✅ OPTIMIZED: Early return for missing business
+  if (!currentBusiness) {
+    return (
       <div className="p-8">
-        {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -437,363 +427,390 @@ function POS({ currentBusiness }) {
                 Sistema de ventas para mostrador
               </p>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg border border-gray-200">
-                <ShoppingCart className="h-5 w-5 text-gray-500" />
-                <span className="text-sm font-medium text-gray-700">
-                  {cart.length} items en carrito
-                </span>
-              </div>
+          </div>
+          <Alert variant="warning" className="mb-6">
+            <AlertTriangle className="h-4 w-4 mr-2" />
+            No hay negocio seleccionado. Por favor selecciona un negocio desde el menú superior.
+          </Alert>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-8">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Punto de Venta
+            </h1>
+            <p className="text-gray-600">
+              Sistema de ventas para mostrador
+            </p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg border border-gray-200">
+              <ShoppingCart className="h-5 w-5 text-gray-500" />
+              <span className="text-sm font-medium text-gray-700">
+                {cart.length} items en carrito
+              </span>
             </div>
           </div>
-
-          {/* Alerts */}
-          {error && (
-            <Alert variant="destructive" className="mb-6">
-              <AlertTriangle className="h-4 w-4 mr-2" />
-              {error}
-            </Alert>
-          )}
-          
-          {cartError && (
-            <Alert variant="warning" className="mb-6">
-              <AlertTriangle className="h-4 w-4 mr-2" />
-              {cartError}
-            </Alert>
-          )}
-          
-          {saleSuccessMessage && (
-            <Alert variant="success" className="mb-6">
-              <CheckCircle className="h-4 w-4 mr-2" />
-              {saleSuccessMessage}
-            </Alert>
-          )}
         </div>
 
-        {/* Main POS Interface */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Products and Services Section - Left Side */}
-          <div className="lg:col-span-2">
-            <Card className="h-full">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    {activeTab === 'productos' ? (
-                      <>
-                        <Package className="h-5 w-5 text-blue-600" />
-                        Productos Disponibles
-                      </>
-                    ) : (
-                      <>
-                        <Wrench className="h-5 w-5 text-purple-600" />
-                        Servicios Disponibles
-                      </>
-                    )}
-                  </CardTitle>
-                  
-                  {/* Tabs */}
-                  <div className="flex bg-gray-100 rounded-lg p-1">
-                    <button
-                      onClick={() => setActiveTab('productos')}
-                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                        activeTab === 'productos'
-                          ? 'bg-white text-blue-600 shadow-sm'
-                          : 'bg-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }`}
-                    >
-                      <Package className="h-4 w-4 mr-2 inline" />
-                      Productos
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('servicios')}
-                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                        activeTab === 'servicios'
-                          ? 'bg-white text-purple-600 shadow-sm'
-                          : 'bg-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }`}
-                    >
-                      <Wrench className="h-4 w-4 mr-2 inline" />
-                      Servicios
-                    </button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {/* Search */}
-                <div className="mb-6">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder={activeTab === 'productos' ? "Buscar productos por nombre..." : "Buscar servicios por nombre..."}
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500"
-                    />
-                  </div>
-                </div>
+        {/* Alerts */}
+        {currentError && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertTriangle className="h-4 w-4 mr-2" />
+            {currentError}
+          </Alert>
+        )}
+        
+        {cartError && (
+          <Alert variant="warning" className="mb-6">
+            <AlertTriangle className="h-4 w-4 mr-2" />
+            {cartError}
+          </Alert>
+        )}
+        
+        {saleSuccessMessage && (
+          <Alert variant="success" className="mb-6">
+            <CheckCircle className="h-4 w-4 mr-2" />
+            {saleSuccessMessage}
+          </Alert>
+        )}
+      </div>
 
-                {/* Products/Services Grid */}
-                <div className="max-h-96 overflow-y-auto">
+      {/* Main POS Interface */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Products and Services Section - Left Side */}
+        <div className="lg:col-span-2">
+          <Card className="h-full">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
                   {activeTab === 'productos' ? (
                     <>
-                      {loadingProducts && (
-                        <div className="flex items-center justify-center py-8">
-                          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                          <span className="ml-2 text-gray-600">Cargando productos...</span>
-                        </div>
-                      )}
-                      
-                      {!loadingProducts && availableProducts.length === 0 && (
-                        <div className="text-center py-8 text-gray-500">
-                          {searchTerm ? 'No se encontraron productos que coincidan con tu búsqueda.' : 'No hay productos disponibles.'}
-                        </div>
-                      )}
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {availableProducts.map(product => (
-                          <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                            <div className="flex justify-between items-start mb-3">
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-gray-900 mb-1">{product.nombre}</h3>
-                                <p className="text-sm text-gray-600 mb-2">
-                                  Stock: {product.stock_actual} unidades
-                                </p>
-                                <p className="text-lg font-bold text-blue-600">
-                                  ${Number(product.precio_venta).toFixed(2)}
-                                </p>
-                              </div>
-                            </div>
-                            <Button 
-                              onClick={() => handleAddToCart(product, 1)} 
-                              disabled={product.stock_actual <= (cart.find(item => item.item_id === product.id && item.tipo === 'producto')?.quantity || 0) || product.stock_actual === 0}
-                              className="w-full"
-                              size="sm"
-                            >
-                              <Plus className="h-4 w-4 mr-2" />
-                              Agregar al Carrito
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
+                      <Package className="h-5 w-5 text-blue-600" />
+                      Productos Disponibles
                     </>
                   ) : (
                     <>
-                      {loadingServices && (
-                        <div className="flex items-center justify-center py-8">
-                          <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
-                          <span className="ml-2 text-gray-600">Cargando servicios...</span>
-                        </div>
-                      )}
-                      
-                      {!loadingServices && availableServices.length === 0 && (
-                        <div className="text-center py-8 text-gray-500">
-                          {searchTerm ? 'No se encontraron servicios que coincidan con tu búsqueda.' : 'No hay servicios disponibles.'}
-                        </div>
-                      )}
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {availableServices.map(service => (
-                          <div key={service.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                            <div className="flex justify-between items-start mb-3">
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-gray-900 mb-1">{service.nombre}</h3>
-                                {service.descripcion && (
-                                  <p className="text-sm text-gray-600 mb-2">{service.descripcion}</p>
-                                )}
-                                {service.duracion_minutos && (
-                                  <p className="text-sm text-gray-500 mb-2">
-                                    Duración: {service.duracion_minutos} min
-                                  </p>
-                                )}
-                                <p className="text-lg font-bold text-purple-600">
-                                  ${Number(service.precio).toFixed(2)}
-                                </p>
-                              </div>
-                            </div>
-                            <Button 
-                              onClick={() => handleAddServiceToCart(service, 1)} 
-                              className="w-full bg-purple-600 hover:bg-purple-700"
-                              size="sm"
-                            >
-                              <Plus className="h-4 w-4 mr-2" />
-                              Agregar al Carrito
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
+                      <Wrench className="h-5 w-5 text-purple-600" />
+                      Servicios Disponibles
                     </>
                   )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Cart Section - Right Side */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-24">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ShoppingCart className="h-5 w-5 text-green-600" />
-                  Venta Actual
                 </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {/* Customer Selection */}
-                {!loadingCustomers && customers.length > 0 && (
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Cliente (Opcional)
-                    </label>
-                    <select 
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
-                      value={selectedCustomer}
-                      onChange={(e) => setSelectedCustomer(e.target.value)}
-                    >
-                      <option value="" className="text-gray-900">Cliente ocasional</option>
-                      {customers.map(customer => (
-                        <option key={customer.id} value={customer.id} className="text-gray-900">
-                          {customer.nombre} {customer.apellido}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                
+                {/* Tabs */}
+                <div className="flex bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setActiveTab('productos')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      activeTab === 'productos'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'bg-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Package className="h-4 w-4 mr-2 inline" />
+                    Productos
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('servicios')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      activeTab === 'servicios'
+                        ? 'bg-white text-purple-600 shadow-sm'
+                        : 'bg-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Wrench className="h-4 w-4 mr-2 inline" />
+                    Servicios
+                  </button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {/* Search */}
+              <div className="mb-6">
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder={activeTab === 'productos' ? "Buscar productos por nombre..." : "Buscar servicios por nombre..."}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500"
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
 
-                {/* Payment Method */}
-                <div className="mb-6">
+              {/* Products/Services Grid */}
+              <div className="max-h-96 overflow-y-auto">
+                {activeTab === 'productos' ? (
+                  <>
+                    {loadingProducts && (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                        <span className="ml-2 text-gray-600">Cargando productos...</span>
+                      </div>
+                    )}
+                    
+                    {!loadingProducts && availableProducts.length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        {searchTerm ? 'No se encontraron productos que coincidan con tu búsqueda.' : 'No hay productos disponibles.'}
+                      </div>
+                    )}
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {availableProducts.map(product => (
+                        <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-gray-900 mb-1">{product.nombre}</h3>
+                              <p className="text-sm text-gray-600 mb-2">
+                                Stock: {product.stock_actual} unidades
+                              </p>
+                              <p className="text-lg font-bold text-blue-600">
+                                ${Number(product.precio_venta).toFixed(2)}
+                              </p>
+                            </div>
+                          </div>
+                          <Button 
+                            onClick={() => handleAddToCart(product, 1)} 
+                            disabled={product.stock_actual <= (cart.find(item => item.item_id === product.id && item.tipo === 'producto')?.quantity || 0) || product.stock_actual === 0 || isLoading}
+                            className="w-full"
+                            size="sm"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Agregar al Carrito
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {loadingServices && (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+                        <span className="ml-2 text-gray-600">Cargando servicios...</span>
+                      </div>
+                    )}
+                    
+                    {!loadingServices && availableServices.length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        {searchTerm ? 'No se encontraron servicios que coincidan con tu búsqueda.' : 'No hay servicios disponibles.'}
+                      </div>
+                    )}
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {availableServices.map(service => (
+                        <div key={service.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-gray-900 mb-1">{service.nombre}</h3>
+                              {service.descripcion && (
+                                <p className="text-sm text-gray-600 mb-2">{service.descripcion}</p>
+                              )}
+                              {service.duracion_minutos && (
+                                <p className="text-sm text-gray-500 mb-2">
+                                  Duración: {service.duracion_minutos} min
+                                </p>
+                              )}
+                              <p className="text-lg font-bold text-purple-600">
+                                ${Number(service.precio).toFixed(2)}
+                              </p>
+                            </div>
+                          </div>
+                          <Button 
+                            onClick={() => handleAddServiceToCart(service, 1)} 
+                            className="w-full bg-purple-600 hover:bg-purple-700"
+                            size="sm"
+                            disabled={isLoading}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Agregar al Carrito
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Cart Section - Right Side */}
+        <div className="lg:col-span-1">
+          <Card className="sticky top-24">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5 text-green-600" />
+                Venta Actual
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {/* Customer Selection */}
+              {!loadingCustomers && customers.length > 0 && (
+                <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Método de Pago
+                    Cliente (Opcional)
                   </label>
                   <select 
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
-                    value={paymentMethod}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    disabled={submittingSale}
+                    value={selectedCustomer}
+                    onChange={(e) => setSelectedCustomer(e.target.value)}
+                    disabled={isLoading}
                   >
-                    <option value="efectivo" className="text-gray-900">💵 Efectivo</option>
-                    <option value="tarjeta" className="text-gray-900">💳 Tarjeta</option>
-                    <option value="transferencia" className="text-gray-900">🏦 Transferencia</option>
+                    <option value="" className="text-gray-900">Cliente ocasional</option>
+                    {customers.map(customer => (
+                      <option key={customer.id} value={customer.id} className="text-gray-900">
+                        {customer.nombre} {customer.apellido}
+                      </option>
+                    ))}
                   </select>
                 </div>
+              )}
 
-                {/* Cart Items */}
-                <div className="mb-6">
-                  {cart.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <ShoppingCart className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                      <p>El carrito está vacío</p>
-                      <p className="text-sm">Agrega productos o servicios para comenzar</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3 max-h-64 overflow-y-auto">
-                      {cart.map(item => (
-                        <div key={`${item.item_id}-${item.tipo}`} className="border border-gray-200 rounded-lg p-3">
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                {item.tipo === 'producto' ? (
-                                  <Package className="h-4 w-4 text-blue-600" />
-                                ) : (
-                                  <Wrench className="h-4 w-4 text-purple-600" />
-                                )}
-                                <h4 className="font-medium text-gray-900 text-sm">{item.nombre}</h4>
-                                <span className={`text-xs px-2 py-1 rounded-full ${
-                                  item.tipo === 'producto' 
-                                    ? 'bg-blue-100 text-blue-700' 
-                                    : 'bg-purple-100 text-purple-700'
-                                }`}>
-                                  {item.tipo === 'producto' ? 'Producto' : 'Servicio'}
-                                </span>
-                              </div>
-                              <p className="text-sm text-gray-600">
-                                ${Number(item.precio_at_sale).toFixed(2)} c/u
-                              </p>
+              {/* Payment Method */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Método de Pago
+                </label>
+                <select 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  disabled={isLoading}
+                >
+                  <option value="efectivo" className="text-gray-900">💵 Efectivo</option>
+                  <option value="tarjeta" className="text-gray-900">💳 Tarjeta</option>
+                  <option value="transferencia" className="text-gray-900">🏦 Transferencia</option>
+                </select>
+              </div>
+
+              {/* Cart Items */}
+              <div className="mb-6">
+                {cart.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <ShoppingCart className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                    <p>El carrito está vacío</p>
+                    <p className="text-sm">Agrega productos o servicios para comenzar</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-64 overflow-y-auto">
+                    {cart.map(item => (
+                      <div key={`${item.item_id}-${item.tipo}`} className="border border-gray-200 rounded-lg p-3">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              {item.tipo === 'producto' ? (
+                                <Package className="h-4 w-4 text-blue-600" />
+                              ) : (
+                                <Wrench className="h-4 w-4 text-purple-600" />
+                              )}
+                              <h4 className="font-medium text-gray-900 text-sm">{item.nombre}</h4>
+                              <span className={`text-xs px-2 py-1 rounded-full ${
+                                item.tipo === 'producto' 
+                                  ? 'bg-blue-100 text-blue-700' 
+                                  : 'bg-purple-100 text-purple-700'
+                              }`}>
+                                {item.tipo === 'producto' ? 'Producto' : 'Servicio'}
+                              </span>
                             </div>
-                            <p className="font-semibold text-blue-600">
-                              ${Number(item.item_total).toFixed(2)}
+                            <p className="text-sm text-gray-600">
+                              ${Number(item.precio_at_sale).toFixed(2)} c/u
                             </p>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Button 
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleUpdateCartQuantity(item.item_id, item.tipo, item.quantity - 1)}
-                                disabled={submittingSale}
-                                className="h-8 w-8 p-0"
-                              >
-                                <Minus className="h-4 w-4" />
-                              </Button>
-                              <span className="w-8 text-center font-medium">{item.quantity}</span>
-                              <Button 
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleUpdateCartQuantity(item.item_id, item.tipo, item.quantity + 1)}
-                                disabled={item.tipo === 'producto' && item.quantity >= item.stock_original || submittingSale}
-                                className="h-8 w-8 p-0"
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            </div>
+                          <p className="font-semibold text-blue-600">
+                            ${Number(item.item_total).toFixed(2)}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
                             <Button 
-                              variant="destructive"
+                              variant="outline"
                               size="sm"
-                              onClick={() => handleRemoveFromCart(item.item_id, item.tipo)}
-                              disabled={submittingSale}
+                              onClick={() => handleUpdateCartQuantity(item.item_id, item.tipo, item.quantity - 1)}
+                              disabled={isLoading}
                               className="h-8 w-8 p-0"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                            <span className="w-8 text-center font-medium">{item.quantity}</span>
+                            <Button 
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleUpdateCartQuantity(item.item_id, item.tipo, item.quantity + 1)}
+                              disabled={item.tipo === 'producto' && item.quantity >= item.stock_original || isLoading}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Plus className="h-4 w-4" />
                             </Button>
                           </div>
+                          <Button 
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleRemoveFromCart(item.item_id, item.tipo)}
+                            disabled={isLoading}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                
-                {/* Total */}
-                <div className="border-t border-gray-200 pt-4 mb-6">
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold text-gray-900">Total:</span>
-                    <span className="text-2xl font-bold text-blue-600">
-                      ${Number(cartTotal).toFixed(2)}
-                    </span>
+                      </div>
+                    ))}
                   </div>
+                )}
+              </div>
+              
+              {/* Total */}
+              <div className="border-t border-gray-200 pt-4 mb-6">
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-semibold text-gray-900">Total:</span>
+                  <span className="text-2xl font-bold text-blue-600">
+                    ${Number(cartTotal).toFixed(2)}
+                  </span>
                 </div>
-                
-                {/* Complete Sale Button */}
-                <Button 
-                  onClick={handleCompleteSale}
-                  disabled={cart.length === 0 || submittingSale || loadingProducts || loadingServices || loadingCustomers}
-                  className="w-full"
-                  size="lg"
-                >
-                  {submittingSale ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Procesando...
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Completar Venta
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+              
+              {/* Complete Sale Button */}
+              <Button 
+                onClick={handleCompleteSale}
+                disabled={cart.length === 0 || isLoading}
+                className="w-full"
+                size="lg"
+              >
+                {recordSaleMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Procesando...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Completar Venta
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
-    </Layout>
+    </div>
   );
 }
 
 export default function ProtectedPOS() {
   return (
-    <PermissionGuard requiredModule="ventas" requiredAction="ver">
-      <POS />
-    </PermissionGuard>
+    <Layout activeSection="pos">
+      <PermissionGuard requiredModule="ventas" requiredAction="ver">
+        <POS />
+      </PermissionGuard>
+    </Layout>
   );
 }

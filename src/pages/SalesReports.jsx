@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useBusinessContext } from '../contexts/BusinessContext';
 import { salesAPI, customerAPI } from '../utils/api';
 import { PageLoader, SectionLoader } from '../components/LoadingSpinner';
 import Layout from '../components/Layout';
@@ -139,8 +140,8 @@ const Badge = ({ children, variant = 'default', className = '' }) => {
  * It fetches sales records and associated customer data to present a comprehensive report.
  * Users can filter sales by a date range.
  */
-function SalesReportsComponent({ currentBusiness }) {
-  const { businessId } = useParams();
+function SalesReportsComponent() {
+  const { currentBusiness } = useBusinessContext();
   const navigate = useNavigate();
 
   /** @type {[Array<SaleRecord>, function]} sales - State for storing the list of sales records. */
@@ -168,18 +169,18 @@ function SalesReportsComponent({ currentBusiness }) {
    * Errors during this fetch are logged but do not necessarily block sales data loading.
    */
   const fetchAllCustomers = useCallback(async () => {
-    const effectiveBusinessId = businessId || currentBusiness?.id;
-    if (!effectiveBusinessId) {
+    const businessId = currentBusiness?.id;
+    if (!businessId) {
       return;
     }
     try {
-      const customersData = await customerAPI.getCustomers(effectiveBusinessId);
+      const customersData = await customerAPI.getCustomers(businessId);
       setCustomers(Array.isArray(customersData) ? customersData : []);
     } catch (err) {
       console.error('Error fetching customers for report:', err);
       // Not setting main error, as sales might still load
     }
-  }, [businessId, currentBusiness?.id]);
+  }, [currentBusiness?.id]);
 
   /**
    * Fetches sales data and report analytics from the API.
@@ -189,8 +190,8 @@ function SalesReportsComponent({ currentBusiness }) {
    * @param {string} currentEndDate - The end date for filtering sales (YYYY-MM-DD).
    */
   const fetchSalesData = useCallback(async (currentStartDate, currentEndDate) => {
-    const effectiveBusinessId = businessId || currentBusiness?.id;
-    if (!effectiveBusinessId) {
+    const businessId = currentBusiness?.id;
+    if (!businessId) {
       setError('Business ID is missing.');
       setLoading(false);
       return;
@@ -204,8 +205,8 @@ function SalesReportsComponent({ currentBusiness }) {
       
       // Fetch both sales list and report data
       const [salesData, reportData] = await Promise.all([
-        salesAPI.getSales(effectiveBusinessId, params),
-        salesAPI.getSalesReport(effectiveBusinessId, params)
+        salesAPI.getSales(businessId, params),
+        salesAPI.getSalesReport(businessId, params)
       ]);
       
       setSales(Array.isArray(salesData) ? salesData : []);
@@ -218,7 +219,7 @@ function SalesReportsComponent({ currentBusiness }) {
     } finally {
       setLoading(false);
     }
-  }, [businessId, currentBusiness?.id]);
+  }, [currentBusiness?.id]);
 
   /**
    * useEffect hook for initial data fetching.
@@ -286,8 +287,7 @@ function SalesReportsComponent({ currentBusiness }) {
   }
 
   return (
-    <Layout activeSection="reports">
-      <div className="p-8">
+    <div className="p-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -546,14 +546,15 @@ function SalesReportsComponent({ currentBusiness }) {
           </Card>
         )}
       </div>
-    </Layout>
-  );
-}
+    );
+  }
 
 export default function ProtectedSalesReports() {
   return (
-    <PermissionGuard requiredModule="ventas" requiredAction="ver">
-      <SalesReportsComponent />
-    </PermissionGuard>
+    <Layout activeSection="reports">
+      <PermissionGuard requiredModule="ventas" requiredAction="ver">
+        <SalesReportsComponent />
+      </PermissionGuard>
+    </Layout>
   );
 }

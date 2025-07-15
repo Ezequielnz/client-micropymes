@@ -47,6 +47,17 @@ const App: React.FC = () => {
           <Route path="/my-businesses" element={<MyBusinesses />} />
           <Route path="/create-business" element={<CreateBusiness />} />
           <Route path="/business-users" element={<BusinessUsers />} />
+          
+          {/* ✅ FIXED: Simplified routes that use BusinessContext instead of URL params */}
+          <Route path="/categories" element={<Categories />} />
+          <Route path="/products-and-services" element={<ProductsAndServices />} />
+          <Route path="/customers" element={<Customers />} />
+          <Route path="/subscriptions" element={<Subscriptions />} />
+          <Route path="/pos" element={<POS />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/reports" element={<SalesReports />} />
+          
+          {/* Legacy routes with businessId parameter for backward compatibility */}
           <Route path="/business/:businessId/categories" element={<Categories />} />
           <Route path="/business/:businessId/products-and-services" element={<ProductsAndServices />} />
           <Route path="/business/:businessId/customers" element={<Customers />} />
@@ -55,6 +66,7 @@ const App: React.FC = () => {
           <Route path="/business/:businessId/tasks" element={<Tasks />} />
           <Route path="/business/:businessId/reports" element={<SalesReports />} />
           <Route path="/business/:businessId/users" element={<BusinessUsers />} />
+          
           {/* Catch-all route: If no other route matches, navigate to the home page. */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

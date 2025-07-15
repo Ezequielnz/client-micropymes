@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { businessAPI, authAPI } from '../utils/api';
 import { PageLoader } from '../components/LoadingSpinner';
+import Layout from '../components/Layout';
 import {
   Building2,
   Plus,
@@ -10,8 +11,7 @@ import {
   Users,
   AlertCircle,
   CheckCircle,
-  Loader2,
-  ArrowLeft
+  Loader2
 } from 'lucide-react';
 
 // Componentes UI simples
@@ -151,217 +151,216 @@ function BusinessUsers() {
   };
 
   if (loading) {
-    return <PageLoader message="Cargando negocios..." variant="primary" />;
+    return (
+      <Layout activeSection="businesses">
+        <div className="flex-1 bg-gray-50 min-h-screen flex items-center justify-center">
+          <PageLoader message="Cargando negocios..." variant="primary" />
+        </div>
+      </Layout>
+    );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="card max-w-md mx-auto">
-          <div className="text-center p-8">
-            <AlertCircle className="h-12 w-12 text-red-600 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Error</h3>
-            <p className="text-gray-600 mb-4">{error}</p>
-            <div className="flex gap-2">
-              <Button onClick={loadData} className="flex-1">
-                Reintentar
-              </Button>
-              <Button onClick={() => navigate('/home')} variant="outline" className="flex-1">
-                Volver
-              </Button>
+      <Layout activeSection="businesses">
+        <div className="flex-1 bg-gray-50 min-h-screen flex items-center justify-center">
+          <div className="card max-w-md mx-auto">
+            <div className="text-center p-8">
+              <AlertCircle className="h-12 w-12 text-red-600 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Error</h3>
+              <p className="text-gray-600 mb-4">{error}</p>
+              <div className="flex gap-2">
+                <Button onClick={loadData} className="flex-1">
+                  Reintentar
+                </Button>
+                <Button onClick={() => navigate('/home')} variant="outline" className="flex-1">
+                  Volver
+                </Button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate('/home')}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Volver al Dashboard
-              </Button>
+    <Layout activeSection="businesses">
+      <div className="flex-1 bg-gray-50 min-h-screen">
+        {/* Page Header */}
+        <div className="bg-white border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">Mis Negocios</h1>
                 <p className="text-sm text-gray-600">Gestiona tus negocios registrados</p>
               </div>
+              
+              <Button
+                onClick={() => setShowCreateForm(true)}
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Nuevo Negocio
+              </Button>
             </div>
-            
-            <Button
-              onClick={() => setShowCreateForm(true)}
-              className="flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Nuevo Negocio
-            </Button>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {/* Formulario de creación */}
-        {showCreateForm && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Crear Nuevo Negocio</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleCreateBusiness} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Nombre del Negocio *
-                    </label>
-                    <input
-                      type="text"
-                      value={newBusiness.nombre}
-                      onChange={(e) => setNewBusiness(prev => ({ ...prev, nombre: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Ej: Mi Tienda"
-                      required
-                    />
+          {/* Formulario de creación */}
+          {showCreateForm && (
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle>Crear Nuevo Negocio</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleCreateBusiness} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Nombre del Negocio *
+                      </label>
+                      <input
+                        type="text"
+                        value={newBusiness.nombre}
+                        onChange={(e) => setNewBusiness(prev => ({ ...prev, nombre: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                        placeholder="Ej: Mi Tienda"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Tipo de Negocio *
+                      </label>
+                      <select
+                        value={newBusiness.tipo}
+                        onChange={(e) => setNewBusiness(prev => ({ ...prev, tipo: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                        required
+                      >
+                        <option value="">Seleccionar tipo</option>
+                        {businessTypes.map(type => (
+                          <option key={type} value={type}>{type}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tipo de Negocio *
+                      Descripción
                     </label>
-                    <select
-                      value={newBusiness.tipo}
-                      onChange={(e) => setNewBusiness(prev => ({ ...prev, tipo: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <option value="">Seleccionar tipo</option>
-                      {businessTypes.map(type => (
-                        <option key={type} value={type}>{type}</option>
-                      ))}
-                    </select>
+                    <textarea
+                      value={newBusiness.descripcion}
+                      onChange={(e) => setNewBusiness(prev => ({ ...prev, descripcion: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                      rows="3"
+                      placeholder="Descripción opcional del negocio"
+                    />
                   </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Descripción
-                  </label>
-                  <textarea
-                    value={newBusiness.descripcion}
-                    onChange={(e) => setNewBusiness(prev => ({ ...prev, descripcion: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows="3"
-                    placeholder="Descripción opcional del negocio"
-                  />
-                </div>
-                
-                <div className="flex gap-2 pt-4">
-                  <Button type="submit" disabled={creating}>
-                    {creating ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Creando...
-                      </>
-                    ) : (
-                      'Crear Negocio'
-                    )}
+                  
+                  <div className="flex gap-2 pt-4">
+                    <Button type="submit" disabled={creating}>
+                      {creating ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Creando...
+                        </>
+                      ) : (
+                        'Crear Negocio'
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setShowCreateForm(false);
+                        setNewBusiness({ nombre: '', tipo: '', descripcion: '' });
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Lista de Negocios */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-blue-600" />
+                Mis Negocios ({businesses.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {businesses.length === 0 ? (
+                <div className="text-center py-12">
+                  <Building2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No tienes negocios registrados</h3>
+                  <p className="text-gray-500 mb-6">Crea tu primer negocio para comenzar a gestionar tus productos y ventas</p>
+                  <Button onClick={() => setShowCreateForm(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Crear mi primer negocio
                   </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setShowCreateForm(false);
-                      setNewBusiness({ nombre: '', tipo: '', descripcion: '' });
-                    }}
-                  >
-                    Cancelar
-                  </Button>
                 </div>
-              </form>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {businesses.map((business) => (
+                    <div key={business.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <Building2 className="h-6 w-6 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">{business.nombre}</h3>
+                            <p className="text-sm text-gray-500">{business.tipo}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => handleDeleteBusiness(business.id, business.nombre)}
+                            className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                            title="Eliminar negocio"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {business.descripcion && (
+                        <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                          {business.descripcion}
+                        </p>
+                      )}
+                      
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          Activo
+                        </div>
+                        
+                        <div className="text-xs text-gray-400">
+                          ID: {business.id}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
-        )}
-
-        {/* Lista de Negocios */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5 text-blue-600" />
-              Mis Negocios ({businesses.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {businesses.length === 0 ? (
-              <div className="text-center py-12">
-                <Building2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No tienes negocios registrados</h3>
-                <p className="text-gray-500 mb-6">Crea tu primer negocio para comenzar a gestionar tus productos y ventas</p>
-                <Button onClick={() => setShowCreateForm(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Crear mi primer negocio
-                </Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {businesses.map((business) => (
-                  <div key={business.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <Building2 className="h-6 w-6 text-blue-600" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-900">{business.nombre}</h3>
-                          <p className="text-sm text-gray-500">{business.tipo}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => handleDeleteBusiness(business.id, business.nombre)}
-                          className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                          title="Eliminar negocio"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {business.descripcion && (
-                      <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                        {business.descripcion}
-                      </p>
-                    )}
-                    
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        Activo
-                      </div>
-                      
-                      <div className="text-xs text-gray-400">
-                        ID: {business.id}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        </div>
       </div>
-    </div>
+    </Layout>
   );
 }
 

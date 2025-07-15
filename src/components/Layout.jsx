@@ -16,6 +16,10 @@ import {
   BarChart3
 } from 'lucide-react';
 import { authAPI, businessAPI } from '../utils/api';
+import { BusinessContext, useBusinessContext } from '../contexts/BusinessContext';
+
+// Export useBusinessContext for backward compatibility
+export { useBusinessContext };
 
 // Componente Button reutilizable
 const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', disabled = false, ...props }) => {
@@ -69,8 +73,8 @@ const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
       icon: Package, 
       hasDropdown: true,
       subItems: [
-        { id: 'products', label: 'Productos y Servicios', icon: Package, onClick: () => safeNavigate(`/business/${currentBusiness?.id}/products-and-services`) },
-        { id: 'categories', label: 'Categorías', icon: BarChart3, onClick: () => safeNavigate(`/business/${currentBusiness?.id}/categories`) }
+        { id: 'products', label: 'Productos y Servicios', icon: Package, onClick: () => safeNavigate('/products-and-services') },
+        { id: 'categories', label: 'Categorías', icon: BarChart3, onClick: () => safeNavigate('/categories') }
       ]
     },
     { 
@@ -79,12 +83,12 @@ const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
       icon: ShoppingCart, 
       hasDropdown: true,
       subItems: [
-        { id: 'pos', label: 'POS', icon: ShoppingCart, onClick: () => safeNavigate(`/business/${currentBusiness?.id}/pos`) },
-        { id: 'reports', label: 'Reporte de Ventas', icon: BarChart3, onClick: () => safeNavigate(`/business/${currentBusiness?.id}/reports`) }
+        { id: 'pos', label: 'POS', icon: ShoppingCart, onClick: () => safeNavigate('/pos') },
+        { id: 'reports', label: 'Reporte de Ventas', icon: BarChart3, onClick: () => safeNavigate('/reports') }
       ]
     },
-    { id: 'clients', label: 'Clientes', icon: Users, onClick: () => safeNavigate(`/business/${currentBusiness?.id}/customers`) },
-    { id: 'tasks', label: 'Tareas', icon: Clock, onClick: () => safeNavigate(`/business/${currentBusiness?.id}/tasks`) },
+    { id: 'clients', label: 'Clientes', icon: Users, onClick: () => safeNavigate('/customers') },
+    { id: 'tasks', label: 'Tareas', icon: Clock, onClick: () => safeNavigate('/tasks') },
     { id: 'billing', label: 'Facturación', icon: FileText, disabled: true },
     { id: 'finances', label: 'Finanzas', icon: DollarSign, disabled: true },
     { id: 'settings', label: 'Configuración', icon: Settings, disabled: true },
@@ -319,7 +323,14 @@ const Header = ({ currentBusiness, businesses, onBusinessChange, onLogout }) => 
             </button>
             
             {showBusinessDropdown && (
-              <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50" style={{ backgroundColor: '#ffffff' }}>
+              <div 
+                className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+                style={{ 
+                  backgroundColor: '#ffffff',
+                  color: '#111827',
+                  zIndex: 9999
+                }}
+              >
                 <div className="py-1">
                   {businesses.map((business) => (
                     <button
@@ -328,17 +339,29 @@ const Header = ({ currentBusiness, businesses, onBusinessChange, onLogout }) => 
                         onBusinessChange(business);
                         setShowBusinessDropdown(false);
                       }}
-                      className="w-full flex items-center gap-2 px-4 py-2 text-left transition-colors"
-                      style={{ backgroundColor: 'transparent' }}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-left transition-colors text-gray-900 hover:bg-gray-50 bg-white"
+                      style={{
+                        backgroundColor: '#ffffff',
+                        color: '#111827',
+                        border: 'none',
+                        outline: 'none'
+                      }}
                       onMouseEnter={(e) => {
-                        e.target.style.backgroundColor = '#f8fafc';
+                        e.target.style.backgroundColor = '#f9fafb';
                       }}
                       onMouseLeave={(e) => {
-                        e.target.style.backgroundColor = 'transparent';
+                        e.target.style.backgroundColor = '#ffffff';
                       }}
                     >
-                      <span className="font-medium">{business.nombre}</span>
-                      <span className="text-xs text-gray-500">({business.tipo})</span>
+                      <span 
+                        className="font-medium text-gray-900 bg-transparent"
+                        style={{ 
+                          color: '#111827',
+                          backgroundColor: 'transparent'
+                        }}
+                      >
+                        {business.nombre}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -438,26 +461,28 @@ const Layout = ({ children, activeSection = 'dashboard' }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar 
-        activeSection={activeSection}
-        setActiveSection={() => {}}
-        currentBusiness={currentBusiness}
-      />
-      
-      <div className="flex-1 ml-64">
-        <Header
+    <BusinessContext.Provider value={{ currentBusiness, businesses, handleBusinessChange }}>
+      <div className="min-h-screen bg-gray-50 flex">
+        <Sidebar 
+          activeSection={activeSection}
+          setActiveSection={() => {}}
           currentBusiness={currentBusiness}
-          businesses={businesses}
-          onBusinessChange={handleBusinessChange}
-          onLogout={handleLogout}
         />
         
-        <main className="flex-1">
-          {React.cloneElement(children, { currentBusiness })}
-        </main>
+        <div className="flex-1 ml-64">
+          <Header
+            currentBusiness={currentBusiness}
+            businesses={businesses}
+            onBusinessChange={handleBusinessChange}
+            onLogout={handleLogout}
+          />
+          
+          <main className="flex-1">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </BusinessContext.Provider>
   );
 };
 
