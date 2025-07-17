@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { authAPI, businessAPI, publicBusinessAPI } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   ArrowRight, 
   Mail, 
@@ -24,6 +25,7 @@ import {
  * immediate login or prompting for email confirmation.
  */
 function Register() {
+  const { login } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   /**
    * @type {[object, function]} formData - State for storing user registration input.
@@ -88,13 +90,32 @@ function Register() {
       const data = await authAPI.register(payload);
       console.log('Respuesta del servidor:', data);
       if (data.access_token) {
-        localStorage.setItem('token', data.access_token);
-        navigate('/');
+        try {
+          // 1. Guardar el token temporalmente para obtener los datos del usuario
+          localStorage.setItem('token', data.access_token);
+          
+          // 2. Obtener los datos del usuario usando el token
+          const userData = await authAPI.getCurrentUser();
+          
+          // 3. Llamar a la función login del AuthContext para actualizar el estado
+          login(userData, data.access_token);
+          
+          navigate('/');
+        } catch (userErr) {
+          console.error('Error obteniendo datos del usuario:', userErr);
+          // Si falla obtener los datos del usuario, limpiar el token y mostrar error
+          localStorage.removeItem('token');
+          setError('Error al obtener datos del usuario después del registro');
+        }
       } else {
         navigate(`/email-confirmation?email=${encodeURIComponent(formData.email)}`);
       }
     } catch (err) {
       console.error('Error completo:', err);
+      
+      // Limpiar el token si hay error
+      localStorage.removeItem('token');
+      
       let errorMessage = 'Error al registrar usuario';
       if (err.response?.data?.detail) {
         if (typeof err.response.data.detail === 'string') {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   LogOut,
   Building2,
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react';
 import { authAPI, businessAPI } from '../utils/api';
 import { BusinessContext, useBusinessContext } from '../contexts/BusinessContext';
+import { useAuth } from '../contexts/AuthContext';
 
 // Export useBusinessContext for backward compatibility
 export { useBusinessContext };
@@ -389,10 +391,13 @@ const Header = ({ currentBusiness, businesses, onBusinessChange, onLogout }) => 
 // Layout Component Principal
 const Layout = ({ children, activeSection = 'dashboard' }) => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [businesses, setBusinesses] = useState([]);
+  const location = useLocation();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [currentBusiness, setCurrentBusiness] = useState(null);
+  const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -402,12 +407,9 @@ const Layout = ({ children, activeSection = 'dashboard' }) => {
   const loadInitialData = async () => {
     try {
       setLoading(true);
-      const [userData, businessesData] = await Promise.all([
-        authAPI.getCurrentUser(),
-        businessAPI.getBusinesses()
-      ]);
+      // Solo cargar businesses, el usuario ya está disponible en AuthContext
+      const businessesData = await businessAPI.getBusinesses();
       
-      setUser(userData);
       setBusinesses(businessesData);
       
       // Seleccionar el primer negocio por defecto
@@ -424,6 +426,14 @@ const Layout = ({ children, activeSection = 'dashboard' }) => {
 
   const handleBusinessChange = (business) => {
     setCurrentBusiness(business);
+    // Invalidate permissions cache when business changes
+    queryClient.invalidateQueries({ queryKey: ['userPermissions'] });
+    // Also invalidate other business-specific data
+    queryClient.invalidateQueries({ queryKey: ['products', business.id] });
+    queryClient.invalidateQueries({ queryKey: ['services', business.id] });
+    queryClient.invalidateQueries({ queryKey: ['customers', business.id] });
+    queryClient.invalidateQueries({ queryKey: ['categories', business.id] });
+    queryClient.invalidateQueries({ queryKey: ['tasks', business.id] });
   };
 
   const handleLogout = () => {

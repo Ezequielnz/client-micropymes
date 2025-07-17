@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { businessAPI, authAPI } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
 import { PageLoader } from '../components/LoadingSpinner';
 import Layout from '../components/Layout';
 import {
@@ -66,11 +67,11 @@ const CardTitle = ({ children, className = '' }) => (
 
 function BusinessUsers() {
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
   
   const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newBusiness, setNewBusiness] = useState({
     nombre: '',
@@ -98,9 +99,12 @@ function BusinessUsers() {
       setLoading(true);
       setError(null);
 
-      // Cargar datos del usuario actual
-      const userData = await authAPI.getCurrentUser();
-      setCurrentUser(userData);
+      // El usuario ya está disponible en AuthContext
+      if (!currentUser) {
+        setError('Usuario no autenticado');
+        setLoading(false);
+        return;
+      }
 
       // Cargar negocios del usuario
       const businessData = await businessAPI.getBusinesses();

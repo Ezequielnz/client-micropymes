@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authAPI, businessAPI } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
 import PageHeader from '../components/PageHeader';
 import { 
   Building2, 
@@ -119,7 +120,7 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message, busines
 };
 
 function MyBusinesses() {
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
   const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -136,15 +137,14 @@ function MyBusinesses() {
     setError(null);
     
     try {
-      console.log('Fetching user data and businesses...');
+      console.log('Fetching businesses...');
       
-      // Cargar datos secuencialmente para evitar timeouts
-      const userData = await authAPI.getCurrentUser();
-      console.log('User data received:', userData);
-      setUser(userData);
-      
-      // Esperar un poco antes de la siguiente petición
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // El usuario ya está disponible en AuthContext
+      if (!user) {
+        setError('Usuario no autenticado');
+        setLoading(false);
+        return;
+      }
       
       const businessesData = await businessAPI.getBusinesses();
       console.log('Businesses data received:', businessesData);

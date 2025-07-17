@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, LogOut, Home, User, Settings, ChevronDown } from 'lucide-react';
 import { authAPI } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', disabled = false, ...props }) => {
   const baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
@@ -42,29 +43,16 @@ const PageHeader = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [userInfo, setUserInfo] = useState({ 
-    nombre: userName, 
-    email: 'usuario@ejemplo.com' 
-  });
 
-  // Obtener información real del usuario
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        const userData = await authAPI.getCurrentUser();
-        setUserInfo({
-          nombre: userData.nombre || userData.email?.split('@')[0] || userName,
-          email: userData.email || 'usuario@ejemplo.com'
-        });
-      } catch (error) {
-        console.error('Error al obtener información del usuario:', error);
-        // Mantener valores por defecto si hay error
-      }
-    };
+  // Calcular información del usuario basada en AuthContext
+  const userInfo = {
+    nombre: user?.nombre || user?.email?.split('@')[0] || userName,
+    email: user?.email || 'usuario@ejemplo.com'
+  };
 
-    fetchUserInfo();
-  }, [userName]);
+  // Ya no necesitamos useEffect para cargar datos del usuario
 
   const handleLogout = () => {
     authAPI.logout();

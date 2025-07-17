@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { authAPI } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   CheckCircle, 
   AlertCircle, 
@@ -28,6 +30,7 @@ function ConfirmEmail() {
   /** @type {[string, function]} status - State for tracking the confirmation status ('loading', 'success', 'error'). */
   const [status, setStatus] = useState('loading');
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   /**
    * useEffect hook to handle the email confirmation logic when the component mounts.
@@ -43,15 +46,38 @@ function ConfirmEmail() {
     const accessToken = hashParams.get('access_token');
     
     if (accessToken) {
-      // Si tenemos un token, lo guardamos y redirigimos
-      localStorage.setItem('token', accessToken);
-      setMessage('Email confirmado exitosamente. Redirigiendo...');
-      setStatus('success');
+      // Si tenemos un token, lo guardamos y obtenemos los datos del usuario
+      const handleTokenConfirmation = async () => {
+        try {
+          // 1. Guardar el token temporalmente
+          localStorage.setItem('token', accessToken);
+          
+          // 2. Obtener los datos del usuario
+          const userData = await authAPI.getCurrentUser();
+          
+          // 3. Llamar a la función login del AuthContext
+          login(userData, accessToken);
+          
+          setMessage('Email confirmado exitosamente. Redirigiendo...');
+          setStatus('success');
+          
+          // 4. Redireccionar a la página principal después de un breve retraso
+          setTimeout(() => {
+            navigate('/');
+          }, 2000);
+        } catch (error) {
+          console.error('Error obteniendo datos del usuario:', error);
+          localStorage.removeItem('token');
+          setMessage('Error al confirmar email. Intenta iniciar sesión manualmente.');
+          setStatus('error');
+          
+          setTimeout(() => {
+            navigate('/login');
+          }, 3000);
+        }
+      };
       
-      // Redireccionar a la página principal después de un breve retraso
-      setTimeout(() => {
-        navigate('/');
-      }, 2000);
+      handleTokenConfirmation();
     } else {
       // Si no hay token, puede que haya habido un error
       setMessage('No se encontró token de acceso. Intenta iniciar sesión manualmente.');
@@ -62,7 +88,7 @@ function ConfirmEmail() {
         navigate('/login');
       }, 3000);
     }
-  }, [navigate]);
+  }, [navigate, login]);
 
   return (
     <div className="min-h-screen bg-white">

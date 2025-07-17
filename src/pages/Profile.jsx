@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, Save, ArrowLeft, Eye, EyeOff, AlertCircle, CheckCircle, Edit } from 'lucide-react';
 import { authAPI } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
 import PageHeader from '../components/PageHeader';
 
 const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', disabled = false, ...props }) => {
@@ -70,7 +71,7 @@ const Alert = ({ children, variant = 'default', className = '' }) => {
 };
 
 function Profile() {
-  const [user, setUser] = useState(null);
+  const { user, login } = useAuth();
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -97,14 +98,15 @@ function Profile() {
     const loadUserData = async () => {
       try {
         setLoading(true);
-        const userData = await authAPI.getCurrentUser();
-        setUser(userData);
-        setProfileForm({
-          nombre: userData.nombre || '',
-          apellido: userData.apellido || '',
-          email: userData.email || '',
-          telefono: userData.telefono || ''
-        });
+        // El usuario ya está disponible en AuthContext
+        if (user) {
+          setProfileForm({
+            nombre: user.nombre || '',
+            apellido: user.apellido || '',
+            email: user.email || '',
+            telefono: user.telefono || ''
+          });
+        }
       } catch (error) {
         console.error('Error loading user data:', error);
         setMessage({ type: 'error', text: 'Error al cargar los datos del perfil' });
@@ -114,7 +116,7 @@ function Profile() {
     };
 
     loadUserData();
-  }, []);
+  }, [user]);
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
@@ -130,8 +132,8 @@ function Profile() {
         text: 'Perfil actualizado correctamente' 
       });
       
-      // Actualizar el estado local del usuario
-      setUser(prev => ({ ...prev, ...updatedUser }));
+      // Actualizar el usuario en AuthContext
+      login({ ...user, ...updatedUser }, user.access_token);
       
     } catch (error) {
       console.error('Error updating profile:', error);

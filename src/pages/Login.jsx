@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { authAPI } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   ArrowRight, 
   Mail, 
@@ -22,6 +23,7 @@ import {
  * displaying an error message upon failure.
  */
 function Login() {
+  const { login } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   /**
    * @type {[object, function]} formData - State for storing user input (email and password).
@@ -52,11 +54,8 @@ function Login() {
   };
 
   /**
-   * Handles the login form submission.
-   * Prevents default form submission, sets loading state, and calls `authAPI.login`.
-   * On success, it stores the received access token in localStorage and navigates
-   * the user to the home page ('/').
-   * On failure, it extracts an error message from the API response or uses a generic
+   * Handles form submission for user login.
+   * Calls the login API with the form data, handles the response including
    * error message, and updates the `error` state. It also provides specific UI
    * for "Email not confirmed" errors, including a development-only button to activate the account.
    * @param {React.FormEvent<HTMLFormElement>} e - The form submission event.
@@ -67,15 +66,25 @@ function Login() {
     setLoading(true);
 
     try {
-      const data = await authAPI.login(formData.email, formData.password);
+      // 1. Obtener el token del endpoint de login
+      const loginData = await authAPI.login(formData.email, formData.password);
       
-      // Guardar el token en localStorage
-      localStorage.setItem('token', data.access_token);
+      // 2. Guardar el token temporalmente para obtener los datos del usuario
+      localStorage.setItem('token', loginData.access_token);
+      
+      // 3. Obtener los datos del usuario usando el token
+      const userData = await authAPI.getCurrentUser();
+      
+      // 4. Llamar a la función login del AuthContext para actualizar el estado
+      login(userData, loginData.access_token);
 
-      // Redireccionar a la página de inicio
+      // 5. Redireccionar a la página de inicio
       navigate('/home');
     } catch (err) {
       console.error('Error completo:', err);
+      
+      // Limpiar el token si hay error
+      localStorage.removeItem('token');
       
       // Manejar diferentes tipos de errores
       if (err.response?.status === 403 && err.response?.data?.detail?.error_type === 'email_not_confirmed') {
@@ -102,30 +111,27 @@ function Login() {
                   type="button" 
                   variant="outline"
                   size="sm"
-                  onClick={() => activateAccount(formData.email)}
-                  className="text-erp-warning border-erp-warning-300 hover:bg-erp-warning-50"
+                  onClick={async () => {
+                    try {
+                      await authAPI.activateAccount(email);
+                      alert('Cuenta activada exitosamente. Ahora puedes iniciar sesión.');
+                      setError('');
+                    } catch (activateErr) {
+                      alert('Error al activar la cuenta: ' + activateErr.message);
+                    }
+                  }}
+                  className="text-yellow-600 border-yellow-300 hover:bg-yellow-50"
                 >
-                  Activar cuenta (solo desarrollo)
+                  [DEV] Activar cuenta automáticamente
                 </Button>
               )}
             </div>
           </div>
         );
+      } else if (err.response?.status === 401) {
+        setError('Credenciales inválidas. Por favor verifica tu email y contraseña.');
       } else {
-        // Otros errores
-        let errorMessage = 'Error al iniciar sesión';
-        
-        if (err.response?.data?.detail) {
-          if (typeof err.response.data.detail === 'string') {
-            errorMessage = err.response.data.detail;
-          } else if (err.response.data.detail.message) {
-            errorMessage = err.response.data.detail.message;
-          }
-        } else if (err.message) {
-          errorMessage = err.message;
-        }
-        
-        setError(errorMessage);
+        setError(err.response?.data?.detail || err.message || 'Error al iniciar sesión');
       }
     } finally {
       setLoading(false);

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { businessAPI, authAPI } from '../utils/api';
 import { useBusinessContext } from '../contexts/BusinessContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useUserPermissions } from '../hooks/useUserPermissions';
 import {
   AlertCircle,
   Loader2,
@@ -12,64 +14,49 @@ import {
 
 function PermissionGuard({ children, requiredModule, requiredAction = 'ver' }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   // ✅ FIXED: Use BusinessContext instead of useParams
   const { currentBusiness } = useBusinessContext();
   const businessId = currentBusiness?.id;
   
-  const [loading, setLoading] = useState(true);
-  const [hasAccess, setHasAccess] = useState(false);
-  const [user, setUser] = useState(null);
-  const [business, setBusiness] = useState(null);
+  // ✅ NEW: Use the new permissions system
+  const { isLoading: loading, canView, canEdit, canDelete, hasFullAccess, permissions } = useUserPermissions(businessId);
 
-  useEffect(() => {
-    if (currentBusiness && businessId) {
-      checkPermissions();
-    } else {
-      // If no business is selected, we can't check permissions
-      setLoading(false);
-      setHasAccess(false);
-    }
-  }, [businessId, requiredModule, requiredAction, currentBusiness]);
-
-  const checkPermissions = async () => {
-    try {
-      setLoading(true);
-
-      // Cargar datos del usuario actual
-      const userData = await authAPI.getCurrentUser();
-      setUser(userData);
-
-      // Use currentBusiness from context instead of fetching
-      setBusiness(currentBusiness);
-
-      // Verificar permisos del usuario en este negocio
-      const businessUsers = await businessAPI.getBusinessUsers(businessId);
-      const currentUserInBusiness = businessUsers.find(u => u.usuario?.email === userData.email);
-      
-      if (!currentUserInBusiness) {
-        setHasAccess(false);
-        return;
-      }
-
-      // Si es admin, tiene acceso total
-      if (currentUserInBusiness.rol === 'admin') {
-        setHasAccess(true);
-        return;
-      }
-
-      // Verificar permiso específico
-      const permissionKey = `puede_${requiredAction}_${requiredModule}`;
-      const hasPermission = currentUserInBusiness.permisos?.[permissionKey] || false;
-      setHasAccess(hasPermission);
-
-    } catch (err) {
-      console.error('Error checking permissions:', err);
-      setHasAccess(false);
-    } finally {
-      setLoading(false);
-    }
+  // ✅ NEW: Map modules to permission resources
+  const moduleToResource = {
+    'inventario': 'productos',
+    'productos': 'productos', 
+    'categorias': 'categorias',
+    'clientes': 'clientes',
+    'ventas': 'ventas',
+    'tareas': 'tareas',
+    'stock': 'stock',
+    'facturacion': 'facturacion'
   };
+
+  // ✅ NEW: Determine access based on new permission system
+  const hasAccess = React.useMemo(() => {
+    if (!permissions || loading) return false;
+    
+    // Full access users can access everything
+    if (hasFullAccess()) return true;
+    
+    // Map the required module to the actual resource
+    const resource = moduleToResource[requiredModule] || requiredModule;
+    
+    // Check specific permission based on action
+    switch (requiredAction) {
+      case 'ver':
+        return canView(resource);
+      case 'editar':
+        return canEdit(resource);
+      case 'eliminar':
+        return canDelete(resource);
+      default:
+        return canView(resource);
+    }
+  }, [permissions, loading, hasFullAccess, canView, canEdit, canDelete, requiredModule, requiredAction, moduleToResource]);
 
   // ✅ FIXED: Handle case when no business is selected
   if (!currentBusiness) {
