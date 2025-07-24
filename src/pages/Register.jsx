@@ -133,17 +133,17 @@ function Register() {
   };
 
   return (
-    <div className="page-container bg-white">
+    <div className="min-h-screen bg-white">
       {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b border-erp-neutral-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-6 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link to="/" className="flex-shrink-0 flex items-center">
-                <div className="w-8 h-8 bg-erp-primary rounded-lg mr-3"></div>
-                <h1 className="text-2xl font-bold text-erp-neutral-900">
-                  BizFlow Pro
-                </h1>
+              <Link to="/" className="flex-shrink-0 flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">O</span>
+                </div>
+                <span className="text-xl font-semibold text-gray-900">OperixML</span>
               </Link>
             </div>
             
@@ -151,12 +151,12 @@ function Register() {
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-8">
                 <Link to="/">
-                  <Button variant="outline" size="sm" className="text-erp-neutral-700 hover:text-erp-primary hover:bg-erp-neutral-50 border-erp-neutral-200">
+                  <Button variant="outline" size="sm" className="text-gray-600 hover:text-gray-900 border-gray-300 hover:border-gray-400">
                     Inicio
                   </Button>
                 </Link>
                 <Link to="/login">
-                  <Button variant="outline" size="sm" className="text-erp-neutral-700 hover:text-erp-primary hover:bg-erp-neutral-50 border-erp-neutral-200">
+                  <Button variant="outline" size="sm" className="text-gray-600 hover:text-gray-900 border-gray-300 hover:border-gray-400">
                     Iniciar Sesión
                   </Button>
                 </Link>
@@ -167,7 +167,7 @@ function Register() {
             <div className="md:hidden">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-erp-neutral-600 hover:text-erp-neutral-900 focus:outline-none focus:text-erp-neutral-900"
+                className="text-gray-600 hover:text-gray-900 focus:outline-none focus:text-gray-900"
               >
                 {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
@@ -177,16 +177,16 @@ function Register() {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden bg-white border-t border-erp-neutral-100">
+          <div className="md:hidden bg-white border-t border-gray-100">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
               <div className="flex flex-col space-y-2 px-3 py-2">
                 <Link to="/">
-                  <Button variant="outline" size="sm" className="w-full text-erp-neutral-700 border-erp-neutral-200">
+                  <Button variant="outline" size="sm" className="w-full text-gray-600 border-gray-300">
                     Inicio
                   </Button>
                 </Link>
                 <Link to="/login">
-                  <Button variant="outline" size="sm" className="w-full text-erp-neutral-700 border-erp-neutral-200">
+                  <Button variant="outline" size="sm" className="w-full text-gray-600 border-gray-300">
                     Iniciar Sesión
                   </Button>
                 </Link>
@@ -197,30 +197,33 @@ function Register() {
       </nav>
 
       {/* Main Content */}
-      <section className="bg-erp-neutral-50 py-20">
+      <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 relative overflow-hidden py-12 sm:py-16 md:py-20 lg:py-24">
+        {/* Background decoration */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%239CA3AF%22 fill-opacity=%220.03%22 fill-rule=%22nonzero%22%3E%3Cpath d=%22m36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div>
+        
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-md mx-auto">
             <div className="text-center mb-8">
               <div className="flex justify-center mb-4">
-                <div className="inline-flex items-center px-3 py-1 bg-erp-primary-100 text-erp-primary-700 rounded-full text-sm font-medium">
+                <div className="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
                   <Sparkles className="w-4 h-4 mr-2" />
-                  Gratis por 30 días
+                  Gratis por 14 días
                 </div>
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-erp-neutral-900 mb-4">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
                 Crear Cuenta
               </h1>
-              <p className="text-lg text-erp-neutral-600">
-                Únete a BizFlow Pro y transforma tu negocio
+              <p className="text-lg text-gray-600">
+                Únete a OperixML y transforma tu negocio
               </p>
             </div>
 
-            <Card className="border border-erp-neutral-200 shadow-erp-soft hover:shadow-erp-medium transition-all duration-300">
+            <Card className="border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/95 backdrop-blur-sm">
               <CardHeader className="space-y-1">
-                <CardTitle className="text-2xl font-semibold text-center text-erp-neutral-900">
+                <CardTitle className="text-2xl font-semibold text-center text-gray-900">
                   Comienza tu prueba gratuita
                 </CardTitle>
-                <CardDescription className="text-center text-erp-neutral-600">
+                <CardDescription className="text-center text-gray-600">
                   Completa el formulario para crear tu cuenta
                 </CardDescription>
               </CardHeader>
@@ -238,11 +241,11 @@ function Register() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="nombre" className="text-sm font-medium text-erp-neutral-700">
+                      <Label htmlFor="nombre" className="text-sm font-medium text-gray-700">
                         Nombre
                       </Label>
                       <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-erp-neutral-400" />
+                        <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                         <Input
                           type="text"
                           id="nombre"
@@ -250,18 +253,18 @@ function Register() {
                           value={formData.nombre}
                           onChange={handleChange}
                           required
-                          className="pl-10 border-erp-neutral-200 focus:border-erp-primary focus:ring-erp-primary"
+                          className="pl-10 border-gray-200 focus:border-blue-600 focus:ring-blue-600"
                           placeholder="Juan"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="apellido" className="text-sm font-medium text-erp-neutral-700">
+                      <Label htmlFor="apellido" className="text-sm font-medium text-gray-700">
                         Apellido
                       </Label>
                       <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-erp-neutral-400" />
+                        <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                         <Input
                           type="text"
                           id="apellido"
@@ -269,7 +272,7 @@ function Register() {
                           value={formData.apellido}
                           onChange={handleChange}
                           required
-                          className="pl-10 border-erp-neutral-200 focus:border-erp-primary focus:ring-erp-primary"
+                          className="pl-10 border-gray-200 focus:border-blue-600 focus:ring-blue-600"
                           placeholder="Pérez"
                         />
                       </div>
@@ -277,11 +280,11 @@ function Register() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm font-medium text-erp-neutral-700">
+                    <Label htmlFor="email" className="text-sm font-medium text-gray-700">
                       Email
                     </Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-erp-neutral-400" />
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                       <Input
                         type="email"
                         id="email"
@@ -289,18 +292,18 @@ function Register() {
                         value={formData.email}
                         onChange={handleChange}
                         required
-                        className="pl-10 border-erp-neutral-200 focus:border-erp-primary focus:ring-erp-primary"
+                        className="pl-10 border-gray-200 focus:border-blue-600 focus:ring-blue-600"
                         placeholder="tu@email.com"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="password" className="text-sm font-medium text-erp-neutral-700">
+                    <Label htmlFor="password" className="text-sm font-medium text-gray-700">
                       Contraseña
                     </Label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-erp-neutral-400" />
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                       <Input
                         type="password"
                         id="password"
@@ -308,7 +311,7 @@ function Register() {
                         value={formData.password}
                         onChange={handleChange}
                         required
-                        className="pl-10 border-erp-neutral-200 focus:border-erp-primary focus:ring-erp-primary"
+                        className="pl-10 border-gray-200 focus:border-blue-600 focus:ring-blue-600"
                         placeholder="••••••••"
                       />
                     </div>
@@ -316,14 +319,14 @@ function Register() {
 
                   {/* Información sobre negocios */}
                   <div className="space-y-2">
-                    <div className="bg-erp-primary-50 border border-erp-primary-200 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-erp-primary-800 mb-2">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="text-sm font-medium text-blue-800 mb-2">
                         ¿Qué pasa después del registro?
                       </h4>
-                      <p className="text-sm text-erp-primary-700 mb-2">
+                      <p className="text-sm text-blue-700 mb-2">
                         Una vez registrado, podrás:
                       </p>
-                      <ul className="text-sm text-erp-primary-700 list-disc list-inside space-y-1">
+                      <ul className="text-sm text-blue-700 list-disc list-inside space-y-1">
                         <li>Crear tu propio negocio y ser el administrador</li>
                         <li>Esperar a que un administrador te invite a su negocio</li>
                         <li>Gestionar productos, ventas y clientes según tus permisos</li>
@@ -334,7 +337,7 @@ function Register() {
                   <Button 
                     type="submit" 
                     disabled={loading}
-                    className="w-full bg-erp-primary hover:bg-erp-primary-hover text-white shadow-erp-primary hover-lift"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
                     size="lg"
                   >
                     {loading ? (
@@ -349,25 +352,25 @@ function Register() {
                 </form>
 
                 <div className="text-center">
-                  <p className="text-sm text-erp-neutral-600">
+                  <p className="text-sm text-gray-600">
                     ¿Ya tienes una cuenta?{' '}
                     <Link 
                       to="/login" 
-                      className="font-medium text-erp-primary hover:text-erp-primary-hover transition-colors"
+                      className="font-medium text-blue-600 hover:text-blue-700 transition-colors"
                     >
                       Inicia sesión aquí
                     </Link>
                   </p>
                 </div>
 
-                <div className="text-center pt-4 border-t border-erp-neutral-200">
-                  <p className="text-xs text-erp-neutral-500">
+                <div className="text-center pt-4 border-t border-gray-200">
+                  <p className="text-xs text-gray-500">
                     Al crear una cuenta, aceptas nuestros{' '}
-                    <a href="#" className="text-erp-primary hover:text-erp-primary-hover">
+                    <a href="#" className="text-blue-600 hover:text-blue-700">
                       Términos de Servicio
                     </a>{' '}
                     y{' '}
-                    <a href="#" className="text-erp-primary hover:text-erp-primary-hover">
+                    <a href="#" className="text-blue-600 hover:text-blue-700">
                       Política de Privacidad
                     </a>
                   </p>
@@ -379,15 +382,17 @@ function Register() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-erp-neutral-900 text-white py-12">
+      <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="flex items-center justify-center mb-4">
-              <div className="w-8 h-8 bg-erp-primary rounded-lg mr-3"></div>
-              <h3 className="text-2xl font-bold">BizFlow Pro</h3>
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3">
+                <span className="text-white font-bold text-sm">O</span>
+              </div>
+              <h3 className="text-2xl font-bold">OperixML</h3>
             </div>
-            <p className="text-erp-neutral-400 max-w-md mx-auto">
-              La plataforma de gestión empresarial más avanzada para micro y pequeñas empresas.
+            <p className="text-gray-400 max-w-md mx-auto">
+              El ERP modular e intuitivo diseñado para que tu PyME pueda enfocarse en crecer.
             </p>
           </div>
         </div>
