@@ -493,7 +493,62 @@ function SalesReportsComponent() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
+              {/* Vista móvil - Cards */}
+              <div className="block md:hidden">
+                <div className="space-y-4">
+                  {sales.map(sale => (
+                    <div key={sale.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-blue-600 text-sm">#{sale.id}</span>
+                          <Badge variant={sale.estado === 'completada' ? 'success' : 'warning'} className="text-xs">
+                            {sale.estado}
+                          </Badge>
+                        </div>
+                        <span className="font-semibold text-green-600 text-lg">
+                          ${Number(sale.total).toFixed(2)}
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Fecha:</span>
+                          <span className="text-gray-900">{formatDate(sale.fecha)}</span>
+                        </div>
+                        
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Cliente:</span>
+                          <span className="text-gray-900 flex items-center">
+                            <Users className="h-3 w-3 text-gray-400 mr-1" />
+                            {getCustomerName(sale.cliente_id)}
+                          </span>
+                        </div>
+                        
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Pago:</span>
+                          <Badge variant="default" className="text-xs">
+                            {sale.medio_pago === 'efectivo' && '💵'}
+                            {sale.medio_pago === 'tarjeta' && '💳'}
+                            {sale.medio_pago === 'transferencia' && '🏦'}
+                            {' '}
+                            {sale.medio_pago || 'N/A'}
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Items:</span>
+                          <span className="text-gray-900">
+                            {sale.venta_detalle?.reduce((acc, item) => acc + item.cantidad, 0) || 0} productos
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Vista desktop - Tabla */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200">

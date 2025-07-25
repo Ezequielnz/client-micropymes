@@ -36,108 +36,135 @@ const OptimizedTable = React.memo(({
   const columnCount = activeTab === 'products' ? (canEdit || canDelete ? 6 : 5) : (canEdit || canDelete ? 5 : 4);
 
   return (
-    <div style={{ 
-      backgroundColor: 'white', 
-      borderRadius: '8px', 
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-      overflow: 'hidden'
-    }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#f8f9fa' }}>
-            <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #ddd', color: '#333' }}>
-              Nombre
-            </th>
-            <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #ddd', color: '#333' }}>
-              Descripción
-            </th>
-            <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #ddd', color: '#333' }}>
-              Precio
-            </th>
-            <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #ddd', color: '#333' }}>
-              Categoría
-            </th>
-            {activeTab === 'products' && (
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #ddd', color: '#333' }}>
-                Stock
-              </th>
-            )}
-            {(canEdit || canDelete) && (
-              <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #ddd', color: '#333' }}>
-                Acciones
-              </th>
-            )}
-          </tr>
-        </thead>
-        <tbody>
-          {currentData.length === 0 ? (
-            <tr>
-              <td 
-                colSpan={columnCount}
-                style={{ 
-                  padding: '20px', 
-                  textAlign: 'center', 
-                  color: '#666',
-                  fontStyle: 'italic'
-                }}
-              >
-                No hay {activeTab === 'products' ? 'productos' : 'servicios'} registrados
-              </td>
-            </tr>
-          ) : (
-            currentData.map((item) => (
-              <tr key={item.id} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={{ padding: '12px', color: '#333' }}>{item.name}</td>
-                <td style={{ padding: '12px', color: '#333' }}>{item.description}</td>
-                <td style={{ padding: '12px', color: '#333' }}>${item.price?.toFixed(2) || '0.00'}</td>
-                <td style={{ padding: '12px', color: '#333' }}>
-                  {getCategoryName(item.category)}
-                </td>
-                {activeTab === 'products' && (
-                  <td style={{ padding: '12px', color: '#333' }}>{item.stock} {item.unit}</td>
+    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+      {/* Vista móvil - Cards */}
+      <div className="block md:hidden">
+        {currentData.length === 0 ? (
+          <div className="p-6 text-center text-gray-500 italic">
+            No hay {activeTab === 'products' ? 'productos' : 'servicios'} registrados
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-200">
+            {currentData.map((item) => (
+              <div key={item.id} className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-medium text-gray-900 text-sm">{item.name}</h3>
+                  <span className="text-lg font-semibold text-blue-600">${item.price?.toFixed(2) || '0.00'}</span>
+                </div>
+                {item.description && (
+                  <p className="text-gray-600 text-xs mb-2 line-clamp-2">{item.description}</p>
                 )}
+                <div className="flex justify-between items-center text-xs text-gray-500">
+                  <span>{getCategoryName(item.category)}</span>
+                  {activeTab === 'products' && (
+                    <span>Stock: {item.stock} {item.unit}</span>
+                  )}
+                </div>
                 {(canEdit || canDelete) && (
-                  <td style={{ padding: '12px', textAlign: 'center' }}>
+                  <div className="flex gap-2 mt-3">
                     {canEdit && (
                       <button
                         onClick={() => onEdit(item)}
-                        style={{
-                          backgroundColor: '#007bff',
-                          color: 'white',
-                          padding: '5px 10px',
-                          border: 'none',
-                          borderRadius: '3px',
-                          cursor: 'pointer',
-                          marginRight: '5px',
-                          fontSize: '12px'
-                        }}
+                        className="flex-1 px-3 py-1.5 text-xs bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
                       >
                         Editar
                       </button>
                     )}
                     {canDelete && (
                       <button
-                        onClick={() => onDelete(item.id)}
-                        style={{
-                          backgroundColor: '#dc3545',
-                          color: 'white',
-                          padding: '5px 10px',
-                          border: 'none',
-                          borderRadius: '3px',
-                          cursor: 'pointer',
-                          fontSize: '12px'
-                        }}
+                        onClick={() => onDelete(item.id, item.name)}
+                        className="flex-1 px-3 py-1.5 text-xs bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors"
                       >
                         Eliminar
                       </button>
                     )}
-                  </td>
+                  </div>
                 )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Vista desktop - Tabla */}
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">
+                Nombre
+              </th>
+              <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">
+                Descripción
+              </th>
+              <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">
+                Precio
+              </th>
+              <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">
+                Categoría
+              </th>
+              {activeTab === 'products' && (
+                <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">
+                  Stock
+                </th>
+              )}
+              {(canEdit || canDelete) && (
+                <th className="px-4 py-3 text-center border-b border-gray-200 text-gray-700 font-medium text-sm">
+                  Acciones
+                </th>
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {currentData.length === 0 ? (
+              <tr>
+                <td 
+                  colSpan={columnCount}
+                  className="px-4 py-8 text-center text-gray-500 italic"
+                >
+                  No hay {activeTab === 'products' ? 'productos' : 'servicios'} registrados
+                </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : (
+              currentData.map((item) => (
+                <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <td className="px-4 py-3 text-gray-900 text-sm">{item.name}</td>
+                  <td className="px-4 py-3 text-gray-600 text-sm max-w-xs truncate">{item.description}</td>
+                  <td className="px-4 py-3 text-gray-900 text-sm font-medium">${item.price?.toFixed(2) || '0.00'}</td>
+                  <td className="px-4 py-3 text-gray-600 text-sm">
+                    {getCategoryName(item.category)}
+                  </td>
+                  {activeTab === 'products' && (
+                    <td className="px-4 py-3 text-gray-600 text-sm">{item.stock} {item.unit}</td>
+                  )}
+                  {(canEdit || canDelete) && (
+                    <td className="px-4 py-3 text-center">
+                      <div className="flex gap-2 justify-center">
+                        {canEdit && (
+                          <button
+                            onClick={() => onEdit(item)}
+                            className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                          >
+                            Editar
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button
+                            onClick={() => onDelete(item.id, item.name)}
+                            className="px-3 py-1.5 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                          >
+                            Eliminar
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 });
