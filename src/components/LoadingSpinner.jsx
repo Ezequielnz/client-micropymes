@@ -147,36 +147,23 @@ export const PageLoader = ({
   message = 'Cargando página...', 
   variant = 'primary',
   showLogo = true 
-}) => (
-  <div className="min-h-screen bg-erp-neutral-50 flex items-center justify-center">
-    <div className="text-center max-w-md mx-auto p-8">
-      {/* Logo de la aplicación */}
-      {showLogo && (
-        <div className="flex items-center justify-center mb-6">
-          <div className="w-12 h-12 bg-erp-primary rounded-lg mr-3 flex items-center justify-center">
-            <Zap className="h-6 w-6 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-erp-neutral-900">
-            BizFlow Pro
-          </h1>
-        </div>
-      )}
-      
-      {/* Spinner principal */}
-      <LoadingSpinner 
-        size="lg" 
-        variant={variant} 
-        message={message}
-        showMessage={true}
-      />
-      
-      {/* Mensaje adicional */}
-      <p className="text-sm text-erp-neutral-500 mt-4">
-        Preparando tu experiencia...
-      </p>
-    </div>
+}) => {
+  return (
+    <div className="loader-operixml w-full h-screen">
+      <div className="flex flex-col items-center justify-center w-full">
+        <div className="flex flex-col items-center">
+  <div className="loader-operixml-logo mb-4">
+    <span style={{fontWeight:'bold',fontSize:'2rem',color:'#2563eb'}}>O</span>
+    <Zap className="h-6 w-6 text-white" />
   </div>
-);
+  <h1 className="text-2xl font-bold text-erp-neutral-900">
+    OperixML
+  </h1>
+</div>
+      </div>
+    </div>
+  );
+}
 
 /**
  * Componente de loading para secciones específicas

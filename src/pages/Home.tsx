@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { businessAPI, salesAPI } from '../utils/api';
 import { useDashboardData } from '../hooks/useDashboardData';
 import Layout from '../components/Layout';
+import '../styles/responsive-overrides.css';
 import { useBusinessContext, type Business } from '../contexts/BusinessContext';
 import { PageLoader } from '../components/LoadingSpinner';
 import {
@@ -386,4 +387,4 @@ const Home: React.FC = () => {
   );
 };
 
-export default Home; 
+export default Home;

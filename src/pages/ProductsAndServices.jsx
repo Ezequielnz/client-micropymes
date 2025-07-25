@@ -5,6 +5,7 @@ import { productAPI, serviceAPI, categoryAPI } from '../utils/api';
 import PermissionGuard from '../components/PermissionGuard';
 import { useUserPermissions } from '../hooks/useUserPermissions';
 import Layout from '../components/Layout';
+import '../styles/responsive-overrides.css';
 import { useBusinessContext } from '../contexts/BusinessContext';
 
 // Memoized component to avoid inline component recreation

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { categoryAPI } from '../utils/api';
 import PermissionGuard from '../components/PermissionGuard';
 import Layout from '../components/Layout';
+import '../styles/responsive-overrides.css';
 import { useBusinessContext } from '../contexts/BusinessContext';
 import { 
   Tag, 

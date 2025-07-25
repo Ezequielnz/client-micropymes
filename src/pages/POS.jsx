@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productAPI, customerAPI, salesAPI, serviceAPI } from '../utils/api';
 import PermissionGuard from '../components/PermissionGuard';
 import Layout from '../components/Layout';
+import '../styles/responsive-overrides.css';
 import {
   Package,
   Plus,

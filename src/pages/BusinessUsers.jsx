@@ -4,6 +4,7 @@ import { businessAPI, authAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { PageLoader } from '../components/LoadingSpinner';
 import Layout from '../components/Layout';
+import '../styles/responsive-overrides.css';
 import {
   Building2,
   Plus,

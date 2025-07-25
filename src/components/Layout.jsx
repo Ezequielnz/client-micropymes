@@ -291,8 +291,15 @@ const Header = ({ currentBusiness, businesses, onBusinessChange, onLogout }) => 
   return (
     <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6" style={{ backgroundColor: '#ffffff' }}>
       <div className="flex items-center gap-4">
+        {/* Branding OperixML */}
         <div className="flex items-center gap-2">
-          <span className="text-2xl">📊</span>
+          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-lg">O</span>
+          </div>
+          <span className="text-xl font-semibold text-blue-700">OperixML</span>
+        </div>
+        {/* Negocio actual */}
+        <div className="flex items-center gap-2 ml-6">
           <span className="font-medium text-gray-700">
             Negocio actual:
           </span>

@@ -7,6 +7,7 @@ import { tasksAPI, authAPI } from '../utils/api';
 import { getErrorMessage, isForbiddenError } from '../utils/errorHandler';
 import PermissionGuard from '../components/PermissionGuard';
 import Layout from '../components/Layout';
+import '../styles/responsive-overrides.css';
 import { 
   CheckCircle, 
   Clock, 
