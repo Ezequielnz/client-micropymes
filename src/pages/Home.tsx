@@ -225,31 +225,31 @@ const HomeContent: React.FC = () => {
   // Dashboard content
   return (
     <div className="flex-1 bg-gray-50 min-h-screen">
-      {/* Page Header */}
+      {/* Page Header - Optimizado para móvil */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900">Dashboard</h1>
-              <p className="text-sm text-gray-600 truncate max-w-xs md:max-w-full">
-                Resumen ejecutivo de {currentBusiness?.nombre || 'tu negocio'} | {currentDateString}
+        <div className="max-w-full md:max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 md:h-16">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg md:text-xl font-semibold text-gray-900">Dashboard</h1>
+              <p className="text-xs md:text-sm text-gray-600 truncate w-full max-w-[180px] sm:max-w-xs md:max-w-full">
+                {currentBusiness?.nombre || 'tu negocio'} {/* Nombre del negocio siempre visible */}
+                <span className="hidden sm:inline"> | {currentDateString}</span> {/* Fecha oculta en móvil muy pequeño */}
               </p>
             </div>
-            {/* Refresh button */}
+            {/* Refresh button - Visible solo en tablet/desktop */}
             {hasCurrentBusiness && (
-              <div className="flex items-center gap-2">
-                {lastUpdateString && (
-                  <span className="text-xs text-gray-500">
-                    Actualizado: {lastUpdateString}
-                  </span>
-                )}
+              <div className="flex items-center ml-2">
+                <span className="hidden sm:inline-block text-xs text-gray-500 mr-2">
+                  {lastUpdateString && `Actualizado: ${lastUpdateString}`}
+                </span>
                 <button
                   onClick={refreshData}
                   disabled={dataLoading}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50"
+                  className="inline-flex items-center justify-center w-8 h-8 md:w-auto md:h-auto md:px-3 md:py-1.5 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50"
+                  aria-label="Refrescar datos"
                 >
                   <RefreshCw className={`h-3 w-3 ${dataLoading ? 'animate-spin' : ''}`} />
-                  Refrescar
+                  <span className="hidden md:inline ml-1">Refrescar</span>
                 </button>
               </div>
             )}
@@ -257,8 +257,8 @@ const HomeContent: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Main Content - Optimizado para móvil */}
+      <div className="max-w-full md:max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-8 overflow-hidden">
         {!hasBusinesses ? (
           // No businesses state
           <div className="text-center py-12">
@@ -309,23 +309,25 @@ const HomeContent: React.FC = () => {
               />
             </Suspense>
 
-            {/* Period Controls */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">Período:</span>
-              {periodButtons.map((period) => (
-                <button
-                  key={period.key}
-                  onClick={() => handlePeriodChange(period.key)}
-                  disabled={dataLoading}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
-                    selectedPeriod === period.key 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  {period.label}
-                </button>
-              ))}
+            {/* Period Controls - Optimizado para móvil */}
+            <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+              <span className="text-xs sm:text-sm font-medium text-gray-700">Período:</span>
+              <div className="flex items-center gap-1 sm:gap-2 flex-1 max-w-[220px] sm:max-w-none">
+                {periodButtons.map((period) => (
+                  <button
+                    key={period.key}
+                    onClick={() => handlePeriodChange(period.key)}
+                    disabled={dataLoading}
+                    className={`px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-md sm:rounded-lg text-xs sm:text-sm font-medium transition-colors disabled:opacity-50 flex-1 ${
+                      selectedPeriod === period.key 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {period.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Loading indicator for data refresh */}
@@ -353,8 +355,8 @@ const HomeContent: React.FC = () => {
               <QuickActions currentBusiness={currentBusiness} />
             </Suspense>
 
-            {/* Top Products and Recent Sales */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Top Products and Recent Sales - Optimizado para móvil */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <Suspense fallback={<div className="h-96 bg-gray-100 animate-pulse rounded-lg"></div>}>
                 <TopProducts
                   topItems={topItems}
