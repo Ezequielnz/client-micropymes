@@ -225,6 +225,21 @@
 
 /* Utilidades adicionales modernas */
 @layer utilities {
+  /* Forzar fondo y borde blanco al ícono de menú hamburguesa solo en mobile */
+  @media (max-width: 767px) {
+    .mobile-menu-btn-white {
+      background: #fff !important;
+      border: 1.5px solid #fff !important;
+      border-radius: 0.5rem !important;
+      box-shadow: 0 1px 8px 0 rgba(0,0,0,0.06);
+      padding: 0.375rem;
+      /* Asegura contraste en el ícono */
+    }
+    .mobile-menu-btn-white svg {
+      color: #222 !important;
+    }
+  }
+
   /* Transiciones suaves */
   .transition-erp {
     @apply transition-all duration-200 ease-in-out;

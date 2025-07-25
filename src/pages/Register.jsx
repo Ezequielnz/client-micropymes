@@ -167,7 +167,7 @@ function Register() {
             <div className="md:hidden">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-gray-600 hover:text-gray-900 focus:outline-none focus:text-gray-900"
+                className="text-gray-600 hover:text-gray-900 focus:outline-none focus:text-gray-900 mobile-menu-btn-white"
               >
                 {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
