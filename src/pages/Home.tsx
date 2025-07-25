@@ -1,15 +1,4 @@
 import React, { useState, useEffect, Suspense, lazy, useCallback, useMemo } from 'react';
-
-// Declaración global para TypeScript: window.setSidebarOpen
-// Esto evita el error de tipado en la línea donde se usa window.setSidebarOpen
-// Puedes mover esta declaración a un archivo de tipos globales si lo prefieres
-
-declare global {
-  interface Window {
-    setSidebarOpen?: (open: boolean) => void;
-  }
-}
-
 import { useNavigate } from 'react-router-dom';
 import { businessAPI, salesAPI } from '../utils/api';
 import { useDashboardData } from '../hooks/useDashboardData';
@@ -239,18 +228,8 @@ const HomeContent: React.FC = () => {
       {/* Page Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 relative">
-            {/* Botón menú móvil */}
-            <button
-              className="md:hidden mr-4 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 absolute left-0 top-1/2 -translate-y-1/2"
-              onClick={() => window?.setSidebarOpen && window.setSidebarOpen(true)}
-              aria-label="Abrir menú"
-            >
-              <svg className="h-6 w-6 text-blue-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            <div className="ml-10 md:ml-0">
+          <div className="flex items-center justify-between h-16">
+            <div>
               <h1 className="text-xl font-semibold text-gray-900">Dashboard</h1>
               <p className="text-sm text-gray-600 truncate max-w-xs md:max-w-full">
                 Resumen ejecutivo de {currentBusiness?.nombre || 'tu negocio'} | {currentDateString}

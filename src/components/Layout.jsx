@@ -273,7 +273,7 @@ const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
 };
 
 // Header Component
-const Header = ({ currentBusiness, businesses, onBusinessChange, onLogout }) => {
+const Header = ({ currentBusiness, businesses, onBusinessChange, onLogout, setSidebarOpen }) => {
   const [showBusinessDropdown, setShowBusinessDropdown] = useState(false);
   
   useEffect(() => {
@@ -294,7 +294,7 @@ const Header = ({ currentBusiness, businesses, onBusinessChange, onLogout }) => 
       {/* Botón hamburguesa solo en móvil */}
       <button
         className="md:hidden mr-4 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-        onClick={() => setSidebarOpen && setSidebarOpen(true)}
+        onClick={() => setSidebarOpen(true)}
         aria-label="Abrir menú"
       >
         <svg className="h-6 w-6 text-blue-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -516,6 +516,7 @@ const Layout = ({ children, activeSection = 'dashboard' }) => {
       businesses={businesses}
       onBusinessChange={handleBusinessChange}
       onLogout={handleLogout}
+      setSidebarOpen={setSidebarOpen}
     />
     <main className="flex-1">
       {children}

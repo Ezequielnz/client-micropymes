@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useBusinessContext } from '../contexts/BusinessContext';
 import { salesAPI, customerAPI } from '../utils/api';
-import { PageLoader, SectionLoader } from '../components/LoadingSpinner';
+import { PageLoader } from '../components/LoadingSpinner';
 import Layout from '../components/Layout';
 import PermissionGuard from '../components/PermissionGuard';
 import {
