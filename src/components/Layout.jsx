@@ -263,9 +263,23 @@ const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
         })}
       </nav>
       
-      <div className="p-4 border-t border-gray-200" style={{ backgroundColor: '#f8fafc' }}>
-        <div className="text-xs text-gray-500 text-center">
-          © 2025 MicroPymes v2.1
+      <div className="mt-auto">
+        <button
+          onClick={() => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.clear();
+            navigate('/login');
+          }}
+          className="w-full flex items-center gap-2 px-4 py-3 text-left text-gray-700 hover:text-blue-600 transition-colors"
+        >
+          <LogOut className="h-5 w-5" />
+          <span>Cerrar Sesión</span>
+        </button>
+        <div className="p-4 border-t border-gray-200" style={{ backgroundColor: '#f8fafc' }}>
+          <div className="text-xs text-gray-500 text-center">
+            © 2025 MicroPymes v2.1
+          </div>
         </div>
       </div>
     </div>
@@ -302,14 +316,14 @@ const Header = ({ currentBusiness, businesses, onBusinessChange, onLogout, setSi
         </svg>
       </button>
       {/* Negocio actual */}
-      <div className="flex items-center gap-2 ml-6">
-          <span className="font-medium text-gray-700">
-            Negocio actual:
+      <div className="flex items-center ml-4 sm:ml-6">
+          <span className="hidden sm:inline font-medium text-gray-700 mr-1">
+            Negocio:
           </span>
           <div className="relative business-dropdown">
             <button
               onClick={() => setShowBusinessDropdown(!showBusinessDropdown)}
-              className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg transition-colors"
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg transition-colors"
               style={{ 
                 backgroundColor: '#f8fafc',
                 borderColor: '#d1d5db'
@@ -321,17 +335,17 @@ const Header = ({ currentBusiness, businesses, onBusinessChange, onLogout, setSi
                 e.target.style.backgroundColor = '#f8fafc';
               }}
             >
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-blue-600">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <span className="font-semibold text-blue-600 text-sm sm:text-base truncate max-w-[120px] sm:max-w-none">
                   {currentBusiness?.nombre || 'Seleccionar negocio'}
                 </span>
                 {currentBusiness?.tipo && (
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 hidden sm:inline">
                     ({currentBusiness.tipo})
                   </span>
                 )}
               </div>
-              <ChevronDown className="h-4 w-4 text-gray-500" />
+              <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
             </button>
             
             {showBusinessDropdown && (
@@ -381,17 +395,7 @@ const Header = ({ currentBusiness, businesses, onBusinessChange, onLogout, setSi
             )}
           </div>
         </div>
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onLogout}
-          className="flex items-center gap-2"
-        >
-          <LogOut className="h-4 w-4" />
-          Cerrar Sesión
-        </Button>
-      </div>
+      {/* El botón de cerrar sesión se ha movido al fondo del sidebar */}
     </header>
   );
 };
@@ -445,6 +449,7 @@ const Layout = ({ children, activeSection = 'dashboard' }) => {
   };
 
   const handleLogout = () => {
+    // Esta función ahora se implementa directamente en el botón del sidebar
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.clear();
