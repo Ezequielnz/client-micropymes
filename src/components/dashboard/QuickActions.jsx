@@ -73,45 +73,45 @@ const QuickActions = ({ currentBusiness }) => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <button 
             onClick={() => navigate(`/business/${currentBusiness?.id}/pos`)}
-            className="flex flex-col items-center gap-3 p-4 rounded-lg bg-white border border-gray-200 hover:border-green-300 hover:shadow-md transition-all duration-200 group"
+            className="flex flex-col items-center gap-2 md:gap-3 p-3 md:p-4 rounded-lg bg-white border border-gray-200 hover:border-green-300 hover:shadow-md transition-all duration-200 group min-w-0"
           >
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
-              <ShoppingCart className="w-5 h-5 text-green-600" />
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors flex-shrink-0">
+              <ShoppingCart className="w-4 h-4 md:w-5 md:h-5 text-green-600" />
             </div>
-            <span className="text-sm font-medium text-gray-900">Nueva Venta</span>
+            <span className="text-xs md:text-sm font-medium text-gray-900 text-center">Nueva Venta</span>
           </button>
 
           <Button
             onClick={() => navigate(`/business/${currentBusiness?.id}/products-and-services`)}
             variant="outline"
             size="sm"
-            className="bg-white hover:bg-blue-50 border-blue-200 text-blue-600 hover:text-blue-700"
+            className="bg-white hover:bg-blue-50 border-blue-200 text-blue-600 hover:text-blue-700 min-w-0 flex-col sm:flex-row h-auto sm:h-10 p-3 sm:p-2"
           >
-            <Package className="h-4 w-4 mr-2" />
-            Ver Productos
+            <Package className="h-4 w-4 sm:mr-2 mb-1 sm:mb-0" />
+            <span className="text-xs sm:text-sm">Ver Productos</span>
           </Button>
 
           <Button
             onClick={() => navigate(`/business/${currentBusiness?.id}/customers`)}
             variant="outline"
             size="sm"
-            className="bg-white hover:bg-green-50 border-green-200 text-green-600 hover:text-green-700"
+            className="bg-white hover:bg-green-50 border-green-200 text-green-600 hover:text-green-700 min-w-0 flex-col sm:flex-row h-auto sm:h-10 p-3 sm:p-2"
           >
-            <Users className="h-4 w-4 mr-2" />
-            Ver Clientes
+            <Users className="h-4 w-4 sm:mr-2 mb-1 sm:mb-0" />
+            <span className="text-xs sm:text-sm">Ver Clientes</span>
           </Button>
 
           <Button
             onClick={() => navigate(`/business/${currentBusiness?.id}/products-and-services`)}
             variant="outline"
             size="sm"
-            className="bg-white hover:bg-purple-50 border-purple-200 text-purple-600 hover:text-purple-700"
+            className="bg-white hover:bg-purple-50 border-purple-200 text-purple-600 hover:text-purple-700 min-w-0 flex-col sm:flex-row h-auto sm:h-10 p-3 sm:p-2"
           >
-            <Upload className="h-4 w-4 mr-2" />
-            Importar Productos
+            <Upload className="h-4 w-4 sm:mr-2 mb-1 sm:mb-0" />
+            <span className="text-xs sm:text-sm">Importar</span>
           </Button>
         </div>
       </CardContent>

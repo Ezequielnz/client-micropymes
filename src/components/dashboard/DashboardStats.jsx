@@ -78,26 +78,26 @@ const DashboardStats = ({ dashboardStats, products, customers, formatCurrency })
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
       {statCards.map((stat) => {
         const Icon = stat.icon;
         return (
-          <Card key={stat.title} className="hover:shadow-lg transition-shadow duration-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
+          <Card key={stat.title} className="hover:shadow-lg transition-shadow duration-200 min-w-0">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 md:p-6">
+              <CardTitle className="text-sm font-medium text-gray-600 truncate">
                 {stat.title}
               </CardTitle>
-              <Icon className="h-4 w-4 text-gray-500" />
+              <Icon className="h-4 w-4 text-gray-500 flex-shrink-0" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-gray-900 mb-1">
+            <CardContent className="p-4 md:p-6 pt-0">
+              <div className="text-xl md:text-2xl font-bold text-gray-900 mb-1 truncate">
                 {stat.value}
               </div>
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-600">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs text-gray-600 truncate flex-1">
                   {stat.description}
                 </p>
-                <Badge variant={stat.trendUp ? "default" : "secondary"} className="text-xs">
+                <Badge variant={stat.trendUp ? "default" : "secondary"} className="text-xs flex-shrink-0">
                   <TrendingUp className={`h-3 w-3 mr-1 ${stat.trendUp ? '' : 'rotate-180'}`} />
                   {stat.trend}
                 </Badge>
