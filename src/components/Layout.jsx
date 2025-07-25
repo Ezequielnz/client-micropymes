@@ -261,9 +261,8 @@ const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
             </button>
           );
         })}
-      </nav>
-      
-      <div className="mt-auto">
+        
+        {/* Botón de cerrar sesión inmediatamente después de los items del sidebar */}
         <button
           onClick={() => {
             localStorage.removeItem('token');
@@ -271,15 +270,18 @@ const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
             localStorage.clear();
             navigate('/login');
           }}
-          className="w-full flex items-center gap-2 px-4 py-3 text-left text-gray-700 hover:text-blue-600 transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left text-gray-700 hover:text-blue-600 transition-colors"
+          style={{ backgroundColor: '#ffffff' }}
         >
-          <LogOut className="h-5 w-5" />
-          <span>Cerrar Sesión</span>
+          <LogOut className="h-5 w-5 text-gray-500" />
+          <span className="font-medium">Cerrar Sesión</span>
         </button>
-        <div className="p-4 border-t border-gray-200" style={{ backgroundColor: '#f8fafc' }}>
-          <div className="text-xs text-gray-500 text-center">
-            © 2025 MicroPymes v2.1
-          </div>
+      </nav>
+      
+      {/* Footer */}
+      <div className="p-4 border-t border-gray-200 mt-auto" style={{ backgroundColor: '#f8fafc' }}>
+        <div className="text-xs text-gray-500 text-center">
+          © 2025 MicroPymes v2.1
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Suspense, lazy, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { businessAPI, salesAPI } from '../utils/api';
+import { businessAPI } from '../utils/api';
 import { useDashboardData } from '../hooks/useDashboardData';
 import Layout from '../components/Layout';
 import '../styles/responsive-overrides.css';
@@ -17,7 +17,6 @@ const DashboardStats = lazy(() => import('../components/dashboard/DashboardStats
 const QuickActions = lazy(() => import('../components/dashboard/QuickActions'));
 const TopProducts = lazy(() => import('../components/dashboard/TopProducts'));
 const RecentSales = lazy(() => import('../components/dashboard/RecentSales'));
-const HealthCheck = lazy(() => import('../components/dashboard/HealthCheck'));
 
 // Internal component that uses BusinessContext
 const HomeContent: React.FC = () => {
@@ -43,8 +42,7 @@ const HomeContent: React.FC = () => {
     customers
   } = useDashboardData(currentBusiness, selectedPeriod);
   
-  const [healthCheckResult, setHealthCheckResult] = useState<any>(null);
-  const [healthCheckLoading, setHealthCheckLoading] = useState(false);
+  // Código de diagnóstico eliminado
 
   // ✅ OPTIMIZED: Memoized format functions to prevent recreation on every render
   const formatCurrency = useCallback((amount: number) => {
@@ -116,35 +114,7 @@ const HomeContent: React.FC = () => {
     }
   }, [navigate]);
 
-  // ✅ OPTIMIZED: Memoized performHealthCheck function
-  const performHealthCheck = useCallback(async () => {
-    if (!currentBusiness?.id) return;
-    
-    setHealthCheckLoading(true);
-    setHealthCheckResult(null);
-    
-    const startTime = Date.now();
-    
-    try {
-      const result = await salesAPI.healthCheck(currentBusiness.id);
-      const endTime = Date.now();
-      
-      setHealthCheckResult({
-        ...result,
-        frontend_time: `${endTime - startTime}ms`,
-        status: 'success'
-      });
-    } catch (error: any) {
-      const endTime = Date.now();
-      setHealthCheckResult({
-        status: 'error',
-        error: error.message,
-        frontend_time: `${endTime - startTime}ms`
-      });
-    } finally {
-      setHealthCheckLoading(false);
-    }
-  }, [currentBusiness?.id]);
+  // Función de diagnóstico eliminada
 
   // ✅ OPTIMIZED: Memoized handlePeriodChange function
   const handlePeriodChange = useCallback((period: string) => {
@@ -299,15 +269,7 @@ const HomeContent: React.FC = () => {
               </div>
             )}
 
-            {/* Health Check Component */}
-            <Suspense fallback={<div className="h-16 bg-gray-100 animate-pulse rounded-lg"></div>}>
-              <HealthCheck
-                healthCheckResult={healthCheckResult}
-                healthCheckLoading={healthCheckLoading}
-                performHealthCheck={performHealthCheck}
-                setHealthCheckResult={setHealthCheckResult}
-              />
-            </Suspense>
+            {/* Componente de diagnóstico eliminado */}
 
             {/* Period Controls - Optimizado para móvil */}
             <div className="flex flex-wrap items-center gap-1 sm:gap-2">
