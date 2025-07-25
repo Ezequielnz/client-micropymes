@@ -98,14 +98,15 @@ const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
 
   return (
     <div className="fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col z-40" style={{ backgroundColor: '#ffffff' }}>
-      <div className="p-6 border-b border-gray-200" style={{ backgroundColor: '#f8fafc' }}>
-        <h1 className="text-2xl font-bold text-gray-900">
-          MicroPymes
-        </h1>
-        <p className="text-sm text-gray-600 mt-1">
-          Sistema de Gestión
-        </p>
-      </div>
+      <div className="p-6 border-b border-gray-200 flex items-center gap-3" style={{ backgroundColor: '#f8fafc' }}>
+  <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
+    <span className="text-white font-bold text-2xl">O</span>
+  </div>
+  <div>
+    <h1 className="text-2xl font-bold text-blue-700">OperixML</h1>
+    <p className="text-sm text-gray-600 mt-1">Sistema de Gestión</p>
+  </div>
+</div>
       
       <nav className="flex-1 p-4 space-y-2" style={{ backgroundColor: '#ffffff' }}>
         {sidebarItems.map((item) => {
@@ -290,16 +291,18 @@ const Header = ({ currentBusiness, businesses, onBusinessChange, onLogout }) => 
 
   return (
     <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6" style={{ backgroundColor: '#ffffff' }}>
-      <div className="flex items-center gap-4">
-        {/* Branding OperixML */}
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">O</span>
-          </div>
-          <span className="text-xl font-semibold text-blue-700">OperixML</span>
-        </div>
-        {/* Negocio actual */}
-        <div className="flex items-center gap-2 ml-6">
+      {/* Botón hamburguesa solo en móvil */}
+      <button
+        className="md:hidden mr-4 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        onClick={() => setSidebarOpen && setSidebarOpen(true)}
+        aria-label="Abrir menú"
+      >
+        <svg className="h-6 w-6 text-blue-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+      {/* Negocio actual */}
+      <div className="flex items-center gap-2 ml-6">
           <span className="font-medium text-gray-700">
             Negocio actual:
           </span>
@@ -378,8 +381,6 @@ const Header = ({ currentBusiness, businesses, onBusinessChange, onLogout }) => 
             )}
           </div>
         </div>
-      </div>
-
       <div className="flex items-center gap-4">
         <Button
           variant="outline"
@@ -480,25 +481,47 @@ const Layout = ({ children, activeSection = 'dashboard' }) => {
   return (
     <BusinessContext.Provider value={{ currentBusiness, businesses, handleBusinessChange }}>
       <div className="min-h-screen bg-gray-50 flex">
-        <Sidebar 
-          activeSection={activeSection}
-          setActiveSection={() => {}}
-          currentBusiness={currentBusiness}
-        />
-        
-        <div className="flex-1 ml-64">
-          <Header
-            currentBusiness={currentBusiness}
-            businesses={businesses}
-            onBusinessChange={handleBusinessChange}
-            onLogout={handleLogout}
-          />
-          
-          <main className="flex-1">
-            {children}
-          </main>
-        </div>
-      </div>
+  {/* Sidebar responsive */}
+  <div>
+    {/* Overlay para móvil */}
+    <div
+      className={`fixed inset-0 bg-black bg-opacity-30 z-40 transition-opacity md:hidden ${sidebarOpen ? 'block' : 'hidden'}`}
+      onClick={() => setSidebarOpen(false)}
+      aria-hidden="true"
+    ></div>
+    <div
+      className={`fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col z-50 transform transition-transform duration-300 md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:static md:translate-x-0`}
+    >
+      <Sidebar 
+        activeSection={activeSection}
+        setActiveSection={() => {}}
+        currentBusiness={currentBusiness}
+      />
+      {/* Botón cerrar en móvil */}
+      <button
+        className="absolute top-4 right-4 md:hidden p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        onClick={() => setSidebarOpen(false)}
+        aria-label="Cerrar menú"
+      >
+        <svg className="h-6 w-6 text-blue-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+  {/* Contenido principal */}
+  <div className="flex-1">
+    <Header
+      currentBusiness={currentBusiness}
+      businesses={businesses}
+      onBusinessChange={handleBusinessChange}
+      onLogout={handleLogout}
+    />
+    <main className="flex-1">
+      {children}
+    </main>
+  </div>
+</div>
     </BusinessContext.Provider>
   );
 };
