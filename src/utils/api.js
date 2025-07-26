@@ -26,6 +26,27 @@ const api = axios.create({
   timeout: 60000, // 60 seconds timeout (increased temporarily)
 });
 
+// Request interceptor para adjuntar automáticamente el token JWT a todas las peticiones
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    console.log('API Request:', config.method?.toUpperCase(), config.url);
+    console.log('Token present:', !!token);
+    if (token) {
+      // Aseguramos que el token se envía correctamente con el formato Bearer
+      config.headers['Authorization'] = `Bearer ${token}`;
+      console.log('Authorization header set');
+    } else {
+      console.log('No token found in localStorage');
+    }
+    return config;
+  },
+  (error) => {
+    console.error('Error in request interceptor:', error);
+    return Promise.reject(error);
+  }
+);
+
 // Error handling interceptor
 api.interceptors.response.use(
   (response) => response,
@@ -66,23 +87,6 @@ api.interceptors.response.use(
     // Always return the original error to maintain compatibility
     return Promise.reject(error);
   }
-);
-
-// Axios request interceptor
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    console.log('API Request:', config.method?.toUpperCase(), config.url);
-    console.log('Token present:', !!token);
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-      console.log('Authorization header set');
-    } else {
-      console.log('No token found in localStorage');
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
 );
 
 /**

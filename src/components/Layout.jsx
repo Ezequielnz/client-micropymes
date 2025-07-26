@@ -92,7 +92,7 @@ const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
     { id: 'clients', label: 'Clientes', icon: Users, onClick: () => safeNavigate('/customers') },
     { id: 'tasks', label: 'Tareas', icon: Clock, onClick: () => safeNavigate('/tasks') },
     { id: 'billing', label: 'Facturación', icon: FileText, disabled: true },
-    { id: 'finances', label: 'Finanzas', icon: DollarSign, disabled: true },
+    { id: 'finances', label: 'Finanzas', icon: DollarSign, onClick: () => safeNavigate('/finanzas') },
     { id: 'settings', label: 'Configuración', icon: Settings, disabled: true },
   ];
 
@@ -403,7 +403,7 @@ const Header = ({ currentBusiness, businesses, onBusinessChange, onLogout, setSi
 };
 
 // Layout Component Principal
-const Layout = ({ children, activeSection = 'dashboard' }) => {
+const Layout = ({ children, activeSection }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -413,6 +413,26 @@ const Layout = ({ children, activeSection = 'dashboard' }) => {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [error, setError] = useState('');
+  
+  // Función para determinar la sección activa basándose en la URL
+  const getActiveSectionFromPath = () => {
+    const path = location.pathname;
+    
+    if (path.includes('/finanzas')) return 'finances';
+    if (path.includes('/products-and-services')) return 'products';
+    if (path.includes('/categories')) return 'categories';
+    if (path.includes('/pos')) return 'pos';
+    if (path.includes('/reports')) return 'reports';
+    if (path.includes('/customers')) return 'clients';
+    if (path.includes('/tasks')) return 'tasks';
+    if (path.includes('/business-users')) return 'businesses';
+    if (path.includes('/home')) return 'dashboard';
+    
+    return 'dashboard'; // Por defecto
+  };
+  
+  // Determinar la sección activa
+  const currentActiveSection = activeSection || getActiveSectionFromPath();
 
   useEffect(() => {
     loadInitialData();
@@ -500,7 +520,7 @@ const Layout = ({ children, activeSection = 'dashboard' }) => {
       className={`fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col z-50 transform transition-transform duration-300 md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:static md:translate-x-0`}
     >
       <Sidebar 
-        activeSection={activeSection}
+        activeSection={currentActiveSection}
         setActiveSection={() => {}}
         currentBusiness={currentBusiness}
       />

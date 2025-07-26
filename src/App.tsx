@@ -19,6 +19,7 @@ import Profile from './pages/Profile';
 import LandingPage from './pages/LandingPage.tsx';
 import TestPage from './pages/TestPage';
 import PendingApproval from './pages/PendingApproval';
+import Finanzas from './pages/Finanzas';
 
 /**
  * The main application component.
@@ -56,6 +57,7 @@ const App: React.FC = () => {
           <Route path="/pos" element={<POS />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/reports" element={<SalesReports />} />
+          <Route path="/finanzas" element={<Finanzas />} />
           
           {/* Legacy routes with businessId parameter for backward compatibility */}
           <Route path="/business/:businessId/categories" element={<Categories />} />
@@ -66,6 +68,7 @@ const App: React.FC = () => {
           <Route path="/business/:businessId/tasks" element={<Tasks />} />
           <Route path="/business/:businessId/reports" element={<SalesReports />} />
           <Route path="/business/:businessId/users" element={<BusinessUsers />} />
+          <Route path="/business/:businessId/finanzas" element={<Finanzas />} />
           
           {/* Catch-all route: If no other route matches, navigate to the home page. */}
           <Route path="*" element={<Navigate to="/" />} />
