@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { PageLoader } from '../LoadingSpinner';
 
-const FinanzasMovimientos = ({ businessId }) => {
+const FinanzasMovimientos = ({ businessId, movimientoAction, onActionProcessed }) => {
   const [movimientos, setMovimientos] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [clientes, setClientes] = useState([]);
@@ -87,6 +87,26 @@ const FinanzasMovimientos = ({ businessId }) => {
       fetchData();
     }
   }, [businessId, filters]);
+
+  // Procesar acciones del dashboard
+  useEffect(() => {
+    if (movimientoAction && movimientoAction.type === 'add') {
+      // Configurar el formulario con el tipo de movimiento
+      setFormData(prev => ({
+        ...prev,
+        tipo: movimientoAction.tipoMovimiento
+      }));
+      
+      // Abrir el modal
+      setShowModal(true);
+      setEditingMovimiento(null);
+      
+      // Notificar que la acción fue procesada
+      if (onActionProcessed) {
+        onActionProcessed();
+      }
+    }
+  }, [movimientoAction, onActionProcessed]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -192,7 +212,8 @@ const FinanzasMovimientos = ({ businessId }) => {
     return new Date(dateString).toLocaleDateString('es-AR');
   };
 
-  const filteredCategorias = categorias.filter(cat => cat.tipo === formData.tipo);
+  // Filtrar categorías por tipo y que estén activas
+  const filteredCategorias = categorias.filter(cat => cat.tipo === formData.tipo && cat.activo === true);
 
   if (loading) {
     return <PageLoader />;
@@ -201,30 +222,30 @@ const FinanzasMovimientos = ({ businessId }) => {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Movimientos Financieros</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Movimientos Financieros</h2>
         <button
           onClick={() => {
             resetForm();
             setEditingMovimiento(null);
             setShowModal(true);
           }}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 !important"
+          className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 !important"
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
           Nuevo Movimiento
         </button>
       </div>
 
       {/* Filters */}
-      <div className="bg-gray-50 p-4 rounded-lg mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="bg-gray-50 p-3 sm:p-4 rounded-lg mb-4 sm:mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Tipo</label>
             <select
               value={filters.tipo}
               onChange={(e) => setFilters({...filters, tipo: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
             >
               <option value="">Todos</option>
               <option value="ingreso">Ingresos</option>
@@ -237,10 +258,12 @@ const FinanzasMovimientos = ({ businessId }) => {
             <select
               value={filters.categoria_id}
               onChange={(e) => setFilters({...filters, categoria_id: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
             >
               <option value="">Todas</option>
-              {categorias.map(categoria => (
+              {categorias
+                .filter(categoria => categoria.activo)
+                .map(categoria => (
                 <option key={categoria.id} value={categoria.id}>
                   {categoria.nombre} ({categoria.tipo})
                 </option>
@@ -254,7 +277,7 @@ const FinanzasMovimientos = ({ businessId }) => {
               type="date"
               value={filters.fecha_desde}
               onChange={(e) => setFilters({...filters, fecha_desde: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
             />
           </div>
           
@@ -264,37 +287,37 @@ const FinanzasMovimientos = ({ businessId }) => {
               type="date"
               value={filters.fecha_hasta}
               onChange={(e) => setFilters({...filters, fecha_hasta: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
             />
           </div>
         </div>
       </div>
 
       {/* Movements Table */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
+      <div className="bg-white shadow overflow-hidden rounded-md">
         <ul className="divide-y divide-gray-200">
           {movimientos.length === 0 ? (
-            <li className="px-6 py-8 text-center text-gray-500">
+            <li className="px-3 sm:px-6 py-6 sm:py-8 text-center text-gray-500 text-sm sm:text-base">
               No hay movimientos registrados
             </li>
           ) : (
             movimientos.map((movimiento) => (
-              <li key={movimiento.id} className="px-6 py-4">
+              <li key={movimiento.id} className="px-3 sm:px-6 py-3 sm:py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
                       {movimiento.tipo === 'ingreso' ? (
-                        <TrendingUp className="h-6 w-6 text-green-600" />
+                        <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-green-600" />
                       ) : (
-                        <TrendingDown className="h-6 w-6 text-red-600" />
+                        <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-red-600" />
                       )}
                     </div>
                     <div className="ml-4">
                       <div className="flex items-center">
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-xs sm:text-sm font-medium text-gray-900">
                           {movimiento.descripcion || 'Sin descripción'}
                         </p>
-                        <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        <span className={`ml-1 sm:ml-2 inline-flex items-center px-1.5 sm:px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           movimiento.tipo === 'ingreso' 
                             ? 'bg-green-100 text-green-800' 
                             : 'bg-red-100 text-red-800'
@@ -302,7 +325,7 @@ const FinanzasMovimientos = ({ businessId }) => {
                           {movimiento.tipo === 'ingreso' ? 'Ingreso' : 'Egreso'}
                         </span>
                       </div>
-                      <div className="mt-1 text-sm text-gray-500">
+                      <div className="mt-1 text-xs sm:text-sm text-gray-500">
                         <span>{formatDate(movimiento.fecha)}</span>
                         {movimiento.categoria_nombre && (
                           <span className="ml-2">• {movimiento.categoria_nombre}</span>
@@ -318,13 +341,13 @@ const FinanzasMovimientos = ({ businessId }) => {
                   </div>
                   <div className="flex items-center">
                     <div className="text-right mr-4">
-                      <p className={`text-lg font-medium ${
+                      <p className={`text-base sm:text-lg font-medium ${
                         movimiento.tipo === 'ingreso' ? 'text-green-600' : 'text-red-600'
                       }`}>
                         {movimiento.tipo === 'ingreso' ? '+' : '-'}{formatCurrency(movimiento.monto)}
                       </p>
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-1 sm:space-x-2">
                       <button
                         onClick={() => openEditModal(movimiento)}
                         className="text-blue-600 hover:text-blue-900"
@@ -349,26 +372,26 @@ const FinanzasMovimientos = ({ businessId }) => {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+          <div className="relative top-10 sm:top-20 mx-auto p-4 sm:p-5 border w-[90%] max-w-[400px] shadow-lg rounded-md bg-white">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-base sm:text-lg font-medium text-gray-900">
                 {editingMovimiento ? 'Editar Movimiento' : 'Nuevo Movimiento'}
               </h3>
               <button
                 onClick={() => setShowModal(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
-                <X className="h-6 w-6" />
+                <X className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo *</label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Tipo *</label>
                 <select
                   value={formData.tipo}
                   onChange={(e) => setFormData({...formData, tipo: e.target.value, categoria_id: ''})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                   required
                 >
                   <option value="ingreso">Ingreso</option>
@@ -381,7 +404,7 @@ const FinanzasMovimientos = ({ businessId }) => {
                 <select
                   value={formData.categoria_id}
                   onChange={(e) => setFormData({...formData, categoria_id: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 >
                   <option value="">Seleccionar categoría</option>
                   {filteredCategorias.map(categoria => (
@@ -400,7 +423,7 @@ const FinanzasMovimientos = ({ businessId }) => {
                   min="0"
                   value={formData.monto}
                   onChange={(e) => setFormData({...formData, monto: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                   required
                 />
               </div>
@@ -411,7 +434,7 @@ const FinanzasMovimientos = ({ businessId }) => {
                   type="date"
                   value={formData.fecha}
                   onChange={(e) => setFormData({...formData, fecha: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                   required
                 />
               </div>
@@ -421,7 +444,7 @@ const FinanzasMovimientos = ({ businessId }) => {
                 <select
                   value={formData.metodo_pago}
                   onChange={(e) => setFormData({...formData, metodo_pago: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                   required
                 >
                   <option value="">Seleccionar método</option>
@@ -439,7 +462,7 @@ const FinanzasMovimientos = ({ businessId }) => {
                 <select
                   value={formData.cliente_id}
                   onChange={(e) => setFormData({...formData, cliente_id: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 >
                   <option value="">Sin cliente</option>
                   {clientes.map(cliente => (
@@ -456,7 +479,7 @@ const FinanzasMovimientos = ({ businessId }) => {
                   type="text"
                   value={formData.descripcion}
                   onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                   placeholder="Descripción del movimiento"
                 />
               </div>
@@ -466,7 +489,7 @@ const FinanzasMovimientos = ({ businessId }) => {
                 <textarea
                   value={formData.observaciones}
                   onChange={(e) => setFormData({...formData, observaciones: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                   rows="3"
                   placeholder="Observaciones adicionales"
                 />
@@ -476,7 +499,7 @@ const FinanzasMovimientos = ({ businessId }) => {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 bg-white"
                 >
                   Cancelar
                 </button>

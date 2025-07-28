@@ -15,15 +15,15 @@ import {
 } from 'lucide-react';
 
 // Lazy load finance components
-const FinanzasDashboard = lazy(() => import('../components/finance/FinanzasDashboard'));
 const FinanzasMovimientos = lazy(() => import('../components/finance/FinanzasMovimientos'));
 const FinanzasCategorias = lazy(() => import('../components/finance/FinanzasCategorias'));
 const CuentasPendientes = lazy(() => import('../components/finance/CuentasPendientes'));
 const FlujoCajaChart = lazy(() => import('../components/finance/FlujoCajaChart'));
 
 const FinanzasContent = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('flujo-caja');
   const [loading, setLoading] = useState(false);
+  const [movimientoAction, setMovimientoAction] = useState(null); // Para comunicar acciones al componente de movimientos
   const { currentBusiness } = useBusinessContext();
   const navigate = useNavigate();
 
@@ -40,10 +40,10 @@ const FinanzasContent = () => {
 
   const tabs = [
     {
-      id: 'dashboard',
-      name: 'Dashboard',
-      icon: DollarSign,
-      component: FinanzasDashboard
+      id: 'flujo-caja',
+      name: 'Flujo de Caja',
+      icon: TrendingUp,
+      component: FlujoCajaChart
     },
     {
       id: 'movimientos',
@@ -62,26 +62,44 @@ const FinanzasContent = () => {
       name: 'Cuentas Pendientes',
       icon: CreditCard,
       component: CuentasPendientes
-    },
-    {
-      id: 'flujo-caja',
-      name: 'Flujo de Caja',
-      icon: TrendingUp,
-      component: FlujoCajaChart
     }
   ];
 
-  const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component || FinanzasDashboard;
+  const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component || FlujoCajaChart;
+
+  // Funciones para los accesos directos del dashboard
+  const handleAddIngreso = () => {
+    setMovimientoAction({ type: 'add', tipoMovimiento: 'ingreso' });
+    setActiveTab('movimientos');
+  };
+
+  const handleAddEgreso = () => {
+    setMovimientoAction({ type: 'add', tipoMovimiento: 'egreso' });
+    setActiveTab('movimientos');
+  };
+
+  const handleViewMovimientos = () => {
+    setActiveTab('movimientos');
+  };
+
+  const handleViewCuentasPendientes = () => {
+    setActiveTab('cuentas');
+  };
+
+  // Limpiar la acción después de que se procese
+  const clearMovimientoAction = () => {
+    setMovimientoAction(null);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Finanzas</h1>
-              <p className="mt-2 text-gray-600">
+        <div className="mb-4 sm:mb-6 md:mb-8">
+          <div className="flex flex-col items-start gap-2 pl-0">
+            <div className="text-left w-full">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Finanzas</h1>
+              <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
                 Gestiona los ingresos, egresos y flujo de caja de {currentBusiness.nombre}
               </p>
             </div>
@@ -89,9 +107,9 @@ const FinanzasContent = () => {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="mb-8">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+        <div className="mb-4 sm:mb-6 md:mb-8">
+          <div className="border-b border-gray-200 overflow-x-auto">
+            <nav className="-mb-px flex space-x-2 sm:space-x-4 md:space-x-8" aria-label="Tabs">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
@@ -99,7 +117,7 @@ const FinanzasContent = () => {
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`
-                      group inline-flex items-center py-2 px-1 border-b-2 font-medium text-sm
+                      group inline-flex items-center py-2 px-1 sm:px-2 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap
                       bg-white !bg-opacity-100 !bg-transparent
                       ${activeTab === tab.id
                         ? 'border-blue-500 text-blue-600 !text-blue-600'
@@ -109,7 +127,7 @@ const FinanzasContent = () => {
                   >
                     <Icon 
                       className={`
-                        -ml-0.5 mr-2 h-5 w-5
+                        -ml-0.5 mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5
                         ${activeTab === tab.id
                           ? 'text-blue-500'
                           : 'text-gray-400 group-hover:text-gray-500'
@@ -125,9 +143,25 @@ const FinanzasContent = () => {
         </div>
 
         {/* Content */}
-        <div className="bg-white rounded-lg shadow">
+        <div className="bg-white rounded-lg shadow overflow-hidden">
           <Suspense fallback={<PageLoader />}>
-            <ActiveComponent businessId={currentBusiness.id} />
+            {activeTab === 'flujo-caja' ? (
+              <FlujoCajaChart 
+                businessId={currentBusiness.id} 
+                onAddIngreso={handleAddIngreso} 
+                onAddEgreso={handleAddEgreso} 
+              />
+            ) : activeTab === 'movimientos' ? (
+              <FinanzasMovimientos 
+                businessId={currentBusiness.id} 
+                movimientoAction={movimientoAction} 
+                onActionProcessed={clearMovimientoAction} 
+              />
+            ) : (
+              <ActiveComponent 
+                businessId={currentBusiness.id} 
+              />
+            )}
           </Suspense>
         </div>
       </div>

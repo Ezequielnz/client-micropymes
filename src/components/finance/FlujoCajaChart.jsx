@@ -4,11 +4,14 @@ import {
   TrendingUp,
   TrendingDown,
   DollarSign,
-  RefreshCw
+  RefreshCw,
+  PlusCircle,
+  ArrowDown,
+  ArrowUp
 } from 'lucide-react';
 import { PageLoader } from '../LoadingSpinner';
 
-const FlujoCajaChart = ({ businessId }) => {
+const FlujoCajaChart = ({ businessId, onAddIngreso, onAddEgreso }) => {
   const [flujoCaja, setFlujoCaja] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -100,32 +103,55 @@ const FlujoCajaChart = ({ businessId }) => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-3 sm:p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Flujo de Caja</h2>
-        <button
-          onClick={fetchFlujoCaja}
-          disabled={refreshing}
-          className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-          Actualizar
-        </button>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Flujo de Caja</h2>
+        <div className="flex flex-wrap gap-2 sm:gap-2">
+          {/* Accesos directos para agregar ingresos y egresos */}
+          {onAddIngreso && (
+            <button
+              onClick={onAddIngreso}
+              className="inline-flex items-center px-2 sm:px-3 py-1.5 sm:py-2 border border-transparent shadow-sm text-xs sm:text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 flex-grow sm:flex-grow-0"
+            >
+              <PlusCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <ArrowUp className="h-2 w-2 sm:h-3 sm:w-3 mr-1" />
+              Nuevo Ingreso
+            </button>
+          )}
+          {onAddEgreso && (
+            <button
+              onClick={onAddEgreso}
+              className="inline-flex items-center px-2 sm:px-3 py-1.5 sm:py-2 border border-transparent shadow-sm text-xs sm:text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex-grow sm:flex-grow-0"
+            >
+              <PlusCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <ArrowDown className="h-2 w-2 sm:h-3 sm:w-3 mr-1" />
+              Nuevo Egreso
+            </button>
+          )}
+          <button
+            onClick={fetchFlujoCaja}
+            disabled={refreshing}
+            className="inline-flex items-center px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 shadow-sm text-xs sm:text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 flex-grow sm:flex-grow-0"
+          >
+            <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            Actualizar
+          </button>
+        </div>
       </div>
 
       {/* Month/Year Selector */}
-      <div className="bg-gray-50 p-4 rounded-lg mb-6">
-        <div className="flex items-center space-x-4">
+      <div className="bg-gray-50 p-3 sm:p-4 rounded-lg mb-4 sm:mb-6">
+        <div className="flex flex-row items-start gap-4 justify-start">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Mes</label>
+            <label className="block text-xs sm:text-sm font-medium text-gray-900 mb-1">Mes</label>
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 text-black"
             >
               {Array.from({ length: 12 }, (_, i) => (
-                <option key={i + 1} value={i + 1}>
+                <option key={i + 1} value={i + 1} className="text-black">
                   {getMonthName(i + 1)}
                 </option>
               ))}
@@ -133,14 +159,14 @@ const FlujoCajaChart = ({ businessId }) => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Año</label>
+            <label className="block text-xs sm:text-sm font-medium text-gray-900 mb-1">Año</label>
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-24 text-black"
             >
               {generateYearOptions().map(year => (
-                <option key={year} value={year}>
+                <option key={year} value={year} className="text-black">
                   {year}
                 </option>
               ))}
@@ -150,7 +176,7 @@ const FlujoCajaChart = ({ businessId }) => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
         <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
           <div className="flex items-center">
             <div className="flex-shrink-0">
@@ -161,7 +187,7 @@ const FlujoCajaChart = ({ businessId }) => {
                 <dt className="text-sm font-medium text-gray-500 truncate">
                   Total Ingresos
                 </dt>
-                <dd className="text-lg font-medium text-green-600">
+                <dd className="text-base sm:text-lg font-medium text-green-600">
                   {formatCurrency(totalIngresos)}
                 </dd>
               </dl>
@@ -179,7 +205,7 @@ const FlujoCajaChart = ({ businessId }) => {
                 <dt className="text-sm font-medium text-gray-500 truncate">
                   Total Egresos
                 </dt>
-                <dd className="text-lg font-medium text-red-600">
+                <dd className="text-base sm:text-lg font-medium text-red-600">
                   {formatCurrency(totalEgresos)}
                 </dd>
               </dl>
@@ -197,7 +223,7 @@ const FlujoCajaChart = ({ businessId }) => {
                 <dt className="text-sm font-medium text-gray-500 truncate">
                   Saldo Final
                 </dt>
-                <dd className={`text-lg font-medium ${saldoFinal >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                <dd className={`text-base sm:text-lg font-medium ${saldoFinal >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
                   {formatCurrency(saldoFinal)}
                 </dd>
               </dl>
@@ -207,7 +233,7 @@ const FlujoCajaChart = ({ businessId }) => {
       </div>
 
       {/* Cash Flow Table */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+      <div className="bg-white shadow overflow-hidden rounded-lg">
         <div className="px-4 py-5 sm:p-6">
           <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
             Flujo Diario - {getMonthName(selectedMonth)} {selectedYear}
@@ -223,7 +249,7 @@ const FlujoCajaChart = ({ businessId }) => {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -253,13 +279,13 @@ const FlujoCajaChart = ({ businessId }) => {
                         key={index} 
                         className={hasMovement ? 'bg-white' : 'bg-gray-50'}
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">
                           {formatDate(day.fecha)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">
+                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-green-600">
                           {parseFloat(day.ingresos || 0) > 0 ? formatCurrency(day.ingresos) : '-'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">
+                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-red-600">
                           {parseFloat(day.egresos || 0) > 0 ? formatCurrency(day.egresos) : '-'}
                         </td>
                         <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
@@ -285,12 +311,12 @@ const FlujoCajaChart = ({ businessId }) => {
 
       {/* Simple Chart Visualization */}
       {flujoCaja?.flujo_diario && flujoCaja.flujo_diario.length > 0 && (
-        <div className="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+        <div className="mt-4 sm:mt-6 md:mt-8 bg-white shadow overflow-hidden rounded-lg">
+          <div className="px-3 py-3 sm:px-4 sm:py-5 md:p-6">
+            <h3 className="text-base sm:text-lg leading-6 font-medium text-gray-900 mb-3 sm:mb-4">
               Visualización del Saldo Acumulado
             </h3>
-            <div className="relative h-64 bg-gray-50 rounded-lg p-4 overflow-x-auto">
+            <div className="relative h-48 sm:h-64 bg-gray-50 rounded-lg p-2 sm:p-4 overflow-x-auto">
               <div className="flex items-end justify-between h-full space-x-1 min-w-full">
                 {flujoCaja.flujo_diario.map((day, index) => {
                   const maxSaldo = Math.max(...flujoCaja.flujo_diario.map(d => Math.abs(parseFloat(d.saldo_acumulado || 0))));
