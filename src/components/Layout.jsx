@@ -507,9 +507,9 @@ const Layout = ({ children, activeSection }) => {
 
   return (
     <BusinessContext.Provider value={{ currentBusiness, businesses, handleBusinessChange }}>
-      <div className="min-h-screen bg-gray-50 flex">
-  {/* Sidebar responsive */}
-  <div>
+      <div className="min-h-screen bg-gray-50 flex overflow-x-hidden">
+        {/* Sidebar responsive */}
+        <div>
     {/* Overlay para móvil */}
     <div
       className={`fixed inset-0 bg-black bg-opacity-30 z-40 transition-opacity md:hidden ${sidebarOpen ? 'block' : 'hidden'}`}
@@ -537,7 +537,7 @@ const Layout = ({ children, activeSection }) => {
     </div>
   </div>
   {/* Contenido principal */}
-  <div className="flex-1">
+  <div className="flex-1 min-w-0 overflow-x-hidden">
     <Header
       currentBusiness={currentBusiness}
       businesses={businesses}
@@ -545,7 +545,7 @@ const Layout = ({ children, activeSection }) => {
       onLogout={handleLogout}
       setSidebarOpen={setSidebarOpen}
     />
-    <main className="flex-1">
+    <main className="flex-1 min-w-0">
       {children}
     </main>
   </div>

@@ -95,7 +95,7 @@ const FinanceDashboard = ({
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {/* Total Ingresos */}
-        <div className="overflow-hidden shadow rounded-lg">
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-transparent">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -116,7 +116,7 @@ const FinanceDashboard = ({
         </div>
 
         {/* Total Egresos */}
-        <div className="overflow-hidden shadow rounded-lg">
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-transparent">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -137,7 +137,7 @@ const FinanceDashboard = ({
         </div>
 
         {/* Balance */}
-        <div className="overflow-hidden shadow rounded-lg">
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-transparent">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -158,7 +158,7 @@ const FinanceDashboard = ({
         </div>
 
         {/* Cuentas Pendientes */}
-        <div className="overflow-hidden shadow rounded-lg">
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-transparent">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
