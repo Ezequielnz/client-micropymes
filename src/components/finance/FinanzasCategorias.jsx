@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import PermissionGuard from '../PermissionGuard';
 import { 
   Plus, 
   Edit, 
@@ -9,15 +10,24 @@ import {
   Tag
 } from 'lucide-react';
 import { PageLoader } from '../LoadingSpinner';
+import { useBusinessContext } from '../../contexts/BusinessContext';
+import { useFinanceData } from '../../hooks/useFinanceData';
 
-const FinanzasCategorias = ({ businessId }) => {
-  const [categorias, setCategorias] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const FinanzasCategorias = () => {
+  const { currentBusiness } = useBusinessContext();
+  const {
+    categorias,
+    loading,
+    error,
+    createCategoria,
+    updateCategoria,
+    deleteCategoria,
+    refreshCategorias
+  } = useFinanceData(currentBusiness);
+
   const [showModal, setShowModal] = useState(false);
   const [editingCategoria, setEditingCategoria] = useState(null);
   const [filter, setFilter] = useState('');
-
   const [formData, setFormData] = useState({
     nombre: '',
     descripcion: '',
@@ -25,63 +35,15 @@ const FinanzasCategorias = ({ businessId }) => {
     activo: true
   });
 
-  const fetchCategorias = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/v1/businesses/${businessId}/finanzas/categorias`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al cargar las categorías');
-      }
-
-      const data = await response.json();
-      setCategorias(data);
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching categories:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (businessId) {
-      fetchCategorias();
-    }
-  }, [businessId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      const url = editingCategoria 
-        ? `/api/v1/businesses/${businessId}/finanzas/categorias/${editingCategoria.id}`
-        : `/api/v1/businesses/${businessId}/finanzas/categorias`;
-      
-      const method = editingCategoria ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Error al guardar la categoría');
+      if (editingCategoria) {
+        await updateCategoria.mutateAsync({ id: editingCategoria.id, data: formData });
+      } else {
+        await createCategoria.mutateAsync(formData);
       }
-
-      await fetchCategorias();
       setShowModal(false);
       setEditingCategoria(null);
       resetForm();
@@ -95,23 +57,8 @@ const FinanzasCategorias = ({ businessId }) => {
     if (!confirm('¿Estás seguro de que quieres eliminar esta categoría?')) {
       return;
     }
-
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/v1/businesses/${businessId}/finanzas/categorias/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Error al eliminar la categoría');
-      }
-
-      await fetchCategorias();
+      await deleteCategoria.mutateAsync(id);
     } catch (err) {
       console.error('Error deleting category:', err);
       alert(err.message);
@@ -155,17 +102,19 @@ const FinanzasCategorias = ({ businessId }) => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Categorías Financieras</h2>
-        <button
-          onClick={() => {
-            resetForm();
-            setEditingCategoria(null);
-            setShowModal(true);
-          }}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 !important"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Nueva Categoría
-        </button>
+        <PermissionGuard resource="categorias_financieras" action="edit">
+          <button
+            onClick={() => {
+              resetForm();
+              setEditingCategoria(null);
+              setShowModal(true);
+            }}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 !important"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Nueva Categoría
+          </button>
+        </PermissionGuard>
       </div>
 
       {/* Filter */}
@@ -228,18 +177,22 @@ const FinanzasCategorias = ({ businessId }) => {
                   </div>
                 </div>
                 <div className="flex space-x-2">
-                  <button
-                    onClick={() => openEditModal(categoria)}
-                    className="text-blue-600 hover:text-blue-900"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(categoria.id)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <PermissionGuard resource="categorias_financieras" action="edit">
+                    <button
+                      onClick={() => openEditModal(categoria)}
+                      className="text-blue-600 hover:text-blue-900"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                  </PermissionGuard>
+                  <PermissionGuard resource="categorias_financieras" action="delete">
+                    <button
+                      onClick={() => handleDelete(categoria.id)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </PermissionGuard>
                 </div>
               </div>
               

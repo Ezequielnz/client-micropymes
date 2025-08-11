@@ -6,6 +6,8 @@ import { authAPI, businessAPI } from '../utils/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/api\/v1$/, '');
+
 function TestPage() {
   console.log('TestPage component rendered');
   
@@ -68,10 +70,14 @@ function TestPage() {
           console.log(`Testing /businesses/${firstBusiness.id}/permissions endpoint...`);
           
           try {
-            const permissionsResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/businesses/${firstBusiness.id}/permissions`, {
+            const permissionsResponse = await fetch(`${API_BASE_URL}/api/v1/businesses/${firstBusiness.id}/permissions`, {
+              cache: 'no-store',
               headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Pragma': 'no-cache',
+                'Cache-Control': 'no-cache'
               }
             });
             

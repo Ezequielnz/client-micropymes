@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Plus, 
   Search, 
@@ -11,14 +11,15 @@ import {
   TrendingDown,
   X
 } from 'lucide-react';
+import { useFinanceData } from '../../hooks/useFinanceData';
+import { useBusinessContext } from '../../contexts/BusinessContext';
 import { PageLoader } from '../LoadingSpinner';
+import PermissionGuard from '../PermissionGuard';
+ import { customerAPI } from '../../utils/api';
 
 const FinanzasMovimientos = ({ businessId, movimientoAction, onActionProcessed }) => {
-  const [movimientos, setMovimientos] = useState([]);
-  const [categorias, setCategorias] = useState([]);
+  const { currentBusiness } = useBusinessContext();
   const [clientes, setClientes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingMovimiento, setEditingMovimiento] = useState(null);
   const [filters, setFilters] = useState({
@@ -27,6 +28,18 @@ const FinanzasMovimientos = ({ businessId, movimientoAction, onActionProcessed }
     fecha_desde: '',
     fecha_hasta: ''
   });
+
+  // ✅ OPTIMIZED: Usar el hook personalizado para datos de finanzas con React Query
+  const {
+    movimientos,
+    categorias,
+    loading,
+    error,
+    createMovimiento,
+    updateMovimiento,
+    deleteMovimiento,
+    refreshMovimientos
+  } = useFinanceData(currentBusiness);
 
   const [formData, setFormData] = useState({
     tipo: 'ingreso',
@@ -39,54 +52,23 @@ const FinanzasMovimientos = ({ businessId, movimientoAction, onActionProcessed }
     cliente_id: ''
   });
 
-  const fetchData = async () => {
+  // ✅ OPTIMIZED: Cargar clientes (mantenemos esto separado ya que no está en useFinanceData)
+  const fetchClientes = useCallback(async () => {
+    if (!currentBusiness?.id) return;
+
     try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      };
-
-      // Fetch movements with filters
-      const queryParams = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) queryParams.append(key, value);
-      });
-
-      const [movimientosRes, categoriasRes, clientesRes] = await Promise.all([
-        fetch(`/api/v1/businesses/${businessId}/finanzas/movimientos?${queryParams}`, { headers }),
-        fetch(`/api/v1/businesses/${businessId}/finanzas/categorias`, { headers }),
-        fetch(`/api/v1/businesses/${businessId}/clientes`, { headers })
-      ]);
-
-      if (!movimientosRes.ok || !categoriasRes.ok || !clientesRes.ok) {
-        throw new Error('Error al cargar los datos');
-      }
-
-      const [movimientosData, categoriasData, clientesData] = await Promise.all([
-        movimientosRes.json(),
-        categoriasRes.json(),
-        clientesRes.json()
-      ]);
-
-      setMovimientos(movimientosData);
-      setCategorias(categoriasData);
-      setClientes(clientesData);
-      setError(null);
+      // Backend en `/clientes` valida limit <= 100. Usamos 100 para evitar 422.
+      const data = await customerAPI.getCustomers(currentBusiness.id, { limit: 100 });
+      setClientes(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error('Error fetching data:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      console.error('Error fetching clients:', err);
+      setClientes([]);
     }
-  };
+  }, [currentBusiness?.id]);
 
   useEffect(() => {
-    if (businessId) {
-      fetchData();
-    }
-  }, [businessId, filters]);
+    fetchClientes();
+  }, [fetchClientes]);
 
   // Procesar acciones del dashboard
   useEffect(() => {
@@ -108,68 +90,43 @@ const FinanzasMovimientos = ({ businessId, movimientoAction, onActionProcessed }
     }
   }, [movimientoAction, onActionProcessed]);
 
+  // ✅ OPTIMIZED: Usar mutaciones del hook useFinanceData
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      const url = editingMovimiento 
-        ? `/api/v1/businesses/${businessId}/finanzas/movimientos/${editingMovimiento.id}`
-        : `/api/v1/businesses/${businessId}/finanzas/movimientos`;
-      
-      const method = editingMovimiento ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...formData,
-          monto: parseFloat(formData.monto),
-          categoria_id: formData.categoria_id || null,
-          cliente_id: formData.cliente_id || null
-        })
-      });
+      const movimientoData = {
+        ...formData,
+        monto: parseFloat(formData.monto),
+        categoria_id: formData.categoria_id || null,
+        cliente_id: formData.cliente_id || null
+      };
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Error al guardar el movimiento');
+      if (editingMovimiento) {
+        await updateMovimiento.mutateAsync({ id: editingMovimiento.id, data: movimientoData });
+      } else {
+        await createMovimiento.mutateAsync(movimientoData);
       }
 
-      await fetchData();
       setShowModal(false);
       setEditingMovimiento(null);
       resetForm();
     } catch (err) {
       console.error('Error saving movement:', err);
-      alert(err.message);
+      alert(err.message || 'Error al guardar el movimiento');
     }
   };
 
+  // ✅ OPTIMIZED: Usar mutación de eliminación del hook useFinanceData
   const handleDelete = async (id) => {
     if (!confirm('¿Estás seguro de que quieres eliminar este movimiento?')) {
       return;
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/v1/businesses/${businessId}/finanzas/movimientos/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al eliminar el movimiento');
-      }
-
-      await fetchData();
+      await deleteMovimiento.mutateAsync(id);
     } catch (err) {
       console.error('Error deleting movement:', err);
-      alert(err.message);
+      alert(err.message || 'Error al eliminar el movimiento');
     }
   };
 
@@ -224,17 +181,19 @@ const FinanzasMovimientos = ({ businessId, movimientoAction, onActionProcessed }
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Movimientos Financieros</h2>
-        <button
-          onClick={() => {
-            resetForm();
-            setEditingMovimiento(null);
-            setShowModal(true);
-          }}
-          className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 !important"
-        >
-          <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-          Nuevo Movimiento
-        </button>
+        <PermissionGuard resource="movimientos_financieros" action="edit">
+          <button
+            onClick={() => {
+              resetForm();
+              setEditingMovimiento(null);
+              setShowModal(true);
+            }}
+            className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 !important"
+          >
+            <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+            Nuevo Movimiento
+          </button>
+        </PermissionGuard>
       </div>
 
       {/* Filters */}
@@ -348,18 +307,22 @@ const FinanzasMovimientos = ({ businessId, movimientoAction, onActionProcessed }
                       </p>
                     </div>
                     <div className="flex space-x-1 sm:space-x-2">
-                      <button
-                        onClick={() => openEditModal(movimiento)}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(movimiento.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      <PermissionGuard resource="movimientos_financieros" action="edit">
+                        <button
+                          onClick={() => openEditModal(movimiento)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                      </PermissionGuard>
+                      <PermissionGuard resource="movimientos_financieros" action="delete">
+                        <button
+                          onClick={() => handleDelete(movimiento.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </PermissionGuard>
                     </div>
                   </div>
                 </div>

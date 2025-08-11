@@ -14,8 +14,13 @@
  */
 import axios from 'axios';
 
-/** @const {string} API_URL - The base URL for all API requests. */
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+/**
+ * @const {string} API_URL - The base URL for all API requests.
+ * Normalized to always include "/api/v1" exactly once.
+ */
+const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000')
+  .replace(/\/api\/v1$/, '')
+  .replace(/\/$/, '') + '/api/v1';
 
 // Create a pre-configured Axios instance for API communication.
 const api = axios.create({
@@ -171,6 +176,58 @@ export const authAPI = {
    */
   changePassword: async (passwordData) => {
     const response = await api.put('/auth/change-password', passwordData);
+    return response.data;
+  },
+
+  /**
+   * Activates a user account (development helper).
+   * @param {string} email - Email to activate
+   * @returns {Promise<object>} Activation result
+   */
+  activateAccount: async (email) => {
+    const response = await api.get(`/auth/activate/${encodeURIComponent(email)}`, {
+      headers: {
+        'Accept': 'application/json',
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache',
+      },
+    });
+    return response.data;
+  },
+
+  /**
+   * Checks if an email is confirmed.
+   * @param {string} email - Email to check
+   * @returns {Promise<{is_confirmed: boolean}>}
+   */
+  checkEmailConfirmation: async (email) => {
+    const response = await api.get(`/auth/check-confirmation/${encodeURIComponent(email)}`, {
+      headers: {
+        'Accept': 'application/json',
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache',
+      },
+    });
+    return response.data;
+  },
+
+  /**
+   * Resends confirmation email.
+   * @param {string} email - Email to resend confirmation to
+   * @returns {Promise<object>} Result with already_confirmed flag if applicable
+   */
+  resendConfirmation: async (email) => {
+    const response = await api.post(
+      '/auth/resend-confirmation',
+      { email },
+      {
+        headers: {
+          'Accept': 'application/json',
+          'Pragma': 'no-cache',
+          'Cache-Control': 'no-cache',
+        },
+      }
+    );
     return response.data;
   },
 
@@ -1006,7 +1063,6 @@ export const businessAPI = {
 
   /**
    * Remueve un usuario del negocio.
-   * @param {string} businessId - The ID of the business.
    * @param {string} userBusinessId - The ID of the user-business relationship.
    * @returns {Promise<object>} A promise that resolves to a confirmation message.
    * @throws {Error} If the API request fails.
@@ -1014,9 +1070,202 @@ export const businessAPI = {
   removeUser: async (businessId, userBusinessId) => {
     const response = await api.delete(`/businesses/${businessId}/usuarios/${userBusinessId}`);
     return response.data;
+  },
+
+  /**
+   * Debug helper: checks integrity/status of businesses for a given user.
+   * @param {string} userId - The ID of the user to debug businesses for.
+   * @returns {Promise<object>} Debug info (total_relationships, total_businesses, etc.)
+   */
+  debugUserBusinesses: async (userId) => {
+    const response = await api.get(`/businesses/debug/${encodeURIComponent(userId)}`, {
+      headers: {
+        'Accept': 'application/json',
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache',
+      },
+    });
+    return response.data;
+  },
+
+  /**
+   * Repair helper: repairs orphaned relationships for a given user's businesses.
+   * @param {string} userId - The ID of the user to repair businesses for.
+   * @returns {Promise<object>} Result including relationships_repaired count
+   */
+  repairUserBusinesses: async (userId) => {
+    const response = await api.post(
+      `/businesses/repair/${encodeURIComponent(userId)}`,
+      {},
+      {
+        headers: {
+          'Accept': 'application/json',
+          'Pragma': 'no-cache',
+          'Cache-Control': 'no-cache',
+        },
+      }
+    );
+    return response.data;
   }
 };
 
+/**
+ * @namespace financeAPI
+ * @description Contains functions for finance-related endpoints (cash flow, etc.).
+ */
+export const financeAPI = {
+  // Resumen financiero (stats)
+  getSummary: async (businessId, params = {}) => {
+    const response = await api.get(`/businesses/${businessId}/finanzas/resumen`, {
+      params,
+      headers: {
+        'Accept': 'application/json',
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache',
+      },
+    });
+    return response.data;
+  },
+
+  // Alias para compatibilidad con hooks existentes
+  getStats: async (businessId, params = {}) => {
+    return financeAPI.getSummary(businessId, params);
+  },
+
+  // Movimientos
+  getMovimientos: async (businessId, params = {}) => {
+    const response = await api.get(`/businesses/${businessId}/finanzas/movimientos`, {
+      params,
+      headers: {
+        'Accept': 'application/json',
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache',
+      },
+    });
+    return response.data;
+  },
+  createMovimiento: async (businessId, movimiento) => {
+    const response = await api.post(`/businesses/${businessId}/finanzas/movimientos`, movimiento);
+    return response.data;
+  },
+  updateMovimiento: async (businessId, id, movimiento) => {
+    const response = await api.put(`/businesses/${businessId}/finanzas/movimientos/${id}`, movimiento);
+    return response.data;
+  },
+  deleteMovimiento: async (businessId, id) => {
+    const response = await api.delete(`/businesses/${businessId}/finanzas/movimientos/${id}`);
+    return response.data;
+  },
+
+  // Categorías
+  getCategorias: async (businessId, params = {}) => {
+    const response = await api.get(`/businesses/${businessId}/finanzas/categorias`, {
+      params,
+      headers: {
+        'Accept': 'application/json',
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache',
+      },
+    });
+    return response.data;
+  },
+  createCategoria: async (businessId, categoria) => {
+    const response = await api.post(`/businesses/${businessId}/finanzas/categorias`, categoria);
+    return response.data;
+  },
+  updateCategoria: async (businessId, id, categoria) => {
+    const response = await api.put(`/businesses/${businessId}/finanzas/categorias/${id}`, categoria);
+    return response.data;
+  },
+  deleteCategoria: async (businessId, id) => {
+    const response = await api.delete(`/businesses/${businessId}/finanzas/categorias/${id}`);
+    return response.data;
+  },
+
+  // Cuentas por cobrar/pagar (lectura)
+  getCuentasPorCobrar: async (businessId, params = {}) => {
+    const response = await api.get(`/businesses/${businessId}/finanzas/cuentas-cobrar`, {
+      params,
+      headers: {
+        'Accept': 'application/json',
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache',
+      },
+    });
+    return response.data;
+  },
+  getCuentasPorPagar: async (businessId, params = {}) => {
+    const response = await api.get(`/businesses/${businessId}/finanzas/cuentas-pagar`, {
+      params,
+      headers: {
+        'Accept': 'application/json',
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache',
+      },
+    });
+    return response.data;
+  },
+  // Compat: unificar ambas listas para el hook existente
+  getCuentasPendientes: async (businessId) => {
+    const [cobrar, pagar] = await Promise.all([
+      api.get(`/businesses/${businessId}/finanzas/cuentas-cobrar`, {
+        headers: {
+          'Accept': 'application/json',
+          'Pragma': 'no-cache',
+          'Cache-Control': 'no-cache',
+        },
+      }),
+      api.get(`/businesses/${businessId}/finanzas/cuentas-pagar`, {
+        headers: {
+          'Accept': 'application/json',
+          'Pragma': 'no-cache',
+          'Cache-Control': 'no-cache',
+        },
+      }),
+    ]);
+    return [...(cobrar.data || []), ...(pagar.data || [])];
+  },
+
+  // Flujo de caja
+  getCashFlow: async (businessId, params) => {
+    const response = await api.get(`/businesses/${businessId}/finanzas/flujo-caja`, {
+      params,
+      headers: {
+        'Accept': 'application/json',
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache',
+      },
+    });
+    return response.data;
+  },
+  // Alias usado por el hook (mes, anio)
+  getFlujoCaja: async (businessId, mes, anio) => {
+    return financeAPI.getCashFlow(businessId, { mes, anio });
+  },
+
+  // Cuentas (creación/edición/eliminación)
+  createCuentaPendiente: async (businessId, cuenta) => {
+    const response = await api.post(`/businesses/${businessId}/finanzas/cuentas`, cuenta);
+    return response.data;
+  },
+  updateCuentaPendiente: async (businessId, id, cuenta) => {
+    const response = await api.put(`/businesses/${businessId}/finanzas/cuentas/${id}`, cuenta);
+    return response.data;
+  },
+  deleteCuentaPendiente: async (businessId, id) => {
+    const response = await api.delete(`/businesses/${businessId}/finanzas/cuentas/${id}`);
+    return response.data;
+  },
+  markCuentaPendientePagada: async (businessId, id) => {
+    const response = await api.put(`/businesses/${businessId}/finanzas/cuentas/${id}/marcar-pagado`);
+    return response.data;
+  },
+};
+
+/**
+ * @namespace publicBusinessAPI
+ * @description Contains functions for managing public business data.
+ */
 export const publicBusinessAPI = {
   buscarNegocios: async ({ nombre = '', id = '' }) => {
     const params = [];

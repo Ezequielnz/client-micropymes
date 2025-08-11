@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import PermissionGuard from '../PermissionGuard';
+import { useBusinessContext } from '../../contexts/BusinessContext';
+import { useFinanceData } from '../../hooks/useFinanceData';
 import { 
   Plus, 
   Edit, 
@@ -13,12 +16,18 @@ import {
 } from 'lucide-react';
 import { PageLoader } from '../LoadingSpinner';
 
-const CuentasPendientes = ({ businessId }) => {
-  const [cuentasCobrar, setCuentasCobrar] = useState([]);
-  const [cuentasPagar, setCuentasPagar] = useState([]);
-  const [clientes, setClientes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const CuentasPendientes = () => {
+  const { currentBusiness } = useBusinessContext();
+  const {
+    cuentasPendientes,
+    loading,
+    error,
+    createCuentaPendiente,
+    updateCuentaPendiente,
+    deleteCuentaPendiente,
+    refreshCuentasPendientes
+  } = useFinanceData(currentBusiness);
+
   const [showModal, setShowModal] = useState(false);
   const [editingCuenta, setEditingCuenta] = useState(null);
   const [activeTab, setActiveTab] = useState('cobrar');
@@ -27,7 +36,6 @@ const CuentasPendientes = ({ businessId }) => {
     vencimiento_desde: '',
     vencimiento_hasta: ''
   });
-
   const [formData, setFormData] = useState({
     tipo: 'por_cobrar',
     cliente_id: '',
@@ -40,85 +48,20 @@ const CuentasPendientes = ({ businessId }) => {
     observaciones: ''
   });
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      };
-
-      // Build query params for filters
-      const queryParams = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) queryParams.append(key, value);
-      });
-
-      const [cobrarRes, pagarRes, clientesRes] = await Promise.all([
-        fetch(`/api/v1/businesses/${businessId}/finanzas/cuentas-cobrar?${queryParams}`, { headers }),
-        fetch(`/api/v1/businesses/${businessId}/finanzas/cuentas-pagar?${queryParams}`, { headers }),
-        fetch(`/api/v1/businesses/${businessId}/clientes`, { headers })
-      ]);
-
-      if (!cobrarRes.ok || !pagarRes.ok || !clientesRes.ok) {
-        throw new Error('Error al cargar los datos');
-      }
-
-      const [cobrarData, pagarData, clientesData] = await Promise.all([
-        cobrarRes.json(),
-        pagarRes.json(),
-        clientesRes.json()
-      ]);
-
-      setCuentasCobrar(cobrarData);
-      setCuentasPagar(pagarData);
-      setClientes(clientesData);
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching data:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (businessId) {
-      fetchData();
-    }
-  }, [businessId, filters]);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      const url = editingCuenta 
-        ? `/api/v1/businesses/${businessId}/finanzas/cuentas/${editingCuenta.id}`
-        : `/api/v1/businesses/${businessId}/finanzas/cuentas`;
-      
-      const method = editingCuenta ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...formData,
-          monto: parseFloat(formData.monto),
-          cliente_id: formData.cliente_id || null,
-          proveedor_nombre: formData.proveedor_nombre || null
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Error al guardar la cuenta');
+      const cuentaData = {
+        ...formData,
+        monto: parseFloat(formData.monto),
+        cliente_id: formData.cliente_id || null,
+        proveedor_nombre: formData.proveedor_nombre || null
+      };
+      if (editingCuenta) {
+        await updateCuentaPendiente.mutateAsync({ id: editingCuenta.id, data: cuentaData });
+      } else {
+        await createCuentaPendiente.mutateAsync(cuentaData);
       }
-
-      await fetchData();
       setShowModal(false);
       setEditingCuenta(null);
       resetForm();
@@ -128,52 +71,12 @@ const CuentasPendientes = ({ businessId }) => {
     }
   };
 
-  const handleMarkAsPaid = async (id) => {
-    if (!confirm('¿Marcar esta cuenta como pagada?')) {
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/v1/businesses/${businessId}/finanzas/cuentas/${id}/marcar-pagado`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al marcar como pagada');
-      }
-
-      await fetchData();
-    } catch (err) {
-      console.error('Error marking as paid:', err);
-      alert(err.message);
-    }
-  };
-
   const handleDelete = async (id) => {
     if (!confirm('¿Estás seguro de que quieres eliminar esta cuenta?')) {
       return;
     }
-
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/v1/businesses/${businessId}/finanzas/cuentas/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al eliminar la cuenta');
-      }
-
-      await fetchData();
+      await deleteCuentaPendiente.mutateAsync(id);
     } catch (err) {
       console.error('Error deleting account:', err);
       alert(err.message);
@@ -236,6 +139,10 @@ const CuentasPendientes = ({ businessId }) => {
     return 'Pendiente';
   };
 
+  // Filtrar cuentas pendientes por tipo
+  const cuentasCobrar = cuentasPendientes?.filter(c => c.tipo === 'por_cobrar') || [];
+  const cuentasPagar = cuentasPendientes?.filter(c => c.tipo === 'por_pagar') || [];
+  
   const currentData = activeTab === 'cobrar' ? cuentasCobrar : cuentasPagar;
 
   if (loading) {
@@ -247,17 +154,19 @@ const CuentasPendientes = ({ businessId }) => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Cuentas Pendientes</h2>
-        <button
-          onClick={() => {
-            resetForm();
-            setEditingCuenta(null);
-            setShowModal(true);
-          }}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 !important"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Nueva Cuenta
-        </button>
+        <PermissionGuard resource="cuentas_pendientes" action="edit">
+          <button
+            onClick={() => {
+              resetForm();
+              setEditingCuenta(null);
+              setShowModal(true);
+            }}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 !important"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Nueva Cuenta
+          </button>
+        </PermissionGuard>
       </div>
 
       {/* Tabs */}
@@ -385,18 +294,22 @@ const CuentasPendientes = ({ businessId }) => {
                           <CheckCircle className="h-4 w-4" />
                         </button>
                       )}
-                      <button
-                        onClick={() => openEditModal(cuenta)}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(cuenta.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      <PermissionGuard resource="cuentas_pendientes" action="edit">
+                        <button
+                          onClick={() => openEditModal(cuenta)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                      </PermissionGuard>
+                      <PermissionGuard resource="cuentas_pendientes" action="delete">
+                        <button
+                          onClick={() => handleDelete(cuenta.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </PermissionGuard>
                     </div>
                   </div>
                 </div>

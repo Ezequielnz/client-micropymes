@@ -260,16 +260,12 @@ function MyBusinesses() {
     
     try {
       console.log('🐛 DEBUG: Checking businesses for user:', user.id);
-      const response = await fetch(`http://localhost:8000/api/v1/businesses/debug/${user.id}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      const debugData = await response.json();
+      const debugData = await businessAPI.debugUserBusinesses(user.id);
       console.log('🐛 DEBUG DATA:', debugData);
       alert(`Debug info logged to console. Total relationships: ${debugData.total_relationships}, Total businesses: ${debugData.total_businesses}`);
     } catch (error) {
       console.error('🐛 DEBUG ERROR:', error);
+      alert(error?.response?.data?.detail || 'Error al ejecutar debug');
     }
   };
 
@@ -279,14 +275,7 @@ function MyBusinesses() {
     
     try {
       console.log('🔧 REPAIR: Starting repair for user:', user.id);
-      const response = await fetch(`http://localhost:8000/api/v1/businesses/repair/${user.id}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      const repairData = await response.json();
+      const repairData = await businessAPI.repairUserBusinesses(user.id);
       console.log('🔧 REPAIR DATA:', repairData);
       
       if (repairData.relationships_repaired > 0) {
@@ -298,7 +287,7 @@ function MyBusinesses() {
       }
     } catch (error) {
       console.error('🔧 REPAIR ERROR:', error);
-      alert('Error durante la reparación. Revisa la consola.');
+      alert(error?.response?.data?.detail || 'Error durante la reparación. Revisa la consola.');
     }
   };
   

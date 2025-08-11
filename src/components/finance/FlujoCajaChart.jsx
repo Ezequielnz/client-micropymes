@@ -10,6 +10,7 @@ import {
   ArrowUp
 } from 'lucide-react';
 import { PageLoader } from '../LoadingSpinner';
+import { financeAPI } from '../../utils/api';
 
 const FlujoCajaChart = ({ businessId, onAddIngreso, onAddEgreso }) => {
   const [flujoCaja, setFlujoCaja] = useState(null);
@@ -22,27 +23,13 @@ const FlujoCajaChart = ({ businessId, onAddIngreso, onAddEgreso }) => {
   const fetchFlujoCaja = async () => {
     try {
       setRefreshing(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch(
-        `/api/v1/businesses/${businessId}/finanzas/flujo-caja?mes=${selectedMonth}&anio=${selectedYear}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Error al cargar el flujo de caja');
-      }
-
-      const data = await response.json();
+      const data = await financeAPI.getCashFlow(businessId, { mes: selectedMonth, anio: selectedYear });
       setFlujoCaja(data);
       setError(null);
     } catch (err) {
       console.error('Error fetching cash flow:', err);
-      setError(err.message);
+      const detail = err?.response?.data?.detail || err.message || 'Error al cargar el flujo de caja';
+      setError(detail);
     } finally {
       setLoading(false);
       setRefreshing(false);

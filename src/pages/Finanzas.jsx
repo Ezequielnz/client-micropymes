@@ -1,8 +1,10 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect, Suspense, lazy, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { PageLoader } from '../components/LoadingSpinner';
 import { useBusinessContext } from '../contexts/BusinessContext';
+import { useFinanceData } from '../hooks/useFinanceData';
+import { useUserPermissions } from '../hooks/useUserPermissions'; // Permisos
+import { PageLoader } from '../components/LoadingSpinner';
 import {
   DollarSign,
   TrendingUp,
@@ -11,7 +13,8 @@ import {
   Plus,
   Eye,
   FileText,
-  CreditCard
+  CreditCard,
+  RefreshCw
 } from 'lucide-react';
 
 // Lazy load finance components
@@ -19,13 +22,33 @@ const FinanzasMovimientos = lazy(() => import('../components/finance/FinanzasMov
 const FinanzasCategorias = lazy(() => import('../components/finance/FinanzasCategorias'));
 const CuentasPendientes = lazy(() => import('../components/finance/CuentasPendientes'));
 const FlujoCajaChart = lazy(() => import('../components/finance/FlujoCajaChart'));
+const FinanceDashboard = lazy(() => import('../components/finance/FinanceDashboard'));
 
 const FinanzasContent = () => {
-  const [activeTab, setActiveTab] = useState('flujo-caja');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(false);
   const [movimientoAction, setMovimientoAction] = useState(null); // Para comunicar acciones al componente de movimientos
   const { currentBusiness } = useBusinessContext();
   const navigate = useNavigate();
+
+  // Permisos: helpers para controlar acceso
+  const {
+    canView,
+    canEdit,
+    canDelete,
+    canAssign,
+    hasFullAccess,
+    isAdmin,
+    isCreator,
+    hasPermission
+  } = useUserPermissions(currentBusiness?.id);
+
+  // Estado y hooks para datos de finanzas
+  const {
+    stats, movimientos, categorias, cuentasPendientes, flujoCaja,
+    loading: isLoading, error: dataError, lastUpdate,
+    refreshData, refreshStats, refreshMovimientos, refreshCategorias, refreshCuentasPendientes, refreshFlujoCaja
+  } = useFinanceData(currentBusiness);
 
   // Redirect if no business selected
   useEffect(() => {
@@ -38,7 +61,34 @@ const FinanzasContent = () => {
     return <PageLoader />;
   }
 
+  // ✅ OPTIMIZED: Memoized format functions to prevent recreation on every render
+  const formatCurrency = useCallback((amount) => {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS'
+    }).format(amount || 0);
+  }, []);
+
+  const formatDate = useCallback((dateString) => {
+    return new Date(dateString).toLocaleDateString('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  }, []);
+
+  // ✅ OPTIMIZED: Memoized computed states
+  const shouldShowError = useMemo(() => {
+    return dataError && !isLoading;
+  }, [dataError, isLoading]);
+
   const tabs = [
+    {
+      id: 'dashboard',
+      name: 'Resumen',
+      icon: DollarSign,
+      component: null // Renderizado inline
+    },
     {
       id: 'flujo-caja',
       name: 'Flujo de Caja',
@@ -144,22 +194,83 @@ const FinanzasContent = () => {
 
         {/* Content */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
+          {shouldShowError && (
+            <div className="p-4 bg-red-50 border-l-4 border-red-400">
+              <div className="flex">
+                <div className="ml-3">
+                  <p className="text-sm text-red-700">
+                    Error al cargar datos: {dataError}
+                  </p>
+                  <button
+                    onClick={refreshData}
+                    className="mt-2 text-sm text-red-600 hover:text-red-500 underline"
+                  >
+                    Reintentar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <Suspense fallback={<PageLoader />}>
-            {activeTab === 'flujo-caja' ? (
+            {activeTab === 'dashboard' ? (
+              <FinanceDashboard 
+                stats={stats}
+                movimientos={movimientos}
+                cuentasPendientes={cuentasPendientes}
+                formatCurrency={formatCurrency}
+                formatDate={formatDate}
+                onAddIngreso={handleAddIngreso}
+                onAddEgreso={handleAddEgreso}
+                onViewMovimientos={handleViewMovimientos}
+                onViewCuentasPendientes={handleViewCuentasPendientes}
+                refreshData={refreshData}
+                lastUpdate={lastUpdate}
+                isLoading={isLoading}
+                canView={canView}
+                canEdit={canEdit}
+                canDelete={canDelete}
+                canAssign={canAssign}
+                hasFullAccess={hasFullAccess}
+                isAdmin={isAdmin}
+                isCreator={isCreator}
+                hasPermission={hasPermission}
+              />
+            ) : activeTab === 'flujo-caja' ? (
               <FlujoCajaChart 
                 businessId={currentBusiness.id} 
                 onAddIngreso={handleAddIngreso} 
                 onAddEgreso={handleAddEgreso} 
+                canView={canView}
+                canEdit={canEdit}
+                canDelete={canDelete}
+                hasFullAccess={hasFullAccess}
               />
             ) : activeTab === 'movimientos' ? (
               <FinanzasMovimientos 
                 businessId={currentBusiness.id} 
                 movimientoAction={movimientoAction} 
                 onActionProcessed={clearMovimientoAction} 
+                canView={canView}
+                canEdit={canEdit}
+                canDelete={canDelete}
+                canAssign={canAssign}
+                hasFullAccess={hasFullAccess}
+                isAdmin={isAdmin}
+                isCreator={isCreator}
+                hasPermission={hasPermission}
               />
             ) : (
               <ActiveComponent 
                 businessId={currentBusiness.id} 
+                canView={canView}
+                canEdit={canEdit}
+                canDelete={canDelete}
+                canAssign={canAssign}
+                hasFullAccess={hasFullAccess}
+                isAdmin={isAdmin}
+                isCreator={isCreator}
+                hasPermission={hasPermission}
               />
             )}
           </Suspense>

@@ -57,8 +57,7 @@ function EmailConfirmation() {
     setError('');
     
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/auth/check-confirmation/${email}`);
-      const data = await response.json();
+      const data = await authAPI.checkEmailConfirmation(email);
       
       if (data.is_confirmed) {
         setIsConfirmed(true);
@@ -85,30 +84,18 @@ function EmailConfirmation() {
     setMessage('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/auth/resend-confirmation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        if (data.already_confirmed) {
-          setIsConfirmed(true);
-          setMessage('Tu email ya está confirmado. Puedes iniciar sesión.');
-        } else {
-          setMessage('Email de confirmación reenviado correctamente. Revisa tu bandeja de entrada.');
-          setCountdown(60); // 60 seconds cooldown
-        }
+      const data = await authAPI.resendConfirmation(email);
+      if (data.already_confirmed) {
+        setIsConfirmed(true);
+        setMessage('Tu email ya está confirmado. Puedes iniciar sesión.');
       } else {
-        setError(data.detail || 'Error al reenviar confirmación');
+        setMessage('Email de confirmación reenviado correctamente. Revisa tu bandeja de entrada.');
+        setCountdown(60); // 60 seconds cooldown
       }
     } catch (err) {
       console.error('Error resending confirmation:', err);
-      setError('Error al reenviar confirmación');
+      const detail = err?.response?.data?.detail || 'Error al reenviar confirmación';
+      setError(detail);
     } finally {
       setResendLoading(false);
     }
