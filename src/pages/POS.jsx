@@ -417,11 +417,11 @@ function POS() {
   // ✅ OPTIMIZED: Early return for missing business
   if (!currentBusiness) {
     return (
-      <div className="p-8">
+      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-8 overflow-hidden">
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6 min-w-0">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-xl md:text-3xl font-bold text-gray-900 mb-2">
                 Punto de Venta
               </h1>
               <p className="text-gray-600">
@@ -439,19 +439,19 @@ function POS() {
   }
 
   return (
-    <div className="p-8">
+    <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-8 overflow-hidden">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6 min-w-0">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-xl md:text-3xl font-bold text-gray-900 mb-2">
               Punto de Venta
             </h1>
             <p className="text-gray-600">
               Sistema de ventas para mostrador
             </p>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
             <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg border border-gray-200">
               <ShoppingCart className="h-5 w-5 text-gray-500" />
               <span className="text-sm font-medium text-gray-700">
@@ -485,7 +485,7 @@ function POS() {
       </div>
 
       {/* Main POS Interface */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
         {/* Products and Services Section - Left Side */}
         <div className="lg:col-span-2">
           <Card className="h-full">
@@ -506,7 +506,7 @@ function POS() {
                 </CardTitle>
                 
                 {/* Tabs */}
-                <div className="flex bg-gray-100 rounded-lg p-1">
+                <div className="flex flex-wrap bg-gray-100 rounded-lg p-1 gap-1">
                   <button
                     onClick={() => setActiveTab('productos')}
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -647,7 +647,7 @@ function POS() {
 
         {/* Cart Section - Right Side */}
         <div className="lg:col-span-1">
-          <Card className="sticky top-24">
+          <Card className="lg:sticky lg:top-24">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ShoppingCart className="h-5 w-5 text-green-600" />

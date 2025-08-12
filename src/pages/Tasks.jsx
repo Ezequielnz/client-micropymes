@@ -369,10 +369,10 @@ function Tasks() {
   // ✅ OPTIMIZED: Early return for missing business
   if (!currentBusiness) {
     return (
-      <div className="p-8">
+      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-8 overflow-hidden">
         <div className="mb-8 flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-xl md:text-3xl font-bold text-gray-900 mb-2">
               Gestión de Tareas
             </h1>
             <p className="text-gray-600">
@@ -393,18 +393,18 @@ function Tasks() {
   }
 
   return (
-      <div className="p-8">
+      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-8 overflow-hidden">
         {/* Header Section */}
-        <div className="mb-8 flex justify-between items-center">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-3 min-w-0">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-xl md:text-3xl font-bold text-gray-900 mb-2">
               Gestión de Tareas
             </h1>
             <p className="text-gray-600">
               Organiza y gestiona las tareas de tu equipo
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <button
               className={`btn btn-sm ${vistaActual === 'lista' ? 'btn-primary' : 'btn-outline'}`}
               onClick={() => setVistaActual('lista')}
@@ -668,7 +668,7 @@ function Tasks() {
               tareas.map((tarea) => (
                 <div key={tarea.id} className="card">
                   <div className="card-content p-4">
-                    <div className="flex justify-between items-start">
+                    <div className="flex flex-wrap justify-between items-start gap-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <h3 className="text-lg font-semibold text-gray-900">{tarea.titulo}</h3>
@@ -699,7 +699,7 @@ function Tasks() {
                           )}
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end sm:justify-start">
                         {tarea.estado !== 'completada' && (
                           <button
                             className="btn btn-success btn-sm"

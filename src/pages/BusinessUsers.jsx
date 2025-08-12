@@ -191,11 +191,11 @@ function BusinessUsers() {
 
   return (
     <Layout activeSection="businesses">
-      <div className="flex-1 bg-gray-50 min-h-screen">
+      <div className="flex-1 bg-gray-50 min-h-screen overflow-hidden">
         {/* Page Header */}
         <div className="bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
+          <div className="max-w-full md:max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+            <div className="flex flex-wrap items-center justify-between gap-3 h-14 md:h-16 min-w-0">
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">Mis Negocios</h1>
                 <p className="text-sm text-gray-600">Gestiona tus negocios registrados</p>
@@ -203,7 +203,7 @@ function BusinessUsers() {
               
               <Button
                 onClick={() => setShowCreateForm(true)}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 w-full sm:w-auto"
               >
                 <Plus className="h-4 w-4" />
                 Nuevo Negocio
@@ -213,7 +213,7 @@ function BusinessUsers() {
         </div>
 
         {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-full md:max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-8">
         
           {/* Formulario de creación */}
           {showCreateForm && (
@@ -316,10 +316,10 @@ function BusinessUsers() {
                   </Button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {businesses.map((business) => (
                     <div key={business.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                      <div className="flex items-start justify-between mb-4">
+                      <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                             <Building2 className="h-6 w-6 text-blue-600" />
@@ -369,4 +369,4 @@ function BusinessUsers() {
   );
 }
 
-export default BusinessUsers; 
+export default BusinessUsers;
