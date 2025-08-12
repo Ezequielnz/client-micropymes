@@ -394,9 +394,9 @@ function Tasks() {
 
   return (
       <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-8 overflow-hidden">
-        {/* Header Section */}
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-3 min-w-0">
-          <div>
+        {/* Header Section - Mobile: Stacked, Desktop: Side-by-side */}
+        <div className="mb-8 block sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-3 min-w-0">
+          <div className="text-center sm:text-left mb-4 sm:mb-0">
             <h1 className="text-xl md:text-3xl font-bold text-gray-900 mb-2">
               Gestión de Tareas
             </h1>
@@ -404,7 +404,7 @@ function Tasks() {
               Organiza y gestiona las tareas de tu equipo
             </p>
           </div>
-          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <div className="flex flex-wrap justify-center gap-2 w-full sm:w-auto sm:justify-start mt-4 sm:mt-0">
             <button
               className={`btn btn-sm ${vistaActual === 'lista' ? 'btn-primary' : 'btn-outline'}`}
               onClick={() => setVistaActual('lista')}
