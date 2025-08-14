@@ -5,7 +5,7 @@ import { ChevronRight, Play, BarChart3, Users, Zap } from 'lucide-react';
 const Hero = () => {
   const navigate = useNavigate();
   return (
-    <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 relative overflow-hidden py-12 sm:py-16 md:py-20 lg:py-24">
+    <section id="inicio" className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 relative overflow-hidden py-12 sm:py-16 md:py-20 lg:py-24 scroll-mt-24">
       {/* Background decoration */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%239CA3AF%22 fill-opacity=%220.03%22 fill-rule=%22nonzero%22%3E%3Cpath d=%22m36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div>
       
@@ -29,8 +29,8 @@ const Hero = () => {
 
             {/* Subtitle */}
             <p className="text-xl text-gray-600 max-w-3xl mb-8 text-left">
-              Olvidate de ERPs lentos, complicados y feos. OperixML es modular, intuitivo y 
-              está diseñado para que puedas enfocarte en hacer crecer tu negocio, no en luchar con el sistema.
+              Los ERPs ya no tienen que ser lentos ni complicados. 
+              OperixML integra módulos inteligentes y un uso intuitivo para que trabajes mejor y tu negocio avance más rápido.
             </p>
 
             {/* CTA Buttons */}

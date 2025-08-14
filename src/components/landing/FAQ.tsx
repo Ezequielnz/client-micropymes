@@ -73,9 +73,9 @@ const FAQ = () => {
           <p className="text-gray-600 mb-4">
             ¿Tenés alguna otra pregunta?
           </p>
-          <button className="bg-white text-blue-600 hover:text-blue-700 font-semibold hover:underline px-4 py-2 rounded-lg border border-blue-600 hover:bg-blue-50 transition-all">
+          <a href="mailto:contacto@operixml.com" className="inline-block bg-white text-blue-600 hover:text-blue-700 font-semibold hover:underline px-4 py-2 rounded-lg border border-blue-600 hover:bg-blue-50 transition-all">
             Contactanos y te respondemos al toque
-          </button>
+          </a>
         </div>
       </div>
     </section>

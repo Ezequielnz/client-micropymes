@@ -39,7 +39,7 @@ const Benefits = () => {
       icon: Heart,
       title: "Diseño que da gusto usar",
       description: "Tu equipo va a querer usar el sistema. Interfaz moderna, rápida y sin frustraciones.",
-      metric: "100% adoptión"
+      metric: "100% adopción"
     }
   ];
 

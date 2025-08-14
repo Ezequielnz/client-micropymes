@@ -126,22 +126,22 @@ const Pricing = () => {
               ))}
             </ul>
             
-            <button className="w-full bg-white border border-blue-600 hover:border-blue-700 text-blue-600 hover:text-blue-700 py-3 rounded-xl font-semibold transition-all hover:bg-blue-50">
+            <a href="mailto:contacto@operixml.com" className="w-full inline-block text-center bg-white border border-blue-600 hover:border-blue-700 text-blue-600 hover:text-blue-700 py-3 rounded-xl font-semibold transition-all hover:bg-blue-50">
               Contactar ventas
-            </button>
+            </a>
           </div>
         </div>
 
         {/* Bottom CTA */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 lg:p-12 rounded-2xl border border-blue-100 text-center">
           <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">
-            Probaló gratis. Elegí el plan cuando estés listo.
+            Probalo gratis. Elegí el plan cuando estés listo.
           </h3>
           <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
             Los 14 días de prueba incluyen acceso completo a todas las funciones. 
             No necesitás tarjeta de crédito y podés cancelar en cualquier momento.
           </p>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all transform hover:scale-105 flex items-center space-x-2 mx-auto shadow-lg hover:shadow-xl">
+          <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all transform hover:scale-105 flex items-center space-x-2 mx-auto shadow-lg hover:shadow-xl" onClick={() => navigate('/register')}>
             <span>Empezar prueba gratis</span>
             <ArrowRight size={20} />
           </button>

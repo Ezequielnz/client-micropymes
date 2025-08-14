@@ -20,16 +20,11 @@ const Footer = () => {
             <div className="space-y-2">
               <div className="text-sm">
                 <span className="text-gray-400">Email:</span>{' '}
-                <a href="mailto:hola@operixml.com" className="text-blue-400 hover:text-blue-300">
-                  hola@operixml.com
+                <a href="mailto:contacto@operixml.com" className="text-blue-400 hover:text-blue-300">
+                  contacto@operixml.com
                 </a>
               </div>
-              <div className="text-sm">
-                <span className="text-gray-400">WhatsApp:</span>{' '}
-                <a href="https://wa.me/549xxxxxxxxx" className="text-blue-400 hover:text-blue-300">
-                  +54 9 11 xxxx-xxxx
-                </a>
-              </div>
+              {/* WhatsApp oculto temporalmente */}
             </div>
           </div>
 
