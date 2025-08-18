@@ -41,8 +41,6 @@ const HomeContent: React.FC = () => {
     products,
     customers
   } = useDashboardData(currentBusiness, selectedPeriod);
-  
-  // Código de diagnóstico eliminado
 
   // ✅ OPTIMIZED: Memoized format functions to prevent recreation on every render
   const formatCurrency = useCallback((amount: number) => {
@@ -113,8 +111,6 @@ const HomeContent: React.FC = () => {
       setLoading(false);
     }
   }, [navigate]);
-
-  // Función de diagnóstico eliminada
 
   // ✅ OPTIMIZED: Memoized handlePeriodChange function
   const handlePeriodChange = useCallback((period: string) => {
@@ -268,8 +264,6 @@ const HomeContent: React.FC = () => {
                 </div>
               </div>
             )}
-
-            {/* Componente de diagnóstico eliminado */}
 
             {/* Period Controls - Optimizado para móvil */}
             <div className="flex flex-wrap items-center gap-1 sm:gap-2">

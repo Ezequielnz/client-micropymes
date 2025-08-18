@@ -36,17 +36,17 @@ const Hero = () => {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-4 justify-center lg:justify-start mb-8 w-full">
   <button
-    className="flex bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all transform hover:scale-105 items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
+    className="flex bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all transform hover:scale-105 items-center justify-center space-x-2 shadow-lg hover:shadow-xl whitespace-nowrap"
     onClick={() => navigate('/register')}
   >
-    <span>Empezá gratis por 14 días</span>
+    <span className="whitespace-nowrap">Empezá gratis por 14 días</span>
     <ChevronRight size={20} />
   </button>
   <button
-    className="flex border border-gray-300 hover:border-gray-400 text-gray-700 px-8 py-4 rounded-xl font-semibold text-lg transition-all items-center justify-center space-x-2 hover:bg-gray-50 !bg-white"
+    className="flex border border-gray-300 hover:border-gray-400 text-gray-700 px-8 py-4 rounded-xl font-semibold text-lg transition-all items-center justify-center space-x-2 hover:bg-gray-50 !bg-white whitespace-nowrap"
   >
     <Play size={20} />
-    <span>Ver demo (2 min)</span>
+    <span className="whitespace-nowrap">Ver demo (2 min)</span>
   </button>
 </div>
 

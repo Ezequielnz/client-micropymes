@@ -146,6 +146,47 @@ function POS() {
   /** @type {[string, function]} paymentMethod - State for the selected payment method. */
   const [paymentMethod, setPaymentMethod] = useState('efectivo');
 
+  // Mantener un carrito independiente por negocio usando sessionStorage
+  useEffect(() => {
+    // Cuando cambia el negocio, cargamos su carrito propio desde la sesión
+    if (!businessId) {
+      setCart([]);
+      setSelectedCustomer('');
+      setSearchTerm('');
+      return;
+    }
+    try {
+      const key = `pos_cart_${businessId}`;
+      const saved = sessionStorage.getItem(key);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setCart(Array.isArray(parsed) ? parsed : []);
+      } else {
+        setCart([]);
+      }
+    } catch (e) {
+      console.warn('No se pudo cargar el carrito de la sesión:', e);
+      setCart([]);
+    }
+    // Limpiar mensajes transitorios al cambiar de negocio
+    setError('');
+    setCartError('');
+    setSaleSuccessMessage('');
+    setSelectedCustomer('');
+    setSearchTerm('');
+  }, [businessId]);
+
+  // Guardar el carrito actual en sessionStorage bajo la clave del negocio
+  useEffect(() => {
+    if (!businessId) return;
+    try {
+      const key = `pos_cart_${businessId}`;
+      sessionStorage.setItem(key, JSON.stringify(cart));
+    } catch (e) {
+      console.warn('No se pudo guardar el carrito en la sesión:', e);
+    }
+  }, [cart, businessId]);
+
   // ✅ OPTIMIZED: React Query for products with smart caching
   const { 
     data: allProducts = [], 
@@ -395,7 +436,7 @@ function POS() {
     setCartError('');
 
     const saleData = {
-      cliente_id: selectedCustomer,
+      cliente_id: selectedCustomer || null,
       metodo_pago: paymentMethod,
       observaciones: null,
       items: cart.map(item => ({

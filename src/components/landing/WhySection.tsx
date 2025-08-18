@@ -27,7 +27,7 @@ const WhySection = () => {
             <div className="space-y-4">
               {[
                 "ERPs obsoletos que necesitan 20 clics para hacer algo simple",
-                "Interfaces feas y confusas que nadie quiere usar",
+                "Interfaces poco atractivas y confusas que nadie quiere usar",
                 "Sistemas lentos que te hacen perder tiempo valioso",
                 "Funciones que no necesitás pero igual tenés que pagar",
                 "Soporte técnico que no entiende tu negocio"
