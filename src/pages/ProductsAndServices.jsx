@@ -33,7 +33,7 @@ const OptimizedTable = React.memo(({
   }
 
   // Calculate column count for empty state
-  const columnCount = activeTab === 'products' ? (canEdit || canDelete ? 6 : 5) : (canEdit || canDelete ? 5 : 4);
+  const columnCount = activeTab === 'products' ? (canEdit || canDelete ? 7 : 6) : (canEdit || canDelete ? 6 : 5);
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
@@ -53,6 +53,15 @@ const OptimizedTable = React.memo(({
                 </div>
                 {item.description && (
                   <p className="text-gray-600 text-xs mb-2 line-clamp-2">{item.description}</p>
+                )}
+                {activeTab === 'products' ? (
+                  <div className="text-xs text-gray-700 mb-2">
+                    <span className="font-medium">Compra:</span> {typeof item.purchasePrice === 'number' ? `$${item.purchasePrice.toFixed(2)}` : '—'}
+                  </div>
+                ) : (
+                  <div className="text-xs text-gray-700 mb-2">
+                    <span className="font-medium">Costo:</span> {typeof item.cost === 'number' ? `$${item.cost.toFixed(2)}` : '—'}
+                  </div>
                 )}
                 <div className="flex justify-between items-center text-xs text-gray-500">
                   <span>{getCategoryName(item.category)}</span>
@@ -100,6 +109,15 @@ const OptimizedTable = React.memo(({
               <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">
                 Precio
               </th>
+              {activeTab === 'products' ? (
+                <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">
+                  Precio Compra
+                </th>
+              ) : (
+                <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">
+                  Costo
+                </th>
+              )}
               <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">
                 Categoría
               </th>
@@ -131,6 +149,11 @@ const OptimizedTable = React.memo(({
                   <td className="px-4 py-3 text-gray-900 text-sm">{item.name}</td>
                   <td className="px-4 py-3 text-gray-600 text-sm max-w-xs truncate">{item.description}</td>
                   <td className="px-4 py-3 text-gray-900 text-sm font-medium">${item.price?.toFixed(2) || '0.00'}</td>
+                  {activeTab === 'products' ? (
+                    <td className="px-4 py-3 text-gray-900 text-sm">{typeof item.purchasePrice === 'number' ? `$${item.purchasePrice.toFixed(2)}` : '—'}</td>
+                  ) : (
+                    <td className="px-4 py-3 text-gray-900 text-sm">{typeof item.cost === 'number' ? `$${item.cost.toFixed(2)}` : '—'}</td>
+                  )}
                   <td className="px-4 py-3 text-gray-600 text-sm">
                     {getCategoryName(item.category)}
                   </td>
@@ -188,9 +211,10 @@ const ProductsAndServices = () => {
     name: '',
     description: '',
     price: '',
+    purchasePrice: '',
     category: '',
-    sku: '',
-    stock: ''
+    stock: '',
+    unit: ''
   });
   const [categoryFormData, setCategoryFormData] = useState({
     nombre: '',
@@ -309,6 +333,7 @@ const ProductsAndServices = () => {
           ...item,
           name: item.nombre,
           price: item.precio_venta,
+          purchasePrice: item.precio_compra,
           category: item.categoria_id,
           stock: item.stock_actual,
           unit: item.codigo || ''
@@ -320,6 +345,7 @@ const ProductsAndServices = () => {
           ...item,
           name: item.nombre,
           price: item.precio,
+          cost: item.costo,
           category: item.categoria_id
     }));
   }, [services]);
@@ -362,7 +388,7 @@ const ProductsAndServices = () => {
   });
 
   const deleteProductMutation = useMutation({
-    mutationFn: (id) => productAPI.deleteProduct(id),
+    mutationFn: (id) => productAPI.deleteProduct(businessId, id),
     onSuccess: () => {
       queryClient.invalidateQueries(['products', businessId]);
     }
@@ -418,6 +444,9 @@ const ProductsAndServices = () => {
         payload.precio_venta = parseFloat(formData.price) || 0;
         payload.stock_actual = parseInt(formData.stock) || 0;
         payload.codigo = formData.unit || '';
+        if (formData.purchasePrice !== '') {
+          payload.precio_compra = parseFloat(formData.purchasePrice);
+        }
         
         if (editingItem) {
           await updateProductMutation.mutateAsync({ id: editingItem.id, payload });
@@ -459,6 +488,7 @@ const ProductsAndServices = () => {
       name: item.name || item.nombre || '',
       description: item.description || item.descripcion || '',
       price: item.price?.toString() || item.precio_venta?.toString() || item.precio?.toString() || '',
+      purchasePrice: item.precio_compra !== undefined && item.precio_compra !== null ? item.precio_compra.toString() : '',
       category: item.category || item.categoria_id || '',
       stock: item.stock?.toString() || item.stock_actual?.toString() || '',
       unit: item.unit || item.codigo || ''
@@ -473,6 +503,7 @@ const ProductsAndServices = () => {
       name: '',
       description: '',
       price: '',
+      purchasePrice: '',
       category: '',
       stock: '',
       unit: ''
@@ -701,6 +732,28 @@ const ProductsAndServices = () => {
                     }}
                   />
                 </div>
+
+                {activeTab === 'products' && (
+                  <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
+                      Precio de compra
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formData.purchasePrice}
+                      onChange={(e) => setFormData({ ...formData, purchasePrice: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        color: '#333'
+                      }}
+                    />
+                  </div>
+                )}
 
                 <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>

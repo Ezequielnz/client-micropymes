@@ -39,23 +39,45 @@ function PermissionGuard({ children, requiredModule, requiredAction = 'ver' }) {
   const hasAccess = React.useMemo(() => {
     if (!permissions || loading) return false;
     
+    // Debug logging
+    console.log('PermissionGuard Debug:', {
+      requiredModule,
+      requiredAction,
+      permissions,
+      hasFullAccess: hasFullAccess(),
+      isCreator: permissions?.is_creator,
+      isAdmin: permissions?.is_admin,
+      has_full_access: permissions?.has_full_access
+    });
+    
     // Full access users can access everything
-    if (hasFullAccess()) return true;
+    if (hasFullAccess()) {
+      console.log('✅ Access granted: User has full access');
+      return true;
+    }
     
     // Map the required module to the actual resource
     const resource = moduleToResource[requiredModule] || requiredModule;
+    console.log('Mapped resource:', resource);
     
     // Check specific permission based on action
+    let hasPermission = false;
     switch (requiredAction) {
       case 'ver':
-        return canView(resource);
+        hasPermission = canView(resource);
+        break;
       case 'editar':
-        return canEdit(resource);
+        hasPermission = canEdit(resource);
+        break;
       case 'eliminar':
-        return canDelete(resource);
+        hasPermission = canDelete(resource);
+        break;
       default:
-        return canView(resource);
+        hasPermission = canView(resource);
     }
+    
+    console.log(`Permission check result for ${requiredAction} on ${resource}:`, hasPermission);
+    return hasPermission;
   }, [permissions, loading, hasFullAccess, canView, canEdit, canDelete, requiredModule, requiredAction, moduleToResource]);
 
   // ✅ FIXED: Handle case when no business is selected
