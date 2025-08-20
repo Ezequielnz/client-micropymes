@@ -14,7 +14,8 @@ import {
   ChevronDown,
   ChevronRight,
   Clock,
-  BarChart3
+  BarChart3,
+  Truck
 } from 'lucide-react';
 import { authAPI, businessAPI } from '../utils/api';
 import { BusinessContext, useBusinessContext } from '../contexts/BusinessContext';
@@ -76,7 +77,9 @@ const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
       hasDropdown: true,
       subItems: [
         { id: 'products', label: 'Productos y Servicios', icon: Package, onClick: () => safeNavigate('/products-and-services') },
-        { id: 'categories', label: 'Categorías', icon: BarChart3, onClick: () => safeNavigate('/categories') }
+        { id: 'categories', label: 'Categorías', icon: BarChart3, onClick: () => safeNavigate('/categories') },
+        { id: 'suppliers', label: 'Proveedores', icon: Truck, onClick: () => safeNavigate('/proveedores') },
+        { id: 'purchases', label: 'Compras', icon: ShoppingCart, onClick: () => safeNavigate('/compras') }
       ]
     },
     { 
@@ -281,7 +284,7 @@ const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
       {/* Footer */}
       <div className="p-4 border-t border-gray-200 mt-auto" style={{ backgroundColor: '#f8fafc' }}>
         <div className="text-xs text-gray-500 text-center">
-          © 2025 MicroPymes v2.1
+          2025 MicroPymes v2.1
         </div>
       </div>
     </div>
@@ -421,6 +424,8 @@ const Layout = ({ children, activeSection }) => {
     if (path.includes('/finanzas')) return 'finances';
     if (path.includes('/products-and-services')) return 'products';
     if (path.includes('/categories')) return 'categories';
+    if (path.includes('/proveedores')) return 'suppliers';
+    if (path.includes('/compras')) return 'purchases';
     if (path.includes('/pos')) return 'pos';
     if (path.includes('/reports')) return 'reports';
     if (path.includes('/customers')) return 'clients';
@@ -468,6 +473,8 @@ const Layout = ({ children, activeSection }) => {
     queryClient.invalidateQueries({ queryKey: ['customers', business.id] });
     queryClient.invalidateQueries({ queryKey: ['categories', business.id] });
     queryClient.invalidateQueries({ queryKey: ['tasks', business.id] });
+    queryClient.invalidateQueries({ queryKey: ['purchases', business.id] });
+    queryClient.invalidateQueries({ queryKey: ['suppliers', business.id] });
   };
 
   const handleLogout = () => {

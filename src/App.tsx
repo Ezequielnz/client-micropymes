@@ -20,6 +20,9 @@ import LandingPage from './pages/LandingPage.tsx';
 import TestPage from './pages/TestPage';
 import PendingApproval from './pages/PendingApproval';
 import Finanzas from './pages/Finanzas';
+ import Compras from './pages/Compras';
+ import Proveedores from './pages/Proveedores';
+ import Layout from './components/Layout';
 
 /**
  * The main application component.
@@ -58,6 +61,8 @@ const App: React.FC = () => {
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/reports" element={<SalesReports />} />
           <Route path="/finanzas" element={<Finanzas />} />
+          <Route path="/compras" element={<Layout activeSection="purchases"><Compras /></Layout>} />
+          <Route path="/proveedores" element={<Layout activeSection="suppliers"><Proveedores /></Layout>} />
           
           {/* Legacy routes with businessId parameter for backward compatibility */}
           <Route path="/business/:businessId/categories" element={<Categories />} />
@@ -69,6 +74,8 @@ const App: React.FC = () => {
           <Route path="/business/:businessId/reports" element={<SalesReports />} />
           <Route path="/business/:businessId/users" element={<BusinessUsers />} />
           <Route path="/business/:businessId/finanzas" element={<Finanzas />} />
+          <Route path="/business/:businessId/compras" element={<Layout activeSection="purchases"><Compras /></Layout>} />
+          <Route path="/business/:businessId/proveedores" element={<Layout activeSection="suppliers"><Proveedores /></Layout>} />
           
           {/* Catch-all route: If no other route matches, navigate to the home page. */}
           <Route path="*" element={<Navigate to="/" />} />

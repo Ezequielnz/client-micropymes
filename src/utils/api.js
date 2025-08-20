@@ -1404,4 +1404,102 @@ export const tasksAPI = {
   }
 };
 
-export default api; 
+/**
+ * @namespace supplierAPI
+ * @description Contains functions for managing suppliers (proveedores).
+ */
+export const supplierAPI = {
+  /**
+   * Fetches suppliers for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @param {object} [params] - Optional filter/query params.
+   * @returns {Promise<Array<object>>}
+   */
+  getSuppliers: async (businessId, params) => {
+    const response = await api.get(`/businesses/${businessId}/proveedores`, { params });
+    return response.data;
+  },
+
+  /**
+   * Fetches a single supplier by ID.
+   */
+  getSupplierById: async (businessId, supplierId) => {
+    const response = await api.get(`/businesses/${businessId}/proveedores/${supplierId}`);
+    return response.data;
+  },
+
+  /**
+   * Creates a supplier.
+   */
+  createSupplier: async (businessId, data) => {
+    const response = await api.post(`/businesses/${businessId}/proveedores`, data);
+    return response.data;
+  },
+
+  /**
+   * Updates a supplier.
+   */
+  updateSupplier: async (businessId, supplierId, data) => {
+    const response = await api.put(`/businesses/${businessId}/proveedores/${supplierId}`, data);
+    return response.data;
+  },
+
+  /**
+   * Deletes a supplier.
+   */
+  deleteSupplier: async (businessId, supplierId) => {
+    const response = await api.delete(`/businesses/${businessId}/proveedores/${supplierId}`);
+    return response.data;
+  },
+};
+
+/**
+ * @namespace purchaseAPI
+ * @description Contains functions for managing purchases (compras) and their details.
+ */
+export const purchaseAPI = {
+  /**
+   * Fetches purchases for a business.
+   * @param {string} businessId
+   * @param {object} [params]
+   */
+  getPurchases: async (businessId, params) => {
+    const response = await api.get(`/businesses/${businessId}/compras`, { params });
+    return response.data;
+  },
+
+  /**
+   * Fetch a single purchase by ID.
+   */
+  getPurchaseById: async (businessId, purchaseId) => {
+    const response = await api.get(`/businesses/${businessId}/compras/${purchaseId}`);
+    return response.data;
+  },
+
+  /**
+   * Creates a purchase with optional detail items.
+   * Example payload: { proveedor_id, fecha, observaciones, items: [{ producto_id, cantidad, precio_unitario }] }
+   */
+  createPurchase: async (businessId, data) => {
+    const response = await api.post(`/businesses/${businessId}/compras`, data);
+    return response.data;
+  },
+
+  /**
+   * Updates a purchase header or details (backend dependent).
+   */
+  updatePurchase: async (businessId, purchaseId, data) => {
+    const response = await api.put(`/businesses/${businessId}/compras/${purchaseId}`, data);
+    return response.data;
+  },
+
+  /**
+   * Deletes a purchase.
+   */
+  deletePurchase: async (businessId, purchaseId) => {
+    const response = await api.delete(`/businesses/${businessId}/compras/${purchaseId}`);
+    return response.data;
+  },
+};
+
+export default api;
