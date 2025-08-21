@@ -9,7 +9,6 @@ import {
   ShoppingCart,
   Users,
   FileText,
-  DollarSign,
   Settings,
   ChevronDown,
   ChevronRight,
@@ -56,6 +55,7 @@ const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
   const navigate = useNavigate();
   const [showSalesDropdown, setShowSalesDropdown] = useState(false);
   const [showInventoryDropdown, setShowInventoryDropdown] = useState(false);
+  const [showPurchasesDropdown, setShowPurchasesDropdown] = useState(false);
   
   // Helper function to safely navigate with business validation
   const safeNavigate = (path) => {
@@ -70,33 +70,40 @@ const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
   const sidebarItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, onClick: () => navigate('/home') },
     { id: 'businesses', label: 'Negocios', icon: Building2, onClick: () => navigate('/business-users') },
-    { 
-      id: 'inventory', 
-      label: 'Inventario', 
-      icon: Package, 
+    {
+      id: 'sales',
+      label: 'Ventas',
+      icon: ShoppingCart,
       hasDropdown: true,
       subItems: [
-        { id: 'products', label: 'Productos y Servicios', icon: Package, onClick: () => safeNavigate('/products-and-services') },
-        { id: 'categories', label: 'Categorías', icon: BarChart3, onClick: () => safeNavigate('/categories') },
-        { id: 'suppliers', label: 'Proveedores', icon: Truck, onClick: () => safeNavigate('/proveedores') },
-        { id: 'purchases', label: 'Compras', icon: ShoppingCart, onClick: () => safeNavigate('/compras') }
+        { id: 'pos', label: 'Ventas POS', icon: ShoppingCart, onClick: () => safeNavigate('/pos') },
+        { id: 'reports', label: 'Reporte de ventas', icon: BarChart3, onClick: () => safeNavigate('/reports') }
       ]
     },
-    { 
-      id: 'sales', 
-      label: 'Ventas', 
-      icon: ShoppingCart, 
+    {
+      id: 'purchasesMenu',
+      label: 'Compras',
+      icon: ShoppingCart,
       hasDropdown: true,
       subItems: [
-        { id: 'pos', label: 'POS', icon: ShoppingCart, onClick: () => safeNavigate('/pos') },
-        { id: 'reports', label: 'Reporte de Ventas', icon: BarChart3, onClick: () => safeNavigate('/reports') }
+        { id: 'purchases', label: 'Órdenes de compra', icon: ShoppingCart, onClick: () => safeNavigate('/compras') },
+        { id: 'suppliers', label: 'Proveedores', icon: Truck, onClick: () => safeNavigate('/proveedores') }
+      ]
+    },
+    {
+      id: 'inventory',
+      label: 'Inventario',
+      icon: Package,
+      hasDropdown: true,
+      subItems: [
+        { id: 'products', label: 'Productos y servicios', icon: Package, onClick: () => safeNavigate('/products-and-services') },
+        { id: 'categories', label: 'Categorías', icon: BarChart3, onClick: () => safeNavigate('/categories') }
       ]
     },
     { id: 'clients', label: 'Clientes', icon: Users, onClick: () => safeNavigate('/customers') },
     { id: 'tasks', label: 'Tareas', icon: Clock, onClick: () => safeNavigate('/tasks') },
-    { id: 'billing', label: 'Facturación', icon: FileText, disabled: true },
-    { id: 'finances', label: 'Finanzas', icon: DollarSign, onClick: () => safeNavigate('/finanzas') },
-    { id: 'settings', label: 'Configuración', icon: Settings, disabled: true },
+    { id: 'billing', label: 'Facturación (próximamente)', icon: FileText, disabled: true },
+    { id: 'settings', label: 'Configuración (próximamente)', icon: Settings, disabled: true },
   ];
 
   return (
@@ -127,6 +134,8 @@ const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
                       setShowSalesDropdown(!showSalesDropdown);
                     } else if (item.id === 'inventory') {
                       setShowInventoryDropdown(!showInventoryDropdown);
+                    } else if (item.id === 'purchasesMenu') {
+                      setShowPurchasesDropdown(!showPurchasesDropdown);
                     }
                   }}
                   disabled={isDisabled}
@@ -155,7 +164,7 @@ const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
                     isActive ? "text-blue-600" : isDisabled ? "text-gray-400" : "text-gray-500"
                   }`} />
                   <span className="font-medium flex-1">{item.label}</span>
-                  {((showSalesDropdown && item.id === 'sales') || (showInventoryDropdown && item.id === 'inventory')) ? (
+                  {((showSalesDropdown && item.id === 'sales') || (showInventoryDropdown && item.id === 'inventory') || (showPurchasesDropdown && item.id === 'purchasesMenu')) ? (
                     <ChevronDown className="h-4 w-4 text-gray-500" />
                   ) : (
                     <ChevronRight className="h-4 w-4 text-gray-500" />
@@ -165,7 +174,7 @@ const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
                   )}
                 </button>
                 
-                {(((showSalesDropdown && item.id === 'sales') || (showInventoryDropdown && item.id === 'inventory')) && item.subItems) && (
+                {(((showSalesDropdown && item.id === 'sales') || (showInventoryDropdown && item.id === 'inventory') || (showPurchasesDropdown && item.id === 'purchasesMenu')) && item.subItems) && (
                   <div className="ml-8 space-y-1">
                     {item.subItems.map((subItem) => {
                       const SubIcon = subItem.icon;

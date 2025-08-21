@@ -65,52 +65,56 @@ const SupplierCreateModal = ({ open, onClose, onSubmit, isSubmitting }) => {
   return (
     <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
       <div style={{ background: 'white', borderRadius: 8, padding: 20, width: '95%', maxWidth: 800, maxHeight: '90vh', overflow: 'auto' }}>
-        <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Nuevo proveedor</h2>
+        <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, color: '#000' }}>Nuevo proveedor</h2>
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Nombre</label>
-              <input type="text" value={form.nombre} onChange={(e) => update('nombre', e.target.value)} required style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Nombre</label>
+              <input type="text" value={form.nombre} onChange={(e) => update('nombre', e.target.value)} required style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>CUIT/CUIL</label>
-              <input type="text" value={form.cuit_cuil} onChange={(e) => update('cuit_cuil', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>CUIT/CUIL</label>
+              <input type="text" value={form.cuit_cuil} onChange={(e) => update('cuit_cuil', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Email</label>
-              <input type="email" value={form.email} onChange={(e) => update('email', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Email</label>
+              <input type="email" value={form.email} onChange={(e) => update('email', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Teléfono</label>
-              <input type="text" value={form.telefono} onChange={(e) => update('telefono', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Teléfono</label>
+              <input type="text" value={form.telefono} onChange={(e) => update('telefono', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Dirección</label>
-              <input type="text" value={form.direccion} onChange={(e) => update('direccion', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Dirección</label>
+              <input type="text" value={form.direccion} onChange={(e) => update('direccion', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Ciudad</label>
-              <input type="text" value={form.ciudad} onChange={(e) => update('ciudad', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Ciudad</label>
+              <input type="text" value={form.ciudad} onChange={(e) => update('ciudad', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Provincia</label>
-              <input type="text" value={form.provincia} onChange={(e) => update('provincia', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Provincia</label>
+              <input type="text" value={form.provincia} onChange={(e) => update('provincia', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>País</label>
-              <input type="text" value={form.pais} onChange={(e) => update('pais', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>País</label>
+              <input type="text" value={form.pais} onChange={(e) => update('pais', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Condiciones de pago</label>
-              <input type="text" value={form.condiciones_pago} onChange={(e) => update('condiciones_pago', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Condiciones de pago</label>
+              <input type="text" value={form.condiciones_pago} onChange={(e) => update('condiciones_pago', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Estado</label>
-              <input type="text" value={form.estado} onChange={(e) => update('estado', e.target.value)} placeholder="Activo / Inactivo" style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Estado</label>
+              <select value={form.estado} onChange={(e) => update('estado', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }}>
+                <option value="">Seleccionar...</option>
+                <option value="Activo">Activo</option>
+                <option value="Inactivo">Inactivo</option>
+              </select>
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Observaciones</label>
-              <input type="text" value={form.observaciones} onChange={(e) => update('observaciones', e.target.value)} placeholder="Opcional" style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Observaciones</label>
+              <input type="text" value={form.observaciones} onChange={(e) => update('observaciones', e.target.value)} placeholder="Opcional" style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
             </div>
           </div>
 
@@ -186,48 +190,52 @@ const SupplierEditModal = ({ open, onClose, onSubmit, isSubmitting, supplier }) 
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Nombre</label>
-              <input type="text" value={form.nombre} onChange={(e) => update('nombre', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Nombre</label>
+              <input type="text" value={form.nombre} onChange={(e) => update('nombre', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>CUIT/CUIL</label>
-              <input type="text" value={form.cuit_cuil} onChange={(e) => update('cuit_cuil', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>CUIT/CUIL</label>
+              <input type="text" value={form.cuit_cuil} onChange={(e) => update('cuit_cuil', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Email</label>
-              <input type="email" value={form.email} onChange={(e) => update('email', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Email</label>
+              <input type="email" value={form.email} onChange={(e) => update('email', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Teléfono</label>
-              <input type="text" value={form.telefono} onChange={(e) => update('telefono', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Teléfono</label>
+              <input type="text" value={form.telefono} onChange={(e) => update('telefono', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Dirección</label>
-              <input type="text" value={form.direccion} onChange={(e) => update('direccion', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Dirección</label>
+              <input type="text" value={form.direccion} onChange={(e) => update('direccion', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Ciudad</label>
-              <input type="text" value={form.ciudad} onChange={(e) => update('ciudad', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Ciudad</label>
+              <input type="text" value={form.ciudad} onChange={(e) => update('ciudad', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Provincia</label>
-              <input type="text" value={form.provincia} onChange={(e) => update('provincia', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Provincia</label>
+              <input type="text" value={form.provincia} onChange={(e) => update('provincia', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>País</label>
-              <input type="text" value={form.pais} onChange={(e) => update('pais', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>País</label>
+              <input type="text" value={form.pais} onChange={(e) => update('pais', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Condiciones de pago</label>
-              <input type="text" value={form.condiciones_pago} onChange={(e) => update('condiciones_pago', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Condiciones de pago</label>
+              <input type="text" value={form.condiciones_pago} onChange={(e) => update('condiciones_pago', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Estado</label>
-              <input type="text" value={form.estado} onChange={(e) => update('estado', e.target.value)} placeholder="Activo / Inactivo" style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Estado</label>
+              <select value={form.estado} onChange={(e) => update('estado', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }}>
+                <option value="">Seleccionar...</option>
+                <option value="Activo">Activo</option>
+                <option value="Inactivo">Inactivo</option>
+              </select>
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Observaciones</label>
-              <input type="text" value={form.observaciones} onChange={(e) => update('observaciones', e.target.value)} placeholder="Opcional" style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Observaciones</label>
+              <input type="text" value={form.observaciones} onChange={(e) => update('observaciones', e.target.value)} placeholder="Opcional" style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
