@@ -101,6 +101,7 @@ const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
       ]
     },
     { id: 'clients', label: 'Clientes', icon: Users, onClick: () => safeNavigate('/customers') },
+    { id: 'finances', label: 'Finanzas', icon: BarChart3, onClick: () => safeNavigate('/finanzas') },
     { id: 'tasks', label: 'Tareas', icon: Clock, onClick: () => safeNavigate('/tasks') },
     { id: 'billing', label: 'Facturación (próximamente)', icon: FileText, disabled: true },
     { id: 'settings', label: 'Configuración (próximamente)', icon: Settings, disabled: true },
@@ -258,7 +259,7 @@ const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
                   e.target.style.backgroundColor = 'transparent';
                 }
               }}
-              title={!currentBusiness?.id && ['products', 'clients', 'tasks'].includes(item.id) ? 'Selecciona un negocio para acceder' : ''}
+              title={!currentBusiness?.id && ['products', 'clients', 'finances', 'tasks'].includes(item.id) ? 'Selecciona un negocio para acceder' : ''}
             >
               <Icon className={`h-5 w-5 transition-colors ${
                 isActive ? "text-blue-600" : isDisabled ? "text-gray-400" : "text-gray-500"
@@ -267,7 +268,7 @@ const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
               {isDisabled && (
                 <span className="ml-auto text-xs text-gray-400">Próximamente</span>
               )}
-              {!currentBusiness?.id && ['products', 'clients', 'tasks'].includes(item.id) && (
+              {!currentBusiness?.id && ['products', 'clients', 'finances', 'tasks'].includes(item.id) && (
                 <span className="ml-auto text-xs text-orange-500">Sin negocio</span>
               )}
             </button>

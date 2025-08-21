@@ -613,8 +613,9 @@ export const salesAPI = {
    * @throws {Error} If the API request fails.
    */
   getSales: async (businessId, params) => {
-    const response = await api.get(`/businesses/${businessId}/ventas`, { params });
-    return response.data;
+    const response = await api.get(`/businesses/${businessId}/ventas/sales`, { params });
+    const ventas = response.data?.ventas;
+    return Array.isArray(ventas) ? ventas : [];
   },
 
   /**
@@ -693,8 +694,18 @@ export const salesAPI = {
    * @throws {Error} If the API request fails.
    */
   getRecentSales: async (businessId) => {
-    const response = await api.get(`/ventas/sales`);
-    return response.data;
+    const response = await api.get(`/ventas/sales`, {
+      params: { business_id: businessId }
+    });
+    const ventas = response.data?.ventas;
+    if (Array.isArray(ventas)) {
+      // Map to expected shape for dashboard component (uses fecha_venta)
+      return ventas.map((v) => ({
+        ...v,
+        fecha_venta: v.fecha ?? v.fecha_venta,
+      }));
+    }
+    return [];
   },
 
   /**
