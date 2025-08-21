@@ -151,7 +151,11 @@ function BusinessUsers() {
       await loadData(); // Recargar la lista
     } catch (err) {
       console.error('Error deleting business:', err);
-      alert('Error al eliminar el negocio: ' + (err.response?.data?.detail || err.message));
+      if (err?.response?.status === 403) {
+        alert('No tienes permisos para eliminar este negocio. Solo los administradores pueden eliminarlo.');
+      } else {
+        alert('Error al eliminar el negocio: ' + (err.response?.data?.detail || err.message));
+      }
     }
   };
 
@@ -195,19 +199,21 @@ function BusinessUsers() {
         {/* Page Header */}
         <div className="bg-white border-b border-gray-200">
           <div className="max-w-full md:max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-            <div className="flex flex-wrap items-center justify-between gap-3 h-14 md:h-16 min-w-0">
+            <div className="flex flex-col gap-2 py-3 md:py-4 min-w-0">
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">Mis Negocios</h1>
                 <p className="text-sm text-gray-600">Gestiona tus negocios registrados</p>
               </div>
-              
-              <Button
-                onClick={() => setShowCreateForm(true)}
-                className="flex items-center gap-2 w-full sm:w-auto"
-              >
-                <Plus className="h-4 w-4" />
-                Nuevo Negocio
-              </Button>
+              <div className="flex">
+                <Button
+                  onClick={() => setShowCreateForm(true)}
+                  size="sm"
+                  className="flex items-center gap-2 w-auto self-start"
+                >
+                  <Plus className="h-4 w-4" />
+                  Nuevo Negocio
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -298,12 +304,6 @@ function BusinessUsers() {
 
           {/* Lista de Negocios */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-blue-600" />
-                Mis Negocios ({businesses.length})
-              </CardTitle>
-            </CardHeader>
             <CardContent>
               {businesses.length === 0 ? (
                 <div className="text-center py-12">
@@ -331,13 +331,16 @@ function BusinessUsers() {
                         </div>
                         
                         <div className="flex gap-1">
-                          <button
-                            onClick={() => handleDeleteBusiness(business.id, business.nombre)}
-                            className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                            title="Eliminar negocio"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                          {business.rol === 'admin' && (
+                            <button
+                              onClick={() => handleDeleteBusiness(business.id, business.nombre)}
+                              className="p-2 rounded-md bg-white border border-gray-200 text-red-600 hover:bg-red-50 hover:border-red-200 transition-colors"
+                              title="Eliminar negocio"
+                              aria-label={`Eliminar ${business.nombre}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
                         </div>
                       </div>
                       
