@@ -45,6 +45,20 @@ const BusinessSettingsForm = ({ business, isOpen, onClose, onSave }) => {
     { value: 'MXN', label: 'Peso Mexicano (MXN)' }
   ];
 
+  // Opciones de sensibilidad y días mínimos
+  const sensitivityOptions = [
+    { value: 30, label: 'Baja (30%)' },
+    { value: 15, label: 'Media (15%)' },
+    { value: 10, label: 'Alta (10%)' }
+  ];
+
+  const minDaysOptions = [
+    { value: 15, label: '15 días' },
+    { value: 30, label: '30 días' },
+    { value: 60, label: '60 días' },
+    { value: 90, label: '90 días' }
+  ];
+
   useEffect(() => {
     if (isOpen && business) {
       loadSettings();
@@ -218,18 +232,21 @@ const BusinessSettingsForm = ({ business, isOpen, onClose, onSave }) => {
                 
                 <div className="max-w-md">
                   <label className="block text-sm font-medium text-black mb-2">
-                    Umbral de alerta (%)
+                    Sensibilidad de alerta
                   </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="100"
+                  <select
                     value={settings.sales_drop_threshold}
-                    onChange={(e) => handleInputChange('sales_drop_threshold', parseInt(e.target.value) || 15)}
+                    onChange={(e) => handleInputChange('sales_drop_threshold', parseInt(e.target.value))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black bg-white"
-                  />
+                  >
+                    {sensitivityOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
                   <p className="text-xs text-gray-500 mt-1">
-                    Valor entre 1% y 100%
+                    Baja: alerta con caídas mayores al 30% | Media: 15% | Alta: 10%
                   </p>
                 </div>
               </div>
@@ -246,16 +263,19 @@ const BusinessSettingsForm = ({ business, isOpen, onClose, onSave }) => {
                   <label className="block text-sm font-medium text-black mb-2">
                     Días mínimos
                   </label>
-                  <input
-                    type="number"
-                    min="7"
-                    max="365"
+                  <select
                     value={settings.min_days_for_model}
-                    onChange={(e) => handleInputChange('min_days_for_model', parseInt(e.target.value) || 30)}
+                    onChange={(e) => handleInputChange('min_days_for_model', parseInt(e.target.value))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black bg-white"
-                  />
+                  >
+                    {minDaysOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
                   <p className="text-xs text-gray-500 mt-1">
-                    Valor entre 7 y 365 días
+                    Opciones disponibles: 15, 30, 60 o 90 días
                   </p>
                 </div>
               </div>
