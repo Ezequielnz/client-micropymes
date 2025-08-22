@@ -1024,15 +1024,56 @@ export const businessAPI = {
   },
 
   /**
-   * Aprueba un usuario pendiente.
+   * Aprueba un usuario pendiente y configura sus permisos.
    * @param {string} businessId - The ID of the business.
-   * @param {string} userBusinessId - The ID of the user-business relationship.
-   * @param {object} permissions - Permissions to assign to the user.
-   * @returns {Promise<object>} A promise that resolves to a confirmation message.
+   * @param {string} usuarioNegocioId - The ID of the user-business relationship.
+   * @param {object} permissionsData - The permissions data to set.
+   * @returns {Promise<object>} A promise that resolves to the approval result.
    * @throws {Error} If the API request fails.
    */
-  approveUser: async (businessId, userBusinessId, permissions) => {
-    const response = await api.post(`/businesses/${businessId}/usuarios-pendientes/${userBusinessId}/aprobar`, permissions);
+  approveUser: async (businessId, usuarioNegocioId, permissionsData) => {
+    const response = await api.post(`/businesses/${businessId}/usuarios-pendientes/${usuarioNegocioId}/aprobar`, permissionsData);
+    return response.data;
+  },
+
+  /**
+   * Gets tenant settings for a business.
+   * @param {string} businessId - The ID of the business.
+   * @returns {Promise<object>} A promise that resolves to the tenant settings object.
+   * @throws {Error} If the API request fails.
+   */
+  getTenantSettings: async (businessId) => {
+    const response = await api.get(`/businesses/${businessId}/tenant-settings`);
+    return response.data;
+  },
+
+  /**
+   * Saves tenant settings for a business.
+   * @param {string} businessId - The ID of the business.
+   * @param {object} settingsData - The tenant settings data.
+   * @param {string} [settingsData.locale] - Locale code (e.g., 'es-AR').
+   * @param {string} [settingsData.timezone] - Timezone name (e.g., 'America/Argentina/Buenos_Aires').
+   * @param {string} [settingsData.currency] - Currency code (e.g., 'ARS').
+   * @param {number} [settingsData.sales_drop_threshold] - Sales drop threshold percentage.
+   * @param {number} [settingsData.min_days_for_model] - Minimum days for model training.
+   * @returns {Promise<object>} A promise that resolves to the saved settings object.
+   * @throws {Error} If the API request fails.
+   */
+  saveTenantSettings: async (businessId, settingsData) => {
+    const response = await api.post(`/businesses/${businessId}/tenant-settings`, settingsData);
+    return response.data;
+  },
+
+  /**
+   * Updates tenant settings for a business.
+   * @param {string} businessId - The ID of the business.
+   * @param {string} tenantId - The ID of the tenant settings record.
+   * @param {object} settingsData - The updated tenant settings data.
+   * @returns {Promise<object>} A promise that resolves to the updated settings object.
+   * @throws {Error} If the API request fails.
+   */
+  updateTenantSettings: async (businessId, tenantId, settingsData) => {
+    const response = await api.put(`/businesses/${businessId}/tenant-settings/${tenantId}`, settingsData);
     return response.data;
   },
 
@@ -1512,5 +1553,6 @@ export const purchaseAPI = {
     return response.data;
   },
 };
+
 
 export default api;

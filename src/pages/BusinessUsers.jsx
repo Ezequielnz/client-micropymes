@@ -4,6 +4,7 @@ import { businessAPI, authAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { PageLoader } from '../components/LoadingSpinner';
 import Layout from '../components/Layout';
+import BusinessSettingsForm from '../components/BusinessSettingsForm';
 import '../styles/responsive-overrides.css';
 import {
   Building2,
@@ -13,7 +14,8 @@ import {
   Users,
   AlertCircle,
   CheckCircle,
-  Loader2
+  Loader2,
+  Settings
 } from 'lucide-react';
 
 // Componentes UI simples
@@ -80,6 +82,8 @@ function BusinessUsers() {
     descripcion: ''
   });
   const [creating, setCreating] = useState(false);
+  const [selectedBusiness, setSelectedBusiness] = useState(null);
+  const [showSettingsForm, setShowSettingsForm] = useState(false);
 
   const businessTypes = [
     'Comercio',
@@ -157,6 +161,21 @@ function BusinessUsers() {
         alert('Error al eliminar el negocio: ' + (err.response?.data?.detail || err.message));
       }
     }
+  };
+
+  const handleOpenSettings = (business) => {
+    setSelectedBusiness(business);
+    setShowSettingsForm(true);
+  };
+
+  const handleCloseSettings = () => {
+    setSelectedBusiness(null);
+    setShowSettingsForm(false);
+  };
+
+  const handleSettingsSaved = () => {
+    // Optionally refresh data or show success message
+    console.log('Settings saved successfully');
   };
 
   if (loading) {
@@ -331,6 +350,14 @@ function BusinessUsers() {
                         </div>
                         
                         <div className="flex gap-1">
+                          <button
+                            onClick={() => handleOpenSettings(business)}
+                            className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                            title="Configurar negocio"
+                            aria-label={`Configurar ${business.nombre}`}
+                          >
+                            <Settings className="h-4 w-4" />
+                          </button>
                           {business.rol === 'admin' && (
                             <button
                               onClick={() => handleDeleteBusiness(business.id, business.nombre)}
@@ -366,6 +393,14 @@ function BusinessUsers() {
               )}
             </CardContent>
           </Card>
+
+          {/* Business Settings Form Modal */}
+          <BusinessSettingsForm
+            business={selectedBusiness}
+            isOpen={showSettingsForm}
+            onClose={handleCloseSettings}
+            onSave={handleSettingsSaved}
+          />
         </div>
       </div>
     </Layout>
