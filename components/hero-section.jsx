@@ -1,21 +1,12 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { useForm, ValidationError } from "@formspree/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 
 export function HeroSection() {
-  const [email, setEmail] = useState("")
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Handle email submission
-    console.log("Email submitted:", email)
-    setEmail("")
-  }
+  const [state, handleSubmit] = useForm("xyzdqrow")
 
   return (
     <section className="relative min-h-screen flex items-center justify-center px-4 py-20 bg-gradient-to-br from-gray-50 to-blue-50">
@@ -52,23 +43,33 @@ export function HeroSection() {
         </div>
 
         <Card className="max-w-md mx-auto p-6 bg-white/80 backdrop-blur-sm border-gray-100 shadow-lg">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              type="email"
-              placeholder="tu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="text-center text-lg py-3 border-gray-200 focus:border-blue-600 focus:ring-blue-600/20"
-            />
-            <Button
-              type="submit"
-              size="lg"
-              className="w-full text-lg py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-105 text-white"
-            >
-              Quiero ser el primero en enterarme
-            </Button>
-          </form>
+          {state.succeeded ? (
+            <div className="text-center space-y-2">
+              <p className="text-lg font-semibold text-green-700">¡Gracias por unirte!</p>
+              <p className="text-sm text-gray-600">Te avisaremos apenas lancemos.</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <input type="hidden" name="form_name" value="hero_section" />
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="tu@email.com"
+                required
+                className="text-center text-lg py-3 border-gray-200 focus:border-blue-600 focus:ring-blue-600/20"
+              />
+              <ValidationError prefix="Email" field="email" errors={state.errors} />
+              <Button
+                type="submit"
+                size="lg"
+                disabled={state.submitting}
+                className="w-full text-lg py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-105 text-white"
+              >
+                Quiero ser el primero en enterarme
+              </Button>
+            </form>
+          )}
         </Card>
 
         {/* Trust indicator */}
@@ -77,3 +78,4 @@ export function HeroSection() {
     </section>
   )
 }
+

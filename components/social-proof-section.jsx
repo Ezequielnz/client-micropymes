@@ -28,10 +28,10 @@ export function SocialProofSection() {
 
           <Card className="bg-white/50 backdrop-blur-sm border-gray-100">
             <CardContent className="p-6 text-center space-y-3">
-              <div className="w-12 h-12 mx-auto bg-purple-50 rounded-full flex items-center justify-center">
-                <Star className="w-6 h-6 text-purple-600" />
+              <div className="w-12 h-12 mx-auto bg-orange-100 rounded-full flex items-center justify-center">
+                <Star className="w-6 h-6 text-orange-500" />
               </div>
-              <div className="text-2xl font-bold text-purple-600">4.9/5</div>
+              <div className="text-2xl font-bold text-orange-600">4.9/5</div>
               <p className="text-sm text-gray-500">Calificación en beta testing</p>
             </CardContent>
           </Card>

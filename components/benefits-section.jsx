@@ -46,7 +46,7 @@ export function BenefitsSection() {
             >
               <CardContent className="p-6 text-center space-y-4">
                 <div className="w-16 h-16 mx-auto bg-blue-50 rounded-full flex items-center justify-center group-hover:bg-blue-100 transition-colors duration-300">
-                  <benefit.icon className="w-8 h-8 text-blue-600" />
+                  <benefit.icon className="w-8 h-8 text-orange-500" />
                 </div>
                 <h4 className="text-xl font-semibold text-balance text-gray-900">{benefit.title}</h4>
                 <p className="text-gray-600 text-pretty leading-relaxed">{benefit.description}</p>
