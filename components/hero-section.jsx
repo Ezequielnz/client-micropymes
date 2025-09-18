@@ -1,12 +1,42 @@
 "use client"
 
+import { useRef } from "react"
 import { useForm, ValidationError } from "@formspree/react"
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 
 export function HeroSection() {
   const [state, handleSubmit] = useForm("xyzdqrow")
+  const { executeRecaptcha } = useGoogleReCaptcha()
+  const tokenRef = useRef(null)
+
+  const onSubmit = async (e) => {
+    e.preventDefault()
+    const formEl = e.currentTarget
+    if (!executeRecaptcha) {
+      // Fallback: submit without token; Formspree will handle validation
+      await handleSubmit(formEl)
+      return
+    }
+    try {
+      const token = await executeRecaptcha("hero_section")
+      if (tokenRef.current) {
+        tokenRef.current.value = token || ""
+      }
+    } catch (err) {
+      // If reCAPTCHA fails, we can still attempt submission; Formspree will decide.
+      // eslint-disable-next-line no-console
+      console.warn("[reCAPTCHA] token generation failed", err)
+    }
+    try {
+      await handleSubmit(formEl)
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("[Formspree] submit failed", err)
+    }
+  }
 
   return (
     <section className="relative min-h-screen flex items-center justify-center px-4 py-20 bg-gradient-to-br from-gray-50 to-blue-50">
@@ -49,8 +79,9 @@ export function HeroSection() {
               <p className="text-sm text-gray-600">Te avisaremos apenas lancemos.</p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={onSubmit} className="space-y-4">
               <input type="hidden" name="form_name" value="hero_section" />
+              <input ref={tokenRef} type="hidden" name="g-recaptcha-response" value="" />
               <Input
                 id="email"
                 name="email"
@@ -60,13 +91,17 @@ export function HeroSection() {
                 className="text-center text-lg py-3 border-gray-200 focus:border-blue-600 focus:ring-blue-600/20"
               />
               <ValidationError prefix="Email" field="email" errors={state.errors} />
+              {state.errors && state.errors.length > 0 ? (
+                <p className="text-sm text-red-600">No se pudo enviar el formulario. Intenta nuevamente.</p>
+              ) : null}
               <Button
                 type="submit"
                 size="lg"
                 disabled={state.submitting}
+                aria-busy={state.submitting}
                 className="w-full text-lg py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-105 text-white"
               >
-                Quiero ser el primero en enterarme
+                {state.submitting ? "Enviando..." : "Quiero ser el primero en enterarme"}
               </Button>
             </form>
           )}

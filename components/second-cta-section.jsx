@@ -1,6 +1,8 @@
 "use client"
 
+import { useRef } from "react"
 import { useForm, ValidationError } from "@formspree/react"
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -8,6 +10,27 @@ import { Bell, Sparkles } from "lucide-react"
 
 export function SecondCTASection() {
   const [state, handleSubmit] = useForm("xyzdqrow")
+  const { executeRecaptcha } = useGoogleReCaptcha()
+  const tokenRef = useRef(null)
+
+  const onSubmit = async (e) => {
+    e.preventDefault()
+    const formEl = e.currentTarget
+    if (!executeRecaptcha) {
+      // Fallback: submit without token; Formspree will handle validation
+      await handleSubmit(formEl)
+      return
+    }
+    try {
+      const token = await executeRecaptcha("second_cta")
+      if (tokenRef.current) {
+        tokenRef.current.value = token || ""
+      }
+    } catch (err) {
+      // If reCAPTCHA fails, we still attempt; Formspree will validate server-side.
+    }
+    await handleSubmit(formEl)
+  }
 
   return (
     <section className="py-20 px-4">
@@ -54,8 +77,9 @@ export function SecondCTASection() {
                     <p className="text-sm text-muted-foreground">Revisa tu correo por una confirmación.</p>
                   </div>
                 ) : (
-                  <form onSubmit={handleSubmit} className="space-y-4">
+                  <form onSubmit={onSubmit} className="space-y-4">
                     <input type="hidden" name="form_name" value="second_cta" />
+                    <input ref={tokenRef} type="hidden" name="g-recaptcha-response" value="" />
                     <Input
                       id="email"
                       name="email"
@@ -65,11 +89,14 @@ export function SecondCTASection() {
                       className="text-center text-lg py-3"
                     />
                     <ValidationError prefix="Email" field="email" errors={state.errors} />
+                    {state.errors && state.errors.length > 0 ? (
+                      <p className="text-sm text-red-600">No se pudo enviar el formulario. Intenta nuevamente.</p>
+                    ) : null}
                     <Button
                       type="submit"
                       size="lg"
                       disabled={state.submitting}
-                      className="w-full text-lg py-3 bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 transform hover:scale-105"
+                      className="w-full text-lg py-3 bg-accent hover:bg-accent/90 text-accent-foreground transition-all duration-300 transform hover:scale-105"
                     >
                       Notificarme del lanzamiento
                     </Button>
