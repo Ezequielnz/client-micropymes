@@ -1,40 +1,53 @@
 "use client"
 
-import { useRef } from "react"
-import { useForm, ValidationError } from "@formspree/react"
+import { useRef, useState } from "react"
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 
 export function HeroSection() {
-  const [state, handleSubmit] = useForm("xyzdqrow")
   const { executeRecaptcha } = useGoogleReCaptcha()
   const tokenRef = useRef(null)
+  const [email, setEmail] = useState("")
+  const [captchaError, setCaptchaError] = useState(null)
+  const [errorMsg, setErrorMsg] = useState(null)
+  const [verifying, setVerifying] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [succeeded, setSucceeded] = useState(false)
 
-  const onSubmit = async (e) => {
+  const preSubmit = async (e) => {
     e.preventDefault()
-    const formEl = e.currentTarget
-    if (!executeRecaptcha) {
-      // Fallback: submit without token; Formspree will handle validation
-      await handleSubmit(formEl)
-      return
-    }
+    setErrorMsg(null)
+    setCaptchaError(null)
+    setVerifying(true)
     try {
-      const token = await executeRecaptcha("hero_section")
-      if (tokenRef.current) {
-        tokenRef.current.value = token || ""
+      let token = ""
+      if (executeRecaptcha) {
+        try {
+          token = (await executeRecaptcha("hero_section")) || ""
+          if (tokenRef.current) tokenRef.current.value = token
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn("[reCAPTCHA] token generation failed", err)
+        }
       }
-    } catch (err) {
-      // If reCAPTCHA fails, we can still attempt submission; Formspree will decide.
-      // eslint-disable-next-line no-console
-      console.warn("[reCAPTCHA] token generation failed", err)
-    }
-    try {
-      await handleSubmit(formEl)
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error("[Formspree] submit failed", err)
+      // Submit to our proxy which verifies reCAPTCHA and forwards to Formspree
+      setSubmitting(true)
+      const resp = await fetch("/api/form/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, token, action: "hero_section", form_name: "hero_section" }),
+      })
+      const data = await resp.json().catch(() => ({}))
+      if (!resp.ok || data?.ok === false) {
+        setErrorMsg("No se pudo enviar el formulario. Intenta nuevamente.")
+        return
+      }
+      setSucceeded(true)
+    } finally {
+      setSubmitting(false)
+      setVerifying(false)
     }
   }
 
@@ -73,36 +86,45 @@ export function HeroSection() {
         </div>
 
         <Card className="max-w-md mx-auto p-6 bg-white/80 backdrop-blur-sm border-gray-100 shadow-lg">
-          {state.succeeded ? (
+          {succeeded ? (
             <div className="text-center space-y-2">
               <p className="text-lg font-semibold text-green-700">¡Gracias por unirte!</p>
               <p className="text-sm text-gray-600">Te avisaremos apenas lancemos.</p>
             </div>
           ) : (
-            <form onSubmit={onSubmit} className="space-y-4">
+            <form onSubmit={(ev) => ev.preventDefault()} className="space-y-4">
               <input type="hidden" name="form_name" value="hero_section" />
-              <input ref={tokenRef} type="hidden" name="g-recaptcha-response" value="" />
               <Input
                 id="email"
                 name="email"
                 type="email"
                 placeholder="tu@email.com"
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="text-center text-lg py-3 border-gray-200 focus:border-blue-600 focus:ring-blue-600/20"
               />
-              <ValidationError prefix="Email" field="email" errors={state.errors} />
-              {state.errors && state.errors.length > 0 ? (
-                <p className="text-sm text-red-600">No se pudo enviar el formulario. Intenta nuevamente.</p>
+              {errorMsg ? <p className="text-sm text-red-600">{errorMsg}</p> : null}
+              {captchaError ? (
+                <p className="text-sm text-red-600" role="alert" aria-live="polite">{captchaError}</p>
               ) : null}
               <Button
-                type="submit"
+                type="button"
                 size="lg"
-                disabled={state.submitting}
-                aria-busy={state.submitting}
+                disabled={submitting || verifying}
+                aria-busy={submitting || verifying}
                 className="w-full text-lg py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-105 text-white"
+                onClick={preSubmit}
               >
-                {state.submitting ? "Enviando..." : "Quiero ser el primero en enterarme"}
+                {submitting || verifying ? "Enviando..." : "Quiero ser el primero en enterarme"}
               </Button>
+              <p className="text-[11px] leading-snug text-gray-500 mt-2">
+                Este sitio está protegido por reCAPTCHA y se aplican la
+                <a className="underline ml-1" href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Política de Privacidad</a>
+                y los
+                <a className="underline ml-1" href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer">Términos del Servicio</a>
+                de Google.
+              </p>
             </form>
           )}
         </Card>

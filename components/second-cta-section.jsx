@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import { useForm, ValidationError } from "@formspree/react"
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3"
 import { Button } from "@/components/ui/button"
@@ -12,24 +12,59 @@ export function SecondCTASection() {
   const [state, handleSubmit] = useForm("xyzdqrow")
   const { executeRecaptcha } = useGoogleReCaptcha()
   const tokenRef = useRef(null)
+  const formRef = useRef(null)
+  const [captchaError, setCaptchaError] = useState(null)
+  const [verifying, setVerifying] = useState(false)
 
-  const onSubmit = async (e) => {
+  const preSubmit = async (e) => {
     e.preventDefault()
-    const formEl = e.currentTarget
-    if (!executeRecaptcha) {
-      // Fallback: submit without token; Formspree will handle validation
-      await handleSubmit(formEl)
-      return
-    }
+    setCaptchaError(null)
+    setVerifying(true)
     try {
-      const token = await executeRecaptcha("second_cta")
-      if (tokenRef.current) {
-        tokenRef.current.value = token || ""
+      let token = ""
+      if (executeRecaptcha) {
+        try {
+          token = (await executeRecaptcha("second_cta")) || ""
+          if (tokenRef.current) tokenRef.current.value = token
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn("[reCAPTCHA] token generation failed", err)
+        }
       }
-    } catch (err) {
-      // If reCAPTCHA fails, we still attempt; Formspree will validate server-side.
+      if (token) {
+        try {
+          const res = await fetch("/api/recaptcha/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token, action: "second_cta" }),
+          })
+          const data = await res.json()
+          // eslint-disable-next-line no-console
+          console.log("[reCAPTCHA] verify response:", data)
+          if (
+            !res.ok ||
+            !data?.success ||
+            (data?.action && data.action !== "second_cta") ||
+            (typeof data?.score === "number" && data.score < 0.5)
+          ) {
+            setCaptchaError("No pudimos verificar el reCAPTCHA. Intenta nuevamente.")
+            setVerifying(false)
+            return
+          }
+        } catch (err) {
+          setCaptchaError("Error verificando reCAPTCHA. Intenta nuevamente.")
+          setVerifying(false)
+          return
+        }
+      }
+      if (formRef.current) {
+        // eslint-disable-next-line no-console
+        console.log("[Form] requestSubmit()")
+        formRef.current.requestSubmit()
+      }
+    } finally {
+      setVerifying(false)
     }
-    await handleSubmit(formEl)
   }
 
   return (
@@ -77,9 +112,9 @@ export function SecondCTASection() {
                     <p className="text-sm text-muted-foreground">Revisa tu correo por una confirmación.</p>
                   </div>
                 ) : (
-                  <form onSubmit={onSubmit} className="space-y-4">
+                  <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
                     <input type="hidden" name="form_name" value="second_cta" />
-                    <input ref={tokenRef} type="hidden" name="g-recaptcha-response" value="" />
+                    <input ref={tokenRef} type="hidden" name="g-recaptcha-response" />
                     <Input
                       id="email"
                       name="email"
@@ -92,14 +127,25 @@ export function SecondCTASection() {
                     {state.errors && state.errors.length > 0 ? (
                       <p className="text-sm text-red-600">No se pudo enviar el formulario. Intenta nuevamente.</p>
                     ) : null}
+                    {captchaError ? (
+                      <p className="text-sm text-red-600" role="alert" aria-live="polite">{captchaError}</p>
+                    ) : null}
                     <Button
-                      type="submit"
+                      type="button"
                       size="lg"
-                      disabled={state.submitting}
+                      disabled={state.submitting || verifying}
                       className="w-full text-lg py-3 bg-accent hover:bg-accent/90 text-accent-foreground transition-all duration-300 transform hover:scale-105"
+                      onClick={preSubmit}
                     >
-                      Notificarme del lanzamiento
+                      {state.submitting || verifying ? "Enviando..." : "Notificarme del lanzamiento"}
                     </Button>
+                    <p className="text-[11px] leading-snug text-gray-500 mt-2">
+                      Este sitio está protegido por reCAPTCHA y se aplican la
+                      <a className="underline ml-1" href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Política de Privacidad</a>
+                      y los
+                      <a className="underline ml-1" href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer">Términos del Servicio</a>
+                      de Google.
+                    </p>
                   </form>
                 )}
               </div>
