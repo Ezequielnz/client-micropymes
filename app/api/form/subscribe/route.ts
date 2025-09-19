@@ -62,11 +62,19 @@ export async function POST(request: Request) {
       body: body.toString(),
     })
 
-    const fsData = await fsResp.json().catch(() => ({}))
+    const fsData = await fsResp.json().catch(() => null)
 
-    if (!fsResp.ok) {
+    if (!fsResp.ok || !fsData || typeof fsData !== "object") {
       return NextResponse.json(
-        { ok: false, error: "formspree-error", details: fsData },
+        { ok: false, error: "formspree-error", details: fsData || "Non-JSON response", status: fsResp.status },
+        { status: 400 },
+      )
+    }
+
+    // Check for Formspree error structure
+    if (fsData.errors && Array.isArray(fsData.errors)) {
+      return NextResponse.json(
+        { ok: false, error: "formspree-validation-error", details: fsData },
         { status: 400 },
       )
     }
