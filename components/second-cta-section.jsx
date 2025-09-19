@@ -47,33 +47,6 @@ export function SecondCTASection() {
         setVerifying(false)
         return
       }
-      if (token) {
-        try {
-          const res = await fetch("/api/recaptcha/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ token, action: "second_cta" }),
-          })
-          const data = await res.json()
-          // eslint-disable-next-line no-console
-          console.log("[reCAPTCHA] verify response:", data)
-          if (
-            !res.ok ||
-            !data?.success ||
-            (data?.action && data.action !== "second_cta") ||
-            (typeof data?.score === "number" && data.score < 0.5)
-          ) {
-            const errorMsg = data?.["error-codes"] ? `Error de reCAPTCHA: ${data["error-codes"].join(", ")}` : "No pudimos verificar el reCAPTCHA. Intenta nuevamente."
-            setCaptchaError(errorMsg)
-            setVerifying(false)
-            return
-          }
-        } catch (err) {
-          setCaptchaError("Error verificando reCAPTCHA. Intenta nuevamente.")
-          setVerifying(false)
-          return
-        }
-      }
       if (formRef.current) {
         // eslint-disable-next-line no-console
         console.log("[Form] requestSubmit()")
