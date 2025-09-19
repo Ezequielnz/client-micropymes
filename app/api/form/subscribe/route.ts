@@ -63,6 +63,8 @@ export async function POST(request: Request) {
     })
 
     const fsData = await fsResp.json().catch(() => null)
+    // eslint-disable-next-line no-console
+    console.log("[Formspree] Response status:", fsResp.status, "Data:", fsData)
 
     if (!fsResp.ok || !fsData || typeof fsData !== "object") {
       return NextResponse.json(
@@ -75,6 +77,14 @@ export async function POST(request: Request) {
     if (fsData.errors && Array.isArray(fsData.errors)) {
       return NextResponse.json(
         { ok: false, error: "formspree-validation-error", details: fsData },
+        { status: 400 },
+      )
+    }
+
+    // Check for successful submission (Formspree returns { next: "..." } on success)
+    if (!fsData.next || typeof fsData.next !== "string") {
+      return NextResponse.json(
+        { ok: false, error: "formspree-submission-failed", details: fsData },
         { status: 400 },
       )
     }
