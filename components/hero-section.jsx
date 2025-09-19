@@ -21,16 +21,32 @@ export function HeroSection() {
     setErrorMsg(null)
     setCaptchaError(null)
     setVerifying(true)
+    // eslint-disable-next-line no-console
+    console.log("[Hero] executeRecaptcha available:", !!executeRecaptcha)
     try {
       let token = ""
-      if (executeRecaptcha) {
-        try {
-          token = (await executeRecaptcha("hero_section")) || ""
-          if (tokenRef.current) tokenRef.current.value = token
-        } catch (err) {
-          // eslint-disable-next-line no-console
-          console.warn("[reCAPTCHA] token generation failed", err)
+      if (!executeRecaptcha) {
+        setCaptchaError("reCAPTCHA no está listo. Espera un momento e intenta nuevamente.")
+        setVerifying(false)
+        return
+      }
+      try {
+        const rawToken = await executeRecaptcha("hero_section")
+        if (!rawToken) {
+          setCaptchaError("Error generando token de reCAPTCHA. Intenta nuevamente.")
+          setVerifying(false)
+          return
         }
+        token = rawToken
+        // eslint-disable-next-line no-console
+        console.log("[Hero] raw token:", rawToken, "final token:", token)
+        if (tokenRef.current) tokenRef.current.value = token
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn("[reCAPTCHA] token generation failed", err)
+        setCaptchaError("Error generando token de reCAPTCHA. Intenta nuevamente.")
+        setVerifying(false)
+        return
       }
       // Submit to our proxy which verifies reCAPTCHA and forwards to Formspree
       setSubmitting(true)
@@ -40,8 +56,18 @@ export function HeroSection() {
         body: JSON.stringify({ email, token, action: "hero_section", form_name: "hero_section" }),
       })
       const data = await resp.json().catch(() => ({}))
+      // eslint-disable-next-line no-console
+      console.log("[Hero] Subscribe response:", data)
       if (!resp.ok || data?.ok === false) {
-        setErrorMsg("No se pudo enviar el formulario. Intenta nuevamente.")
+        let errorMsg = "No se pudo enviar el formulario. Intenta nuevamente."
+        if (data?.error === "formspree-error" && data?.details) {
+          errorMsg = `Error de Formspree: ${JSON.stringify(data.details)}`
+        } else if (data?.details?.["error-codes"]) {
+          errorMsg = `Error de reCAPTCHA: ${data.details["error-codes"].join(", ")}`
+        } else if (data?.error) {
+          errorMsg = `Error: ${data.error}`
+        }
+        setErrorMsg(errorMsg)
         return
       }
       setSucceeded(true)

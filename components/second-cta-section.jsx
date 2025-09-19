@@ -20,16 +20,32 @@ export function SecondCTASection() {
     e.preventDefault()
     setCaptchaError(null)
     setVerifying(true)
+    // eslint-disable-next-line no-console
+    console.log("[Second CTA] executeRecaptcha available:", !!executeRecaptcha)
     try {
       let token = ""
-      if (executeRecaptcha) {
-        try {
-          token = (await executeRecaptcha("second_cta")) || ""
-          if (tokenRef.current) tokenRef.current.value = token
-        } catch (err) {
-          // eslint-disable-next-line no-console
-          console.warn("[reCAPTCHA] token generation failed", err)
+      if (!executeRecaptcha) {
+        setCaptchaError("reCAPTCHA no está listo. Espera un momento e intenta nuevamente.")
+        setVerifying(false)
+        return
+      }
+      try {
+        const rawToken = await executeRecaptcha("second_cta")
+        if (!rawToken) {
+          setCaptchaError("Error generando token de reCAPTCHA. Intenta nuevamente.")
+          setVerifying(false)
+          return
         }
+        token = rawToken
+        // eslint-disable-next-line no-console
+        console.log("[Second CTA] raw token:", rawToken, "final token:", token)
+        if (tokenRef.current) tokenRef.current.value = token
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn("[reCAPTCHA] token generation failed", err)
+        setCaptchaError("Error generando token de reCAPTCHA. Intenta nuevamente.")
+        setVerifying(false)
+        return
       }
       if (token) {
         try {
@@ -47,7 +63,8 @@ export function SecondCTASection() {
             (data?.action && data.action !== "second_cta") ||
             (typeof data?.score === "number" && data.score < 0.5)
           ) {
-            setCaptchaError("No pudimos verificar el reCAPTCHA. Intenta nuevamente.")
+            const errorMsg = data?.["error-codes"] ? `Error de reCAPTCHA: ${data["error-codes"].join(", ")}` : "No pudimos verificar el reCAPTCHA. Intenta nuevamente."
+            setCaptchaError(errorMsg)
             setVerifying(false)
             return
           }
