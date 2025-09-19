@@ -1,7 +1,6 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { useForm, ValidationError } from "@formspree/react"
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,15 +8,18 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Bell, Sparkles } from "lucide-react"
 
 export function SecondCTASection() {
-  const [state, handleSubmit] = useForm("xyzdqrow")
   const { executeRecaptcha } = useGoogleReCaptcha()
   const tokenRef = useRef(null)
-  const formRef = useRef(null)
+  const [email, setEmail] = useState("")
   const [captchaError, setCaptchaError] = useState(null)
+  const [errorMsg, setErrorMsg] = useState(null)
   const [verifying, setVerifying] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [succeeded, setSucceeded] = useState(false)
 
   const preSubmit = async (e) => {
     e.preventDefault()
+    setErrorMsg(null)
     setCaptchaError(null)
     setVerifying(true)
     // eslint-disable-next-line no-console
@@ -47,12 +49,29 @@ export function SecondCTASection() {
         setVerifying(false)
         return
       }
-      if (formRef.current) {
-        // eslint-disable-next-line no-console
-        console.log("[Form] requestSubmit()")
-        formRef.current.requestSubmit()
+      // Submit directly to Formspree
+      setSubmitting(true)
+      const formData = new FormData(e.target)
+      formData.set("g-recaptcha-response", token)
+
+      const resp = await fetch("https://formspree.io/f/xyzdqrow", {
+        method: "POST",
+        body: formData,
+      })
+      const data = await resp.json().catch(() => null)
+      // eslint-disable-next-line no-console
+      console.log("[Second CTA] Formspree response:", resp.status, data)
+      if (!resp.ok) {
+        let errorMsg = "No se pudo enviar el formulario. Intenta nuevamente."
+        if (data?.errors) {
+          errorMsg = `Error: ${data.errors.map(err => err.message).join(", ")}`
+        }
+        setErrorMsg(errorMsg)
+        return
       }
+      setSucceeded(true)
     } finally {
+      setSubmitting(false)
       setVerifying(false)
     }
   }
@@ -96,13 +115,13 @@ export function SecondCTASection() {
 
               {/* Email form */}
               <div className="max-w-md mx-auto">
-                {state.succeeded ? (
+                {succeeded ? (
                   <div className="text-center space-y-2">
                     <p className="text-lg font-semibold text-green-700">¡Gracias! Te avisaremos del lanzamiento.</p>
                     <p className="text-sm text-muted-foreground">Revisa tu correo por una confirmación.</p>
                   </div>
                 ) : (
-                  <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
+                  <form onSubmit={preSubmit} className="space-y-4">
                     <input type="hidden" name="form_name" value="second_cta" />
                     <input ref={tokenRef} type="hidden" name="g-recaptcha-response" />
                     <Input
@@ -111,23 +130,21 @@ export function SecondCTASection() {
                       type="email"
                       placeholder="Ingresa tu email"
                       required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       className="text-center text-lg py-3"
                     />
-                    <ValidationError prefix="Email" field="email" errors={state.errors} />
-                    {state.errors && state.errors.length > 0 ? (
-                      <p className="text-sm text-red-600">No se pudo enviar el formulario. Intenta nuevamente.</p>
-                    ) : null}
+                    {errorMsg ? <p className="text-sm text-red-600">{errorMsg}</p> : null}
                     {captchaError ? (
                       <p className="text-sm text-red-600" role="alert" aria-live="polite">{captchaError}</p>
                     ) : null}
                     <Button
-                      type="button"
+                      type="submit"
                       size="lg"
-                      disabled={state.submitting || verifying}
+                      disabled={submitting || verifying}
                       className="w-full text-lg py-3 bg-accent hover:bg-accent/90 text-accent-foreground transition-all duration-300 transform hover:scale-105"
-                      onClick={preSubmit}
                     >
-                      {state.submitting || verifying ? "Enviando..." : "Notificarme del lanzamiento"}
+                      {submitting || verifying ? "Enviando..." : "Notificarme del lanzamiento"}
                     </Button>
                     <p className="text-[11px] leading-snug text-gray-500 mt-2">
                       Este sitio está protegido por reCAPTCHA y se aplican la

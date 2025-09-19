@@ -48,24 +48,22 @@ export function HeroSection() {
         setVerifying(false)
         return
       }
-      // Submit to our proxy which verifies reCAPTCHA and forwards to Formspree
+      // Submit directly to Formspree
       setSubmitting(true)
-      const resp = await fetch("/api/form/subscribe", {
+      const formData = new FormData(e.target)
+      formData.set("g-recaptcha-response", token)
+
+      const resp = await fetch("https://formspree.io/f/xyzdqrow", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, token, action: "hero_section", form_name: "hero_section" }),
+        body: formData,
       })
-      const data = await resp.json().catch(() => ({}))
+      const data = await resp.json().catch(() => null)
       // eslint-disable-next-line no-console
-      console.log("[Hero] Subscribe response:", data)
-      if (!resp.ok || data?.ok === false) {
+      console.log("[Hero] Formspree response:", resp.status, data)
+      if (!resp.ok) {
         let errorMsg = "No se pudo enviar el formulario. Intenta nuevamente."
-        if (data?.error === "formspree-error" && data?.details) {
-          errorMsg = `Error de Formspree: ${JSON.stringify(data.details)}`
-        } else if (data?.details?.["error-codes"]) {
-          errorMsg = `Error de reCAPTCHA: ${data.details["error-codes"].join(", ")}`
-        } else if (data?.error) {
-          errorMsg = `Error: ${data.error}`
+        if (data?.errors) {
+          errorMsg = `Error: ${data.errors.map(err => err.message).join(", ")}`
         }
         setErrorMsg(errorMsg)
         return
@@ -118,8 +116,9 @@ export function HeroSection() {
               <p className="text-sm text-gray-600">Te avisaremos apenas lancemos.</p>
             </div>
           ) : (
-            <form onSubmit={(ev) => ev.preventDefault()} className="space-y-4">
+            <form onSubmit={preSubmit} className="space-y-4">
               <input type="hidden" name="form_name" value="hero_section" />
+              <input ref={tokenRef} type="hidden" name="g-recaptcha-response" />
               <Input
                 id="email"
                 name="email"
@@ -135,12 +134,11 @@ export function HeroSection() {
                 <p className="text-sm text-red-600" role="alert" aria-live="polite">{captchaError}</p>
               ) : null}
               <Button
-                type="button"
+                type="submit"
                 size="lg"
                 disabled={submitting || verifying}
                 aria-busy={submitting || verifying}
                 className="w-full text-lg py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-105 text-white"
-                onClick={preSubmit}
               >
                 {submitting || verifying ? "Enviando..." : "Quiero ser el primero en enterarme"}
               </Button>
