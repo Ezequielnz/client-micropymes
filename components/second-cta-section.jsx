@@ -56,12 +56,25 @@ export function SecondCTASection() {
 
       const resp = await fetch("https://formspree.io/f/xyzdqrow", {
         method: "POST",
+        headers: {
+          "Accept": "application/json",
+        },
         body: formData,
       })
-      const data = await resp.json().catch(() => null)
+
+      // Don't try to parse JSON if it's a redirect (Formspree redirects to thanks page)
+      let data = null
+      if (resp.headers.get("content-type")?.includes("application/json")) {
+        data = await resp.json().catch(() => null)
+      }
+
       // eslint-disable-next-line no-console
-      console.log("[Second CTA] Formspree response:", resp.status, data)
-      if (!resp.ok) {
+      console.log("[Second CTA] Formspree response:", resp.status, resp.headers.get("location"), data)
+
+      // Formspree returns 200 for success, even with redirects
+      if (resp.status === 200 || resp.status === 302) {
+        setSucceeded(true)
+      } else {
         let errorMsg = "No se pudo enviar el formulario. Intenta nuevamente."
         if (data?.errors) {
           errorMsg = `Error: ${data.errors.map(err => err.message).join(", ")}`
@@ -69,7 +82,6 @@ export function SecondCTASection() {
         setErrorMsg(errorMsg)
         return
       }
-      setSucceeded(true)
     } finally {
       setSubmitting(false)
       setVerifying(false)
