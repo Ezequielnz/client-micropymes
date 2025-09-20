@@ -103,9 +103,12 @@ export function HeroSection() {
 
       <div className="relative max-w-4xl mx-auto text-center space-y-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-800 mb-2">
-            OperixML
-          </h1>
+          <div className="flex items-center justify-center gap-4 mb-2">
+            <img src="/logo 1.png" alt="OperixML Logo" className="h-12 w-12" />
+            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-800">
+              OperixML
+            </h1>
+          </div>
           <div className="w-16 h-1 bg-gradient-to-r from-orange-400 to-orange-500 mx-auto rounded-full" />
         </div>
 

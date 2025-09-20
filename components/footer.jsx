@@ -1,5 +1,4 @@
 import { Card } from "@/components/ui/card"
-import { Github, Twitter, Linkedin, Mail } from "lucide-react"
 
 export function Footer() {
   return (
@@ -8,30 +7,23 @@ export function Footer() {
         <div className="grid md:grid-cols-3 gap-8 items-center">
           {/* Logo and tagline */}
           <div className="text-center md:text-left">
-            <h4 className="text-2xl font-bold text-primary mb-2">OperixML</h4>
+            <div className="flex items-center gap-3 mb-2">
+              <img src="/logo 1.png" alt="OperixML Logo" className="h-8 w-8" />
+              <h4 className="text-2xl font-bold text-black">OperixML</h4>
+            </div>
             <p className="text-sm text-muted-foreground">El futuro de la gestión empresarial</p>
           </div>
 
           {/* Social links */}
           <div className="flex justify-center gap-4">
-            <a href="#" aria-label="Twitter" target="_blank" rel="noopener noreferrer">
+            <a href="https://instagram.com/operix.ml" aria-label="Instagram @operix.ml" target="_blank" rel="noopener noreferrer">
               <Card className="w-10 h-10 flex items-center justify-center hover:bg-primary/10 transition-colors cursor-pointer">
-                <Twitter className="w-4 h-4 text-muted-foreground hover:text-primary" />
+                <img src="/logo_instagram.png" alt="Instagram" className="w-5 h-5" />
               </Card>
             </a>
-            <a href="#" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">
+            <a href="https://linkedin.com/company/operixml" aria-label="LinkedIn OperixML" target="_blank" rel="noopener noreferrer">
               <Card className="w-10 h-10 flex items-center justify-center hover:bg-primary/10 transition-colors cursor-pointer">
-                <Linkedin className="w-4 h-4 text-muted-foreground hover:text-primary" />
-              </Card>
-            </a>
-            <a href="#" aria-label="GitHub" target="_blank" rel="noopener noreferrer">
-              <Card className="w-10 h-10 flex items-center justify-center hover:bg-primary/10 transition-colors cursor-pointer">
-                <Github className="w-4 h-4 text-muted-foreground hover:text-primary" />
-              </Card>
-            </a>
-            <a href="mailto:contacto@operixml.com" aria-label="Email: contacto@operixml.com">
-              <Card className="w-10 h-10 flex items-center justify-center hover:bg-primary/10 transition-colors cursor-pointer">
-                <Mail className="w-4 h-4 text-muted-foreground hover:text-primary" />
+                <img src="/logo_linkedin.png" alt="LinkedIn" className="w-5 h-5" />
               </Card>
             </a>
           </div>
@@ -46,7 +38,7 @@ export function Footer() {
                 Términos
               </a>
             </div>
-            <p className="text-xs text-muted-foreground">© 2024 OperixML. Todos los derechos reservados.</p>
+            <p className="text-xs text-muted-foreground">© 2025 OperixML. Todos los derechos reservados.</p>
           </div>
         </div>
       </div>

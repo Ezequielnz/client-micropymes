@@ -8,10 +8,13 @@ import { RecaptchaProvider } from "@/components/recaptcha-provider"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "OperixML - ERP Modular con IA para PyMEs",
+  title: "OperixML - Primer ERP con IA para PyMEs",
   description:
     "La nueva forma de gestionar tu PyME con inteligencia artificial. Un ERP modular, simple y automatizado.",
   generator: "v0.app",
+  icons: {
+    icon: "/logo 1.png",
+  },
 }
 
 export default function RootLayout({
