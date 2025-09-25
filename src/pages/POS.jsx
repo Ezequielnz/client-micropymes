@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useBusinessContext } from '../contexts/BusinessContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productAPI, customerAPI, salesAPI, serviceAPI } from '../utils/api';
@@ -124,7 +123,6 @@ const Alert = ({ children, variant = 'default', className = '' }) => {
 function POS() {
   const { currentBusiness } = useBusinessContext();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const businessId = currentBusiness?.id;
 
   /** @type {[Array<CartItem>, function]} cart - State representing the current shopping cart, an array of CartItem objects. */
@@ -421,7 +419,7 @@ function POS() {
         ? { ...item, quantity: newQuantity, item_total: newQuantity * item.precio_at_sale }
         : item
     ));
-  }, [cart, allProducts]);
+  }, [cart, allProducts, handleRemoveFromCart]);
 
   /**
    * Removes an item completely from the cart.
@@ -503,7 +501,7 @@ function POS() {
         documento_tipo: newCustomer.documento_tipo || null,
         documento_numero: newCustomer.documento_numero || null,
       });
-    } catch (err) {
+    } catch {
       // Error handling is done in the mutation onError callback
     }
   }, [newCustomer, createCustomerMutation]);

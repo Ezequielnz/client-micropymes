@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { businessAPI, authAPI } from '../utils/api';
+import { businessAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { PageLoader } from '../components/LoadingSpinner';
 import Layout from '../components/Layout';
@@ -95,11 +95,7 @@ function BusinessUsers() {
     'Otro'
   ];
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -121,7 +117,11 @@ function BusinessUsers() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUser]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleCreateBusiness = async (e) => {
     e.preventDefault();

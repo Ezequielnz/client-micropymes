@@ -26,7 +26,6 @@ const FinanceDashboard = lazy(() => import('../components/finance/FinanceDashboa
 
 const FinanzasContent = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [loading, setLoading] = useState(false);
   const [movimientoAction, setMovimientoAction] = useState(null); // Para comunicar acciones al componente de movimientos
   const { currentBusiness } = useBusinessContext();
   const navigate = useNavigate();
@@ -45,21 +44,10 @@ const FinanzasContent = () => {
 
   // Estado y hooks para datos de finanzas
   const {
-    stats, movimientos, categorias, cuentasPendientes, flujoCaja,
+    stats, movimientos, cuentasPendientes,
     loading: isLoading, error: dataError, lastUpdate,
-    refreshData, refreshStats, refreshMovimientos, refreshCategorias, refreshCuentasPendientes, refreshFlujoCaja
+    refreshData
   } = useFinanceData(currentBusiness);
-
-  // Redirect if no business selected
-  useEffect(() => {
-    if (!currentBusiness) {
-      navigate('/my-businesses');
-    }
-  }, [currentBusiness, navigate]);
-
-  if (!currentBusiness) {
-    return <PageLoader />;
-  }
 
   // ✅ OPTIMIZED: Memoized format functions to prevent recreation on every render
   const formatCurrency = useCallback((amount) => {
@@ -81,6 +69,17 @@ const FinanzasContent = () => {
   const shouldShowError = useMemo(() => {
     return dataError && !isLoading;
   }, [dataError, isLoading]);
+
+  // Redirect if no business selected
+  useEffect(() => {
+    if (!currentBusiness) {
+      navigate('/my-businesses');
+    }
+  }, [currentBusiness, navigate]);
+
+  if (!currentBusiness) {
+    return <PageLoader />;
+  }
 
   const tabs = [
     {

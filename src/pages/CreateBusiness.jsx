@@ -7,12 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { businessAPI } from '../utils/api';
 import { 
-  ArrowRight, 
-  Building2, 
-  AlertCircle,
-  Menu,
-  X,
-  Sparkles
+    ArrowRight, 
+    Building2, 
+    AlertCircle,
+    Menu,
+    X,
+    Sparkles
 } from 'lucide-react';
 
 function CreateBusiness() {
