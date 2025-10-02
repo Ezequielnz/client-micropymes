@@ -15,7 +15,7 @@ export function SocialProofSection() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
+        <div className="flex flex-col md:flex-row justify-center gap-6 mb-12">
           {/*<Card className="bg-white/50 backdrop-blur-sm border-gray-100">
             <CardContent className="p-6 text-center space-y-3">
               <div className="w-12 h-12 mx-auto bg-blue-50 rounded-full flex items-center justify-center">
