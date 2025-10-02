@@ -16,7 +16,7 @@ export function SocialProofSection() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 mb-12">
-          <Card className="bg-white/50 backdrop-blur-sm border-gray-100">
+          {/*<Card className="bg-white/50 backdrop-blur-sm border-gray-100">
             <CardContent className="p-6 text-center space-y-3">
               <div className="w-12 h-12 mx-auto bg-blue-50 rounded-full flex items-center justify-center">
                 <Users className="w-6 h-6 text-blue-600" />
@@ -24,7 +24,7 @@ export function SocialProofSection() {
               <div className="text-2xl font-bold text-blue-600">500+</div>
               <p className="text-sm text-gray-500">Empresas en lista de espera</p>
             </CardContent>
-          </Card>
+          </Card>*/}
 
           <Card className="bg-white/50 backdrop-blur-sm border-gray-100">
             <CardContent className="p-6 text-center space-y-3">
