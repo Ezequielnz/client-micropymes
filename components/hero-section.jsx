@@ -115,7 +115,7 @@ export function HeroSection() {
         <div className="space-y-4">
           <h2 className="text-5xl md:text-6xl font-bold text-balance leading-tight text-gray-900">
             La nueva forma de gestionar tu{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-800">PyME</span> con{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-800">pyme</span> con{" "}
             <span className="text-orange-500">inteligencia artificial</span>
           </h2>
 

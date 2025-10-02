@@ -11,7 +11,7 @@ export function SocialProofSection() {
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-800">OperixML</span>
           </h3>
           <p className="text-lg text-gray-600 text-pretty">
-            Sé parte de la revolución en gestión empresarial para PyMEs
+            Sé parte de la revolución en gestión empresarial para pymes
           </p>
         </div>
 

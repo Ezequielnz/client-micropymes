@@ -105,7 +105,7 @@ export function SecondCTASection() {
                 </h3>
 
                 <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
-                  Sé de los primeros en acceder a la plataforma que revolucionará la gestión de tu PyME
+                  Sé de los primeros en acceder a la plataforma que revolucionará la gestión de tu pyme
                 </p>
               </div>
 
