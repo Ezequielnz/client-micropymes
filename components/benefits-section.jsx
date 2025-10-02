@@ -19,7 +19,7 @@ const benefits = [
   },
   {
     icon: Building2,
-    title: "Hecho para PyMEs",
+    title: "Hecho para pymes",
     description: "Pensado específicamente para pequeñas y medianas empresas. Potente pero accesible.",
   },
 ]
