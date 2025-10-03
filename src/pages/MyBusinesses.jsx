@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { authAPI, businessAPI } from '../utils/api';
+import { businessAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import PageHeader from '../components/PageHeader';
 import { 
@@ -131,30 +131,30 @@ function MyBusinesses() {
   const navigate = useNavigate();
   
   // Función manual para cargar datos
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     console.log('Loading businesses data...');
     setLoading(true);
     setError(null);
-    
+
     try {
       console.log('Fetching businesses...');
-      
+
       // El usuario ya está disponible en AuthContext
       if (!user) {
         setError('Usuario no autenticado');
         setLoading(false);
         return;
       }
-      
+
       const businessesData = await businessAPI.getBusinesses();
       console.log('Businesses data received:', businessesData);
       setBusinesses(businessesData || []);
-      
+
       setDataLoaded(true);
       console.log('Data fetching completed successfully');
     } catch (error) {
       console.error('Error fetching data:', error);
-      
+
       // Manejo específico para timeouts
       if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
         setError('La conexión tardó demasiado tiempo. Verifica tu conexión a internet e intenta nuevamente.');
@@ -173,36 +173,23 @@ function MyBusinesses() {
       console.log('Setting loading to false');
       setLoading(false);
     }
-  };
+  }, [user, navigate]);
   
   useEffect(() => {
     console.log('MyBusinesses component mounted');
-    
+
     const token = localStorage.getItem('token');
     console.log('Token found:', !!token);
-    
+
     if (!token) {
       console.log('No token found, redirecting to login');
       navigate('/login');
       return;
     }
-    
+
     // Cargar datos automáticamente
     loadData();
-  }, [navigate]);
-
-  const handleLogout = () => {
-    // Limpiar completamente el localStorage
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.clear(); // Limpia todo el localStorage por seguridad
-    
-    // Navegar al login
-    navigate('/login');
-    
-    // Opcional: recargar la página para asegurar que no quede estado residual
-    window.location.href = '/login';
-  };
+  }, [navigate, loadData]);
   
   // Función para manejar el menú desplegable
   const toggleMenu = (businessId) => {

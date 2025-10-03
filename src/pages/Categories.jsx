@@ -130,27 +130,6 @@ function Categories() {
   });
 
   // ✅ FIXED: Better loading and undefined handling
-  if (!currentBusiness) {
-    return (
-      <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '48px 0',
-          backgroundColor: '#f8f9fa',
-          borderRadius: '8px',
-          border: '1px solid #e9ecef'
-        }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '500', color: '#111827', marginBottom: '8px' }}>
-            No hay negocio seleccionado
-          </h3>
-          <p style={{ color: '#6b7280', marginBottom: '24px' }}>
-            Por favor selecciona un negocio desde el menú superior para gestionar categorías.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   // ✅ OPTIMIZED: React Query for data fetching with smart caching - Only when businessId is available
   const {
     data: categories = [],
@@ -213,33 +192,26 @@ function Categories() {
     }));
   }, []);
 
-  /**
-   * Handles the submission of the category form (for both adding and editing).
-   */
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     
     if (!categoryForm.nombre.trim() || !businessId) return;
-
     try {
-      const categoryData = { 
-        nombre: categoryForm.nombre.trim(), 
-        descripcion: categoryForm.descripcion.trim() 
+      const categoryData = {
+        nombre: categoryForm.nombre.trim(),
+        descripcion: categoryForm.descripcion.trim()
       };
       
       if (isEditing && currentCategory) {
-        await updateCategoryMutation.mutateAsync({ categoryId: currentCategory.id, categoryData }); 
+        await updateCategoryMutation.mutateAsync({ categoryId: currentCategory.id, categoryData });
       } else {
         await createCategoryMutation.mutateAsync(categoryData);
       }
-    } catch (error) {
+    } catch {
       // Error is handled in the mutation onError callback
     }
   }, [categoryForm, businessId, isEditing, currentCategory, createCategoryMutation, updateCategoryMutation]);
 
-  /**
-   * Handles editing a category by populating the form with the category's data.
-   */
   const handleEdit = useCallback((category) => {
     setIsEditing(true);
     setCurrentCategory(category);
@@ -250,24 +222,18 @@ function Categories() {
     setShowForm(true);
   }, []);
 
-  /**
-   * Handles deleting a category after user confirmation.
-   */
   const handleDelete = useCallback(async (categoryId) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta categoría?')) {
       if (!businessId) return;
       
       try {
         await deleteCategoryMutation.mutateAsync(categoryId);
-      } catch (error) {
+      } catch {
         // Error is handled in the mutation onError callback
       }
     }
   }, [businessId, deleteCategoryMutation]);
 
-  /**
-   * Cancels the editing mode.
-   */
   const cancelEdit = useCallback(() => {
     setIsEditing(false);
     setCurrentCategory(null);
@@ -276,8 +242,8 @@ function Categories() {
   }, []);
 
   // ✅ OPTIMIZED: Computed loading and error states
-  const isMutating = createCategoryMutation.isPending || 
-                    updateCategoryMutation.isPending || 
+  const isMutating = createCategoryMutation.isPending ||
+                    updateCategoryMutation.isPending ||
                     deleteCategoryMutation.isPending;
 
   const currentError = useMemo(() => {
@@ -329,6 +295,28 @@ function Categories() {
     }
     return '';
   }, [categoryForm.nombre, businessId]);
+
+  if (!currentBusiness) {
+    return (
+      <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+        <div style={{
+          textAlign: 'center',
+          padding: '48px 0',
+          backgroundColor: '#f8f9fa',
+          borderRadius: '8px',
+          border: '1px solid #e9ecef'
+        }}>
+          <h3 style={{ fontSize: '18px', fontWeight: '500', color: '#111827', marginBottom: '8px' }}>
+            No hay negocio seleccionado
+          </h3>
+          <p style={{ color: '#6b7280', marginBottom: '24px' }}>
+            Por favor selecciona un negocio desde el menú superior para gestionar categorías.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>

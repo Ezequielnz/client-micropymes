@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import React, { useState, useCallback, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useBusinessContext } from '../contexts/BusinessContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { customerAPI, authAPI } from '../utils/api';
+import { customerAPI } from '../utils/api';
 import { getErrorMessage, isForbiddenError } from '../utils/errorHandler';
 import PermissionGuard from '../components/PermissionGuard';
 import Layout from '../components/Layout';
@@ -57,7 +57,6 @@ import {
 function Customers() {
   const { currentBusiness } = useBusinessContext();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const businessId = currentBusiness?.id;
 
   /** @type {[string, function]} searchQuery - State for the value currently in the search input field. */
@@ -67,15 +66,15 @@ function Customers() {
 
   // Form State
   /** @type {FormDataCustomer} */
-  const initialFormState = { 
-    nombre: '', 
-    apellido: '', 
-    email: '', 
-    telefono: '', 
-    direccion: '', 
-    documento_tipo: '', 
-    documento_numero: '' 
-  };
+  const initialFormState = useMemo(() => ({
+    nombre: '',
+    apellido: '',
+    email: '',
+    telefono: '',
+    direccion: '',
+    documento_tipo: '',
+    documento_numero: ''
+  }), []);
   /** @type {[FormDataCustomer, function]} formData - State for the add/edit customer form inputs. */
   const [formData, setFormData] = useState(initialFormState);
   /** @type {[boolean, function]} showForm - State to control the visibility of the add/edit customer form. */
@@ -88,11 +87,10 @@ function Customers() {
   const [formError, setFormError] = useState('');
 
   // ✅ OPTIMIZED: React Query for customers with smart caching
-  const { 
-    data: customers = [], 
-    isLoading: loading, 
-    error: queryError,
-    refetch: refetchCustomers
+  const {
+    data: customers = [],
+    isLoading: loading,
+    error: queryError
   } = useQuery({
     queryKey: ['customers', businessId, searchTerm],
     queryFn: async () => {
@@ -273,7 +271,7 @@ function Customers() {
 
       // Remove null values to avoid sending them to the backend
       const finalData = Object.fromEntries(
-        Object.entries(cleanedData).filter(([key, value]) => value !== null)
+        Object.entries(cleanedData).filter(([, value]) => value !== null)
       );
 
       if (isEditing && currentCustomer) {

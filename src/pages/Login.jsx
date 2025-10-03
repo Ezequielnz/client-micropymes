@@ -106,7 +106,7 @@ function Login() {
               >
                 Ir a página de confirmación
               </Button>
-              {process.env.NODE_ENV !== 'production' && (
+              {import.meta.env.DEV && (
                 <Button 
                   type="button" 
                   variant="outline"
@@ -138,43 +138,6 @@ function Login() {
     }
   };
 
-  /**
-   * Activates a user account directly by making a GET request to a development-only endpoint.
-   * This function is intended for use during development to bypass email confirmation.
-   * Sets loading state during the activation attempt and displays success or error messages
-   * in the `error` state area.
-   * @param {string} email - The email of the account to activate.
-   */
-  const activateAccount = async (email) => {
-    try {
-      setLoading(true);
-      const response = await fetch(`http://localhost:8000/api/v1/auth/activate/${email}`);
-      const data = await response.json();
-      
-      if (response.ok) {
-        setError(
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-erp-success">
-              <CheckCircle className="h-4 w-4" />
-              <p className="font-medium">{data.detail}</p>
-            </div>
-            <p className="text-sm text-erp-neutral-600">Ahora puedes intentar iniciar sesión nuevamente.</p>
-          </div>
-        );
-      } else {
-        setError(
-          <div className="space-y-2">
-            <p>No se pudo activar la cuenta: {data.detail}</p>
-            <p className="text-sm text-erp-neutral-600">{data.instrucciones || ''}</p>
-          </div>
-        );
-      }
-    } catch (error) {
-      setError(`Error al activar la cuenta: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-white">
