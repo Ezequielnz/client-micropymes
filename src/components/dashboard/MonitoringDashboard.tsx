@@ -69,11 +69,20 @@ const MonitoringDashboard: React.FC<{ tenantId: string }> = ({ tenantId }) => {
       // Fetch all data in parallel for better performance
       const [perfResponse, alertsResponse, costResponse] = await Promise.all([
         axios.get(`${API_BASE_URL}/monitoring/performance/${tenantId}/summary`, { headers })
-          .catch(err => ({ data: { ml_predictions_count: 0, llm_cache_hit_rate: 0, avg_latency_ms: 0, total_cost: 0 } })),
+          .catch((e) => {
+            if (import.meta.env.DEV) console.warn('MonitoringDashboard: performance summary fetch failed', e);
+            return { data: { ml_predictions_count: 0, llm_cache_hit_rate: 0, avg_latency_ms: 0, total_cost: 0 } };
+          }),
         axios.get(`${API_BASE_URL}/monitoring/drift/${tenantId}?days=7`, { headers })
-          .catch(err => ({ data: [] })),
+          .catch((e) => {
+            if (import.meta.env.DEV) console.warn('MonitoringDashboard: drift fetch failed', e);
+            return { data: [] };
+          }),
         axios.get(`${API_BASE_URL}/monitoring/costs/${tenantId}?months=1`, { headers })
-          .catch(err => ({ data: [] }))
+          .catch((e) => {
+            if (import.meta.env.DEV) console.warn('MonitoringDashboard: costs fetch failed', e);
+            return { data: [] };
+          })
       ]);
       
       const perfData = perfResponse.data;
