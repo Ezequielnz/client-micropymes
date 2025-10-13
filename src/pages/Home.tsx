@@ -17,6 +17,7 @@ const DashboardStats = lazy(() => import('../components/dashboard/DashboardStats
 const QuickActions = lazy(() => import('../components/dashboard/QuickActions'));
 const TopProducts = lazy(() => import('../components/dashboard/TopProducts'));
 const RecentSales = lazy(() => import('../components/dashboard/RecentSales'));
+const MonitoringDashboard = lazy(() => import('../components/dashboard/MonitoringDashboard'));
 
 // Internal component that uses BusinessContext
 const HomeContent: React.FC = () => {
@@ -329,6 +330,13 @@ const HomeContent: React.FC = () => {
                 />
               </Suspense>
             </div>
+
+            {/* AI/ML Monitoring Dashboard - Phase 5 */}
+            {currentBusiness?.id && (
+              <Suspense fallback={<div className="h-96 bg-gray-100 animate-pulse rounded-lg"></div>}>
+                <MonitoringDashboard tenantId={currentBusiness.id} />
+              </Suspense>
+            )}
           </div>
         )}
       </div>
