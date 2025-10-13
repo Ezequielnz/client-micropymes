@@ -396,7 +396,8 @@ function POS() {
     if (newQuantity < 0) return; // Cannot have negative quantity
 
     if (newQuantity === 0) {
-      handleRemoveFromCart(itemId, tipo);
+      // Inline removal to avoid TDZ issues with handleRemoveFromCart in dependency array
+      setCart(cart.filter(item => !(item.item_id === itemId && item.tipo === tipo)));
       return;
     }
 
@@ -419,7 +420,7 @@ function POS() {
         ? { ...item, quantity: newQuantity, item_total: newQuantity * item.precio_at_sale }
         : item
     ));
-  }, [cart, allProducts, handleRemoveFromCart]);
+  }, [cart, allProducts]);
 
   /**
    * Removes an item completely from the cart.
