@@ -7,10 +7,25 @@ interface Business {
   tipo?: string;
 }
 
+interface Branch {
+  id: string;
+  nombre: string;
+  codigo?: string;
+  direccion?: string | null;
+  activo?: boolean;
+  is_main?: boolean;
+}
+
 interface BusinessContextType {
   currentBusiness: Business | null;
+  currentBranch: Branch | null;
   businesses: Business[];
+  branches: Branch[];
+  branchesLoading: boolean;
+  branchError: string | null;
   handleBusinessChange: (business: Business) => void;
+  handleBranchChange: (branch: Branch | null) => void;
+  refreshBranches: (businessId?: string) => Promise<void>;
 }
 
 // Business Context
@@ -25,4 +40,4 @@ export const useBusinessContext = () => {
 };
 
 export { BusinessContext };
-export type { Business, BusinessContextType }; 
+export type { Business, Branch, BusinessContextType }; 

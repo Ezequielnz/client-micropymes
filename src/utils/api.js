@@ -595,8 +595,11 @@ export const salesAPI = {
    * @returns {Promise<object>} A promise that resolves to the API response with the created sale.
    * @throws {Error} If the API request fails.
    */
-  recordSale: async (saleData) => {
-    const response = await api.post('/ventas/record-sale', saleData);
+  recordSale: async (businessId, saleData) => {
+    if (!businessId) {
+      throw new Error('businessId is required to record a sale.');
+    }
+    const response = await api.post(`/businesses/${businessId}/ventas/record-sale`, saleData);
     return response.data;
   },
 
@@ -639,7 +642,10 @@ export const salesAPI = {
    * @throws {Error} If the API request fails.
    */
   getDashboardStats: async (businessId) => {
-    const response = await api.get(`/ventas/dashboard-stats`);
+    if (!businessId) {
+      throw new Error('businessId is required to fetch dashboard stats.');
+    }
+    const response = await api.get(`/businesses/${businessId}/ventas/dashboard-stats`);
     return response.data;
   },
 
@@ -648,8 +654,11 @@ export const salesAPI = {
    * @returns {Promise<object>} A promise that resolves to recent activity data.
    * @throws {Error} If the API request fails.
    */
-  getRecentActivity: async () => {
-    const response = await api.get(`/ventas/recent-activity`);
+  getRecentActivity: async (businessId) => {
+    if (!businessId) {
+      throw new Error('businessId is required to fetch recent activity.');
+    }
+    const response = await api.get(`/businesses/${businessId}/ventas/recent-activity`);
     return response.data;
   },
 
@@ -658,8 +667,11 @@ export const salesAPI = {
    * @returns {Promise<object>} A promise that resolves to monthly sales chart data.
    * @throws {Error} If the API request fails.
    */
-  getMonthlySalesChart: async () => {
-    const response = await api.get(`/ventas/monthly-sales-chart`);
+  getMonthlySalesChart: async (businessId) => {
+    if (!businessId) {
+      throw new Error('businessId is required to fetch monthly sales chart.');
+    }
+    const response = await api.get(`/businesses/${businessId}/ventas/monthly-sales-chart`);
     return response.data;
   },
 
@@ -668,8 +680,11 @@ export const salesAPI = {
    * @returns {Promise<object>} A promise that resolves to top products chart data.
    * @throws {Error} If the API request fails.
    */
-  getTopProductsChart: async () => {
-    const response = await api.get(`/ventas/top-products-chart`);
+  getTopProductsChart: async (businessId) => {
+    if (!businessId) {
+      throw new Error('businessId is required to fetch top products chart.');
+    }
+    const response = await api.get(`/businesses/${businessId}/ventas/top-products-chart`);
     return response.data;
   },
 
@@ -681,7 +696,10 @@ export const salesAPI = {
    * @throws {Error} If the API request fails.
    */
   getDashboardStatsV2: async (businessId) => {
-    const response = await api.get(`/ventas/dashboard-stats-v2`, {
+    if (!businessId) {
+      throw new Error('businessId is required to fetch dashboard stats v2.');
+    }
+    const response = await api.get(`/businesses/${businessId}/ventas/dashboard-stats-v2`, {
       params: { negocio_id: businessId }
     });
     return response.data;
@@ -694,7 +712,10 @@ export const salesAPI = {
    * @throws {Error} If the API request fails.
    */
   getRecentSales: async (businessId) => {
-    const response = await api.get(`/ventas/sales`, {
+    if (!businessId) {
+      throw new Error('businessId is required to fetch recent sales.');
+    }
+    const response = await api.get(`/businesses/${businessId}/ventas/sales`, {
       params: { business_id: businessId }
     });
     const ventas = response.data?.ventas;
@@ -715,7 +736,10 @@ export const salesAPI = {
    * @throws {Error} If the API request fails.
    */
   healthCheck: async (businessId) => {
-    const response = await api.get(`/ventas/health-check`, {
+    if (!businessId) {
+      throw new Error('businessId is required to run sales health check.');
+    }
+    const response = await api.get(`/businesses/${businessId}/ventas/health-check`, {
       params: { negocio_id: businessId }
     });
     return response.data;
@@ -977,6 +1001,20 @@ export const businessAPI = {
   getBusinesses: async () => {
     const response = await api.get('/businesses/');
     return response.data;
+  },
+
+  /**
+   * Fetches branches (sucursales) the current user can access for a business.
+   * @param {string} businessId - The ID of the business.
+   * @returns {Promise<Array<object>>} A promise that resolves to an array of branch objects.
+   * @throws {Error} If the API request fails.
+   */
+  getBranches: async (businessId) => {
+    if (!businessId) {
+      return [];
+    }
+    const response = await api.get(`/businesses/${businessId}/branches`);
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   /**

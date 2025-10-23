@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -51,7 +51,7 @@ const Button = ({ children, onClick, variant = 'default', size = 'default', clas
 };
 
 // Sidebar Component
-const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
+const Sidebar = ({ activeSection, setActiveSection, currentBusiness, currentBranch, branches, branchesLoading }) => {
   const navigate = useNavigate();
   const [showSalesDropdown, setShowSalesDropdown] = useState(false);
   const [showInventoryDropdown, setShowInventoryDropdown] = useState(false);
@@ -62,6 +62,16 @@ const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
     if (!currentBusiness?.id) {
       console.error('No business selected for navigation');
       alert('Por favor selecciona un negocio antes de continuar');
+      return;
+    }
+    if (
+      !currentBranch?.id &&
+      Array.isArray(branches) &&
+      branches.length > 1 &&
+      !branchesLoading
+    ) {
+      console.warn('Branch selection required before navigating.');
+      alert('Por favor selecciona una sucursal antes de continuar');
       return;
     }
     navigate(path);
@@ -302,13 +312,28 @@ const Sidebar = ({ activeSection, setActiveSection, currentBusiness }) => {
 };
 
 // Header Component
-const Header = ({ currentBusiness, businesses, onBusinessChange, onLogout, setSidebarOpen }) => {
+const Header = ({
+  currentBusiness,
+  businesses,
+  currentBranch,
+  branches,
+  branchesLoading,
+  branchError,
+  onBusinessChange,
+  onBranchChange,
+  onLogout,
+  setSidebarOpen,
+}) => {
   const [showBusinessDropdown, setShowBusinessDropdown] = useState(false);
+  const [showBranchDropdown, setShowBranchDropdown] = useState(false);
   
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (showBusinessDropdown && !event.target.closest('.business-dropdown')) {
         setShowBusinessDropdown(false);
+      }
+      if (showBranchDropdown && !event.target.closest('.branch-dropdown')) {
+        setShowBranchDropdown(false);
       }
     };
 
@@ -316,7 +341,96 @@ const Header = ({ currentBusiness, businesses, onBusinessChange, onLogout, setSi
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showBusinessDropdown]);
+  }, [showBusinessDropdown, showBranchDropdown]);
+
+  const renderBranchBadge = (branch) => {
+    if (!branch?.is_main) {
+      return null;
+    }
+    return (
+      <span className="px-2 py-0.5 text-[10px] font-semibold text-green-700 bg-green-100 rounded-full uppercase">
+        Principal
+      </span>
+    );
+  };
+
+  const renderBranchSelector = () => {
+    if (branchesLoading) {
+      return (
+        <div className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-lg bg-slate-100 text-gray-600">
+          <div className="w-3.5 h-3.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs sm:text-sm font-medium">Cargando...</span>
+        </div>
+      );
+    }
+
+    if (branchError) {
+      return (
+        <div className="px-3 py-1.5 text-xs sm:text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+          {branchError}
+        </div>
+      );
+    }
+
+    if (!branches?.length) {
+      return (
+        <div className="px-3 py-1.5 text-xs sm:text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg">
+          Sin sucursal asignada
+        </div>
+      );
+    }
+
+    if (branches.length === 1 && currentBranch) {
+      return (
+        <div className="px-3 py-1.5 border border-gray-200 rounded-lg bg-slate-100 flex items-center gap-2">
+          <span className="text-sm font-medium text-blue-700 truncate max-w-[140px] sm:max-w-none">
+            {currentBranch.nombre}
+          </span>
+          {renderBranchBadge(currentBranch)}
+        </div>
+      );
+    }
+
+    return (
+      <div className="relative branch-dropdown">
+        <button
+          onClick={() => setShowBranchDropdown(!showBranchDropdown)}
+          className="flex items-center gap-2 px-3 py-1.5 border border-gray-300 rounded-lg transition-colors bg-slate-50 hover:bg-slate-100"
+        >
+          <span className="font-semibold text-sm text-blue-600 truncate max-w-[140px] sm:max-w-none">
+            {currentBranch?.nombre || 'Seleccionar sucursal'}
+          </span>
+          {renderBranchBadge(currentBranch)}
+          <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
+        </button>
+
+        {showBranchDropdown && (
+          <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+            <div className="py-1">
+              {branches.map((branch) => {
+                const isActive = branch.id === currentBranch?.id;
+                return (
+                  <button
+                    key={branch.id}
+                    onClick={() => {
+                      onBranchChange(branch);
+                      setShowBranchDropdown(false);
+                    }}
+                    className={`w-full flex items-center justify-between gap-2 px-4 py-2 text-left transition-colors ${
+                      isActive ? 'bg-blue-50 text-blue-700' : 'bg-white text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className="font-medium truncate">{branch.nombre}</span>
+                    {renderBranchBadge(branch)}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6" style={{ backgroundColor: '#ffffff' }}>
@@ -324,92 +438,68 @@ const Header = ({ currentBusiness, businesses, onBusinessChange, onLogout, setSi
       <button
         className="md:hidden mr-4 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
         onClick={() => setSidebarOpen(true)}
-        aria-label="Abrir menú"
+        aria-label="Abrir menu"
       >
         <svg className="h-6 w-6 text-blue-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
-      {/* Negocio actual */}
-      <div className="flex items-center ml-4 sm:ml-6">
-          <span className="hidden sm:inline font-medium text-gray-700 mr-1">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 ml-2 sm:ml-4">
+        <div className="flex items-center gap-2">
+          <span className="hidden sm:inline font-medium text-gray-700">
             Negocio:
           </span>
           <div className="relative business-dropdown">
             <button
               onClick={() => setShowBusinessDropdown(!showBusinessDropdown)}
-              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg transition-colors"
-              style={{ 
-                backgroundColor: '#f8fafc',
-                borderColor: '#d1d5db'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = '#f1f5f9';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = '#f8fafc';
-              }}
+              className="flex items-center gap-2 px-3 py-1.5 border border-gray-300 rounded-lg transition-colors bg-slate-50 hover:bg-slate-100"
             >
-              <div className="flex items-center gap-1 sm:gap-2">
-                <span className="font-semibold text-blue-600 text-sm sm:text-base truncate max-w-[120px] sm:max-w-none">
-                  {currentBusiness?.nombre || 'Seleccionar negocio'}
+              <span className="font-semibold text-blue-600 text-sm sm:text-base truncate max-w-[140px] sm:max-w-none">
+                {currentBusiness?.nombre || 'Seleccionar negocio'}
+              </span>
+              {currentBusiness?.tipo && (
+                <span className="text-xs text-gray-500 hidden sm:inline">
+                  ({currentBusiness.tipo})
                 </span>
-                {currentBusiness?.tipo && (
-                  <span className="text-xs text-gray-500 hidden sm:inline">
-                    ({currentBusiness.tipo})
-                  </span>
-                )}
-              </div>
+              )}
               <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
             </button>
-            
+
             {showBusinessDropdown && (
-              <div 
+              <div
                 className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
-                style={{ 
-                  backgroundColor: '#ffffff',
-                  color: '#111827',
-                  zIndex: 9999
-                }}
               >
                 <div className="py-1">
-                  {businesses.map((business) => (
-                    <button
-                      key={business.id}
-                      onClick={() => {
-                        onBusinessChange(business);
-                        setShowBusinessDropdown(false);
-                      }}
-                      className="w-full flex items-center gap-2 px-4 py-2 text-left transition-colors text-gray-900 hover:bg-gray-50 bg-white"
-                      style={{
-                        backgroundColor: '#ffffff',
-                        color: '#111827',
-                        border: 'none',
-                        outline: 'none'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.backgroundColor = '#f9fafb';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.backgroundColor = '#ffffff';
-                      }}
-                    >
-                      <span 
-                        className="font-medium text-gray-900 bg-transparent"
-                        style={{ 
-                          color: '#111827',
-                          backgroundColor: 'transparent'
+                  {businesses.map((business) => {
+                    const isActive = business.id === currentBusiness?.id;
+                    return (
+                      <button
+                        key={business.id}
+                        onClick={() => {
+                          onBusinessChange(business);
+                          setShowBusinessDropdown(false);
                         }}
+                        className={`w-full flex items-center gap-2 px-4 py-2 text-left transition-colors ${
+                          isActive ? 'bg-blue-50 text-blue-700' : 'bg-white text-gray-900 hover:bg-gray-50'
+                        }`}
                       >
-                        {business.nombre}
-                      </span>
-                    </button>
-                  ))}
+                        <span className="font-medium truncate">{business.nombre}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
           </div>
         </div>
+
+        <div className="flex items-center gap-2">
+          <span className="hidden sm:inline font-medium text-gray-700">
+            Sucursal:
+          </span>
+          {renderBranchSelector()}
+        </div>
+      </div>
       {/* El botón de cerrar sesión se ha movido al fondo del sidebar */}
     </header>
   );
@@ -423,9 +513,107 @@ const Layout = ({ children, activeSection }) => {
   const { user } = useAuth();
   const [currentBusiness, setCurrentBusiness] = useState(null);
   const [businesses, setBusinesses] = useState([]);
+  const [currentBranch, setCurrentBranch] = useState(null);
+  const [branches, setBranches] = useState([]);
+  const [branchesLoading, setBranchesLoading] = useState(false);
+  const [branchError, setBranchError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [error, setError] = useState('');
+  const ACTIVE_BUSINESS_STORAGE_KEY = 'activeBusinessId';
+  const getBranchStorageKey = useCallback(
+    (businessId) => (businessId ? `activeBranch:${businessId}` : null),
+    []
+  );
+  const invalidateQueriesForBusiness = useCallback(
+    (businessId) => {
+      if (!businessId) {
+        return;
+      }
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          Array.isArray(query.queryKey) && query.queryKey.includes(businessId),
+      });
+    },
+    [queryClient]
+  );
+  const applyBranchSelection = useCallback(
+    (branch, businessIdOverride = null) => {
+      const targetBusinessId = businessIdOverride || currentBusiness?.id;
+      setCurrentBranch(branch);
+
+      if (targetBusinessId) {
+        const storageKey = getBranchStorageKey(targetBusinessId);
+        if (branch?.id && storageKey) {
+          localStorage.setItem(storageKey, branch.id);
+        } else if (storageKey) {
+          localStorage.removeItem(storageKey);
+        }
+        invalidateQueriesForBusiness(targetBusinessId);
+      }
+    },
+    [currentBusiness?.id, getBranchStorageKey, invalidateQueriesForBusiness]
+  );
+  const loadBranches = useCallback(
+    async (businessId) => {
+      if (!businessId) {
+        setBranches([]);
+        setBranchError(null);
+        applyBranchSelection(null, null);
+        return;
+      }
+
+      try {
+        setBranchesLoading(true);
+        setBranchError(null);
+        const branchList = await businessAPI.getBranches(businessId);
+        const normalizedBranches = Array.isArray(branchList) ? branchList : [];
+        setBranches(normalizedBranches);
+
+        if (normalizedBranches.length === 0) {
+          applyBranchSelection(null, businessId);
+          return;
+        }
+
+        const storageKey = getBranchStorageKey(businessId);
+        const storedBranchId = storageKey ? localStorage.getItem(storageKey) : null;
+        const storedBranch = storedBranchId
+          ? normalizedBranches.find((branch) => branch.id === storedBranchId)
+          : null;
+        const mainBranch = normalizedBranches.find((branch) => branch.is_main);
+        const nextBranch = storedBranch || mainBranch || normalizedBranches[0];
+
+        applyBranchSelection(nextBranch || null, businessId);
+      } catch (loadError) {
+        console.error('Error loading branches:', loadError);
+        setBranches([]);
+        setBranchError(
+          loadError?.response?.data?.detail ||
+          loadError?.message ||
+          'No se pudieron cargar las sucursales.'
+        );
+        applyBranchSelection(null, businessId);
+      } finally {
+        setBranchesLoading(false);
+      }
+    },
+    [applyBranchSelection, getBranchStorageKey]
+  );
+  const handleBranchChange = useCallback(
+    (branch) => {
+      applyBranchSelection(branch || null, currentBusiness?.id);
+    },
+    [applyBranchSelection, currentBusiness?.id]
+  );
+  const refreshBranches = useCallback(
+    async (businessId = null) => {
+      const targetBusinessId = businessId || currentBusiness?.id;
+      if (targetBusinessId) {
+        await loadBranches(targetBusinessId);
+      }
+    },
+    [currentBusiness?.id, loadBranches]
+  );
   
   // Función para determinar la sección activa basándose en la URL
   const getActiveSectionFromPath = () => {
@@ -463,7 +651,21 @@ const Layout = ({ children, activeSection }) => {
       
       // Seleccionar el primer negocio por defecto
       if (businessesData && businessesData.length > 0) {
-        setCurrentBusiness(businessesData[0]);
+        const storedBusinessId = localStorage.getItem(ACTIVE_BUSINESS_STORAGE_KEY);
+        const storedBusiness = storedBusinessId
+          ? businessesData.find((business) => business.id === storedBusinessId)
+          : null;
+        const selectedBusiness = storedBusiness || businessesData[0];
+
+        setCurrentBusiness(selectedBusiness);
+        if (selectedBusiness?.id) {
+          localStorage.setItem(ACTIVE_BUSINESS_STORAGE_KEY, selectedBusiness.id);
+          await loadBranches(selectedBusiness.id);
+        }
+      } else {
+        setCurrentBusiness(null);
+        setBranches([]);
+        setCurrentBranch(null);
       }
     } catch (error) {
       console.error('Error loading initial data:', error);
@@ -475,6 +677,19 @@ const Layout = ({ children, activeSection }) => {
 
   const handleBusinessChange = (business) => {
     setCurrentBusiness(business);
+
+    if (business?.id) {
+      localStorage.setItem(ACTIVE_BUSINESS_STORAGE_KEY, business.id);
+      setBranches([]);
+      applyBranchSelection(null, business.id);
+      loadBranches(business.id);
+      invalidateQueriesForBusiness(business.id);
+    } else {
+      localStorage.removeItem(ACTIVE_BUSINESS_STORAGE_KEY);
+      setBranches([]);
+      applyBranchSelection(null, null);
+    }
+
     // Invalidate permissions cache when business changes
     queryClient.invalidateQueries({ queryKey: ['userPermissions'] });
     // Also invalidate other business-specific data
@@ -523,7 +738,19 @@ const Layout = ({ children, activeSection }) => {
   }
 
   return (
-    <BusinessContext.Provider value={{ currentBusiness, businesses, handleBusinessChange }}>
+    <BusinessContext.Provider
+      value={{
+        currentBusiness,
+        currentBranch,
+        businesses,
+        branches,
+        branchesLoading,
+        branchError,
+        handleBusinessChange,
+        handleBranchChange,
+        refreshBranches,
+      }}
+    >
       <div className="min-h-screen bg-gray-50 flex overflow-x-hidden">
         {/* Sidebar responsive */}
         <div>
@@ -540,6 +767,9 @@ const Layout = ({ children, activeSection }) => {
         activeSection={currentActiveSection}
         setActiveSection={() => {}}
         currentBusiness={currentBusiness}
+        currentBranch={currentBranch}
+        branches={branches}
+        branchesLoading={branchesLoading}
       />
       {/* Botón cerrar en móvil */}
       <button
@@ -558,7 +788,12 @@ const Layout = ({ children, activeSection }) => {
     <Header
       currentBusiness={currentBusiness}
       businesses={businesses}
+      currentBranch={currentBranch}
+      branches={branches}
+      branchesLoading={branchesLoading}
+      branchError={branchError}
       onBusinessChange={handleBusinessChange}
+      onBranchChange={handleBranchChange}
       onLogout={handleLogout}
       setSidebarOpen={setSidebarOpen}
     />

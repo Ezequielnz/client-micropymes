@@ -240,7 +240,7 @@ function POS() {
   const recordSaleMutation = useMutation({
     mutationFn: async (saleData) => {
       if (!businessId) throw new Error('Business ID is missing');
-      return await salesAPI.recordSale(saleData);
+      return await salesAPI.recordSale(businessId, saleData);
     },
     onSuccess: () => {
       setSaleSuccessMessage('¡Venta registrada exitosamente!');
