@@ -14,7 +14,10 @@ import { useBusinessContext } from '../../contexts/BusinessContext';
 import { useFinanceData } from '../../hooks/useFinanceData';
 
 const FinanzasCategorias = () => {
-  const { currentBusiness } = useBusinessContext();
+  const { currentBusiness, currentBranch, branches, branchesLoading } = useBusinessContext();
+  const branchId = currentBranch?.id ?? null;
+  const branchSelectionRequired = !branchesLoading && (branches?.length ?? 0) > 1;
+  const branchReady = !branchSelectionRequired || !!branchId;
   const {
     categorias,
     loading,
@@ -23,7 +26,7 @@ const FinanzasCategorias = () => {
     updateCategoria,
     deleteCategoria,
     refreshCategorias
-  } = useFinanceData(currentBusiness);
+  } = useFinanceData(currentBusiness, { branchId, branchReady });
 
   const [showModal, setShowModal] = useState(false);
   const [editingCategoria, setEditingCategoria] = useState(null);

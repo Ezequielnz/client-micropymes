@@ -325,8 +325,11 @@ const CompraEditModal = ({ open, onClose, onSubmit, suppliers, compra, isSubmitt
 };
 
 const Compras = () => {
-  const { currentBusiness } = useBusinessContext();
+  const { currentBusiness, currentBranch, branches, branchesLoading } = useBusinessContext();
   const businessId = currentBusiness?.id;
+  const branchId = currentBranch?.id;
+  const branchSelectionRequired = !branchesLoading && (branches?.length ?? 0) > 1;
+  const branchReady = !branchSelectionRequired || !!branchId;
   const queryClient = useQueryClient();
 
   const { canView, canEdit, isLoading: permissionsLoading } = useUserPermissions(businessId);
@@ -339,27 +342,27 @@ const Compras = () => {
 
   // Data fetching
   const { data: purchases = [], isLoading: loadingPurchases, error: purchasesError } = useQuery({
-    queryKey: ['purchases', businessId],
-    queryFn: () => purchaseAPI.getPurchases(businessId),
-    enabled: !!businessId && !!currentBusiness,
+    queryKey: ['purchases', businessId, branchId],
+    queryFn: () => purchaseAPI.getPurchases(businessId, branchId ? { branch_id: branchId } : undefined),
+    enabled: !!businessId && branchReady,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
   const { data: suppliers = [], isLoading: loadingSuppliers } = useQuery({
-    queryKey: ['suppliers', businessId],
+    queryKey: ['suppliers', businessId, branchId],
     queryFn: () => supplierAPI.getSuppliers(businessId),
-    enabled: !!businessId && !!currentBusiness,
+    enabled: !!businessId && branchReady,
     staleTime: 10 * 60 * 1000,
     gcTime: 15 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
   const { data: products = [], isLoading: loadingProducts } = useQuery({
-    queryKey: ['products', businessId],
+    queryKey: ['products', businessId, branchId],
     queryFn: () => productAPI.getProducts(businessId),
-    enabled: !!businessId && !!currentBusiness,
+    enabled: !!businessId && branchReady,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -367,17 +370,23 @@ const Compras = () => {
 
   // Mutations
   const createMutation = useMutation({
-    mutationFn: (payload) => purchaseAPI.createPurchase(businessId, payload),
+    mutationFn: (payload) => {
+      if (!branchReady) throw new Error('Branch context not ready');
+      return purchaseAPI.createPurchase(businessId, { ...payload, sucursal_id: branchId });
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries(['purchases', businessId]);
+      queryClient.invalidateQueries(['purchases', businessId, branchId]);
       setShowCreate(false);
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, payload }) => purchaseAPI.updatePurchase(businessId, id, payload),
+    mutationFn: ({ id, payload }) => {
+      if (!branchReady) throw new Error('Branch context not ready');
+      return purchaseAPI.updatePurchase(businessId, id, { ...payload, sucursal_id: branchId });
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries(['purchases', businessId]);
+      queryClient.invalidateQueries(['purchases', businessId, branchId]);
       setShowEdit(false);
       setEditingCompra(null);
     },
@@ -386,7 +395,7 @@ const Compras = () => {
   const deleteMutation = useMutation({
     mutationFn: (id) => purchaseAPI.deletePurchase(businessId, id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['purchases', businessId]);
+      queryClient.invalidateQueries(['purchases', businessId, branchId]);
     },
   });
 
@@ -428,6 +437,17 @@ const Compras = () => {
         <div style={{ textAlign: 'center', padding: '48px 0', background: '#f8f9fa', borderRadius: 8, border: '1px solid #e5e7eb' }}>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p style={{ color: '#6b7280' }}>Cargando permisos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!branchReady) {
+    return (
+      <div style={{ padding: 20, maxWidth: 1200, margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', padding: '48px 0', background: '#fff7ed', borderRadius: 8, border: '1px solid #fed7aa' }}>
+          <h3 style={{ fontSize: 18, fontWeight: 500, color: '#9a3412', marginBottom: 8 }}>Selecciona una sucursal</h3>
+          <p style={{ color: '#b45309' }}>Debes elegir una sucursal para gestionar compras.</p>
         </div>
       </div>
     );
@@ -648,3 +668,5 @@ const Compras = () => {
 };
 
 export default Compras;
+
+

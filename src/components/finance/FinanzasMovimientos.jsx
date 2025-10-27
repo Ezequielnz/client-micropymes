@@ -18,7 +18,10 @@ import PermissionGuard from '../PermissionGuard';
  import { customerAPI } from '../../utils/api';
 
 const FinanzasMovimientos = ({ businessId, movimientoAction, onActionProcessed }) => {
-  const { currentBusiness } = useBusinessContext();
+  const { currentBusiness, currentBranch, branches, branchesLoading } = useBusinessContext();
+  const branchId = currentBranch?.id ?? null;
+  const branchSelectionRequired = !branchesLoading && (branches?.length ?? 0) > 1;
+  const branchReady = !branchSelectionRequired || !!branchId;
   const [clientes, setClientes] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingMovimiento, setEditingMovimiento] = useState(null);
@@ -39,7 +42,7 @@ const FinanzasMovimientos = ({ businessId, movimientoAction, onActionProcessed }
     updateMovimiento,
     deleteMovimiento,
     refreshMovimientos
-  } = useFinanceData(currentBusiness);
+  } = useFinanceData(currentBusiness, { branchId, branchReady });
 
   const [formData, setFormData] = useState({
     tipo: 'ingreso',

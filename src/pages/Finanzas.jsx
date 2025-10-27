@@ -27,8 +27,11 @@ const FinanceDashboard = lazy(() => import('../components/finance/FinanceDashboa
 const FinanzasContent = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [movimientoAction, setMovimientoAction] = useState(null); // Para comunicar acciones al componente de movimientos
-  const { currentBusiness } = useBusinessContext();
+  const { currentBusiness, currentBranch, branches, branchesLoading } = useBusinessContext();
   const navigate = useNavigate();
+  const branchId = currentBranch?.id ?? null;
+  const branchSelectionRequired = !branchesLoading && (branches?.length ?? 0) > 1;
+  const branchReady = !branchSelectionRequired || !!branchId;
 
   // Permisos: helpers para controlar acceso
   const {
@@ -47,7 +50,7 @@ const FinanzasContent = () => {
     stats, movimientos, cuentasPendientes,
     loading: isLoading, error: dataError, lastUpdate,
     refreshData
-  } = useFinanceData(currentBusiness);
+  } = useFinanceData(currentBusiness, { branchId, branchReady });
 
   // ✅ OPTIMIZED: Memoized format functions to prevent recreation on every render
   const formatCurrency = useCallback((amount) => {
@@ -79,6 +82,23 @@ const FinanzasContent = () => {
 
   if (!currentBusiness) {
     return <PageLoader />;
+  }
+
+  if (branchesLoading) {
+    return <PageLoader />;
+  }
+
+  if (branchSelectionRequired && !branchReady) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="max-w-lg w-full bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center shadow-sm">
+          <h2 className="text-lg font-semibold text-yellow-900">Selecciona una sucursal</h2>
+          <p className="mt-2 text-sm text-yellow-800">
+            Elegí una sucursal desde el selector superior para ver los datos financieros asociados.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const tabs = [

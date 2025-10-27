@@ -84,6 +84,11 @@ interface UseFinanceDataReturn {
   deleteCuentaPendiente: any;
 }
 
+interface FinanceScopeOptions {
+  branchId?: string | null;
+  branchReady?: boolean;
+}
+
 // Using axios interceptors for error handling; no local response parser required.
 
 // Using centralized financeAPI from ../utils/api
@@ -94,10 +99,15 @@ interface UseFinanceDataReturn {
  * @returns {UseFinanceDataReturn} - Estado y funciones para manejar los datos de finanzas
  */
 export const useFinanceData = (
-  currentBusiness: Business | null
+  currentBusiness: Business | null,
+  options: FinanceScopeOptions = {}
 ): UseFinanceDataReturn => {
   const queryClient = useQueryClient();
   const businessId = currentBusiness?.id;
+  const { branchId = null, branchReady = true } = options;
+  const branchKey = branchId ?? null;
+  const branchParams: Record<string, string> | undefined = branchId ? { branch_id: branchId } : undefined;
+  const baseEnabled = !!businessId && branchReady;
 
   // ✅ OPTIMIZED: Finance stats query with caching
   const {
@@ -106,9 +116,9 @@ export const useFinanceData = (
     isLoading: statsLoading,
     dataUpdatedAt: statsUpdatedAt
   } = useQuery({
-    queryKey: ['finance-stats', businessId],
-    queryFn: () => financeAPI.getStats(businessId!),
-    enabled: !!businessId,
+    queryKey: ['finance-stats', businessId, branchKey],
+    queryFn: () => financeAPI.getStats(businessId!, branchParams ?? {}),
+    enabled: baseEnabled,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
@@ -122,9 +132,9 @@ export const useFinanceData = (
     isLoading: movimientosLoading,
     dataUpdatedAt: movimientosUpdatedAt
   } = useQuery({
-    queryKey: ['finance-movimientos', businessId],
-    queryFn: () => financeAPI.getMovimientos(businessId!),
-    enabled: !!businessId,
+    queryKey: ['finance-movimientos', businessId, branchKey],
+    queryFn: () => financeAPI.getMovimientos(businessId!, branchParams ?? {}),
+    enabled: baseEnabled,
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
@@ -138,9 +148,9 @@ export const useFinanceData = (
     isLoading: categoriasLoading,
     dataUpdatedAt: categoriasUpdatedAt
   } = useQuery({
-    queryKey: ['finance-categorias', businessId],
-    queryFn: () => financeAPI.getCategorias(businessId!),
-    enabled: !!businessId,
+    queryKey: ['finance-categorias', businessId, branchKey],
+    queryFn: () => financeAPI.getCategorias(businessId!, branchParams ?? {}),
+    enabled: baseEnabled,
     staleTime: 10 * 60 * 1000, // 10 minutes (categories change less frequently)
     gcTime: 15 * 60 * 1000, // 15 minutes
     refetchOnWindowFocus: false,
@@ -154,9 +164,9 @@ export const useFinanceData = (
     isLoading: cuentasPendientesLoading,
     dataUpdatedAt: cuentasPendientesUpdatedAt
   } = useQuery({
-    queryKey: ['finance-cuentas-pendientes', businessId],
-    queryFn: () => financeAPI.getCuentasPendientes(businessId!),
-    enabled: !!businessId,
+    queryKey: ['finance-cuentas-pendientes', businessId, branchKey],
+    queryFn: () => financeAPI.getCuentasPendientes(businessId!, branchParams ?? {}),
+    enabled: baseEnabled,
     staleTime: 3 * 60 * 1000, // 3 minutes
     gcTime: 8 * 60 * 1000, // 8 minutes
     refetchOnWindowFocus: false,
@@ -174,9 +184,9 @@ export const useFinanceData = (
     isLoading: flujoCajaLoading,
     dataUpdatedAt: flujoCajaUpdatedAt
   } = useQuery({
-    queryKey: ['finance-flujo-caja', businessId, currentMonth, currentYear],
-    queryFn: () => financeAPI.getFlujoCaja(businessId!, currentMonth, currentYear),
-    enabled: !!businessId,
+    queryKey: ['finance-flujo-caja', businessId, branchKey, currentMonth, currentYear],
+    queryFn: () => financeAPI.getFlujoCaja(businessId!, currentMonth, currentYear, branchParams ?? {}),
+    enabled: baseEnabled,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
@@ -187,8 +197,8 @@ export const useFinanceData = (
   const createMovimientoMutation = useMutation({
     mutationFn: (data: Partial<MovimientoFinanciero>) => financeAPI.createMovimiento(businessId!, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['finance-movimientos', businessId] });
-      queryClient.invalidateQueries({ queryKey: ['finance-stats', businessId] });
+      queryClient.invalidateQueries({ queryKey: ['finance-movimientos', businessId, branchKey] });
+      queryClient.invalidateQueries({ queryKey: ['finance-stats', businessId, branchKey] });
     }
   });
 
@@ -196,23 +206,23 @@ export const useFinanceData = (
     mutationFn: ({ id, data }: { id: string; data: Partial<MovimientoFinanciero> }) => 
       financeAPI.updateMovimiento(businessId!, id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['finance-movimientos', businessId] });
-      queryClient.invalidateQueries({ queryKey: ['finance-stats', businessId] });
+      queryClient.invalidateQueries({ queryKey: ['finance-movimientos', businessId, branchKey] });
+      queryClient.invalidateQueries({ queryKey: ['finance-stats', businessId, branchKey] });
     }
   });
 
   const deleteMovimientoMutation = useMutation({
     mutationFn: (id: string) => financeAPI.deleteMovimiento(businessId!, id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['finance-movimientos', businessId] });
-      queryClient.invalidateQueries({ queryKey: ['finance-stats', businessId] });
+      queryClient.invalidateQueries({ queryKey: ['finance-movimientos', businessId, branchKey] });
+      queryClient.invalidateQueries({ queryKey: ['finance-stats', businessId, branchKey] });
     }
   });
 
   const createCategoriaMutation = useMutation({
     mutationFn: (data: Partial<CategoriaFinanciera>) => financeAPI.createCategoria(businessId!, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['finance-categorias', businessId] });
+      queryClient.invalidateQueries({ queryKey: ['finance-categorias', businessId, branchKey] });
     }
   });
 
@@ -220,22 +230,22 @@ export const useFinanceData = (
     mutationFn: ({ id, data }: { id: string; data: Partial<CategoriaFinanciera> }) => 
       financeAPI.updateCategoria(businessId!, id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['finance-categorias', businessId] });
+      queryClient.invalidateQueries({ queryKey: ['finance-categorias', businessId, branchKey] });
     }
   });
 
   const deleteCategoriaMutation = useMutation({
     mutationFn: (id: string) => financeAPI.deleteCategoria(businessId!, id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['finance-categorias', businessId] });
+      queryClient.invalidateQueries({ queryKey: ['finance-categorias', businessId, branchKey] });
     }
   });
 
   const createCuentaPendienteMutation = useMutation({
     mutationFn: (data: Partial<CuentaPendiente>) => financeAPI.createCuentaPendiente(businessId!, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['finance-cuentas-pendientes', businessId] });
-      queryClient.invalidateQueries({ queryKey: ['finance-stats', businessId] });
+      queryClient.invalidateQueries({ queryKey: ['finance-cuentas-pendientes', businessId, branchKey] });
+      queryClient.invalidateQueries({ queryKey: ['finance-stats', businessId, branchKey] });
     }
   });
 
@@ -243,32 +253,41 @@ export const useFinanceData = (
     mutationFn: ({ id, data }: { id: string; data: Partial<CuentaPendiente> }) => 
       financeAPI.updateCuentaPendiente(businessId!, id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['finance-cuentas-pendientes', businessId] });
-      queryClient.invalidateQueries({ queryKey: ['finance-stats', businessId] });
+      queryClient.invalidateQueries({ queryKey: ['finance-cuentas-pendientes', businessId, branchKey] });
+      queryClient.invalidateQueries({ queryKey: ['finance-stats', businessId, branchKey] });
     }
   });
 
   const deleteCuentaPendienteMutation = useMutation({
     mutationFn: (id: string) => financeAPI.deleteCuentaPendiente(businessId!, id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['finance-cuentas-pendientes', businessId] });
-      queryClient.invalidateQueries({ queryKey: ['finance-stats', businessId] });
+      queryClient.invalidateQueries({ queryKey: ['finance-cuentas-pendientes', businessId, branchKey] });
+      queryClient.invalidateQueries({ queryKey: ['finance-stats', businessId, branchKey] });
     }
   });
 
   // ✅ OPTIMIZED: Memoized computed states
   const loading = useMemo(() => {
+    if (!baseEnabled) {
+      return true;
+    }
     return statsLoading || movimientosLoading || categoriasLoading || cuentasPendientesLoading || flujoCajaLoading;
-  }, [statsLoading, movimientosLoading, categoriasLoading, cuentasPendientesLoading, flujoCajaLoading]);
+  }, [baseEnabled, statsLoading, movimientosLoading, categoriasLoading, cuentasPendientesLoading, flujoCajaLoading]);
 
   const error = useMemo(() => {
+    if (!baseEnabled) {
+      return null;
+    }
     const errors = [statsError, movimientosError, categoriasError, cuentasPendientesError, flujoCajaError];
     const firstError = errors.find(err => err);
     return firstError ? (firstError as Error).message : null;
-  }, [statsError, movimientosError, categoriasError, cuentasPendientesError, flujoCajaError]);
+  }, [baseEnabled, statsError, movimientosError, categoriasError, cuentasPendientesError, flujoCajaError]);
 
   // ✅ OPTIMIZED: Memoized last update time (siguiendo patrón de useDashboardData)
   const lastUpdate = useMemo(() => {
+    if (!baseEnabled) {
+      return null;
+    }
     const updateTimes = [
       statsUpdatedAt,
       movimientosUpdatedAt,
@@ -278,36 +297,54 @@ export const useFinanceData = (
     ].filter(Boolean);
     
     return updateTimes.length > 0 ? new Date(Math.max(...updateTimes)) : null;
-  }, [statsUpdatedAt, movimientosUpdatedAt, categoriasUpdatedAt, cuentasPendientesUpdatedAt, flujoCajaUpdatedAt]);
+  }, [baseEnabled, statsUpdatedAt, movimientosUpdatedAt, categoriasUpdatedAt, cuentasPendientesUpdatedAt, flujoCajaUpdatedAt]);
 
   // ✅ OPTIMIZED: Memoized refresh functions
   const refreshData = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['finance-stats', businessId] });
-    queryClient.invalidateQueries({ queryKey: ['finance-movimientos', businessId] });
-    queryClient.invalidateQueries({ queryKey: ['finance-categorias', businessId] });
-    queryClient.invalidateQueries({ queryKey: ['finance-cuentas-pendientes', businessId] });
-    queryClient.invalidateQueries({ queryKey: ['finance-flujo-caja', businessId] });
-  }, [queryClient, businessId]);
+    if (!businessId) {
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ['finance-stats', businessId, branchKey] });
+    queryClient.invalidateQueries({ queryKey: ['finance-movimientos', businessId, branchKey] });
+    queryClient.invalidateQueries({ queryKey: ['finance-categorias', businessId, branchKey] });
+    queryClient.invalidateQueries({ queryKey: ['finance-cuentas-pendientes', businessId, branchKey] });
+    queryClient.invalidateQueries({ queryKey: ['finance-flujo-caja', businessId, branchKey] });
+  }, [queryClient, businessId, branchKey]);
 
   const refreshStats = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['finance-stats', businessId] });
-  }, [queryClient, businessId]);
+    if (!businessId) {
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ['finance-stats', businessId, branchKey] });
+  }, [queryClient, businessId, branchKey]);
 
   const refreshMovimientos = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['finance-movimientos', businessId] });
-  }, [queryClient, businessId]);
+    if (!businessId) {
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ['finance-movimientos', businessId, branchKey] });
+  }, [queryClient, businessId, branchKey]);
 
   const refreshCategorias = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['finance-categorias', businessId] });
-  }, [queryClient, businessId]);
+    if (!businessId) {
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ['finance-categorias', businessId, branchKey] });
+  }, [queryClient, businessId, branchKey]);
 
   const refreshCuentasPendientes = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['finance-cuentas-pendientes', businessId] });
-  }, [queryClient, businessId]);
+    if (!businessId) {
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ['finance-cuentas-pendientes', businessId, branchKey] });
+  }, [queryClient, businessId, branchKey]);
 
   const refreshFlujoCaja = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['finance-flujo-caja', businessId] });
-  }, [queryClient, businessId]);
+    if (!businessId) {
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ['finance-flujo-caja', businessId, branchKey] });
+  }, [queryClient, businessId, branchKey]);
 
   // ✅ OPTIMIZED: Memoized data with fallbacks
   const stats = useMemo(() => statsData || {

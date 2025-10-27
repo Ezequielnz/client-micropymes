@@ -31,6 +31,30 @@ const api = axios.create({
   timeout: 60000, // 60 seconds timeout (increased temporarily)
 });
 
+const ACTIVE_BUSINESS_STORAGE_KEY = 'activeBusinessId';
+
+const getActiveBusinessId = () => {
+  try {
+    return localStorage.getItem(ACTIVE_BUSINESS_STORAGE_KEY);
+  } catch (error) {
+    console.warn('Unable to read business context from localStorage', error);
+    return null;
+  }
+};
+
+const getActiveBranchId = () => {
+  const businessId = getActiveBusinessId();
+  if (!businessId) {
+    return null;
+  }
+  try {
+    return localStorage.getItem(`activeBranch:${businessId}`);
+  } catch (error) {
+    console.warn('Unable to read branch context from localStorage', error);
+    return null;
+  }
+};
+
 // Request interceptor para adjuntar automáticamente el token JWT a todas las peticiones
 api.interceptors.request.use(
   (config) => {
@@ -43,6 +67,11 @@ api.interceptors.request.use(
       console.log('Authorization header set');
     } else {
       console.log('No token found in localStorage');
+    }
+
+    const branchId = getActiveBranchId();
+    if (branchId && !config.headers['X-Branch-Id']) {
+      config.headers['X-Branch-Id'] = branchId;
     }
     return config;
   },
@@ -1329,8 +1358,8 @@ export const financeAPI = {
     return response.data;
   },
   // Alias usado por el hook (mes, anio)
-  getFlujoCaja: async (businessId, mes, anio) => {
-    return financeAPI.getCashFlow(businessId, { mes, anio });
+  getFlujoCaja: async (businessId, mes, anio, params = {}) => {
+    return financeAPI.getCashFlow(businessId, { mes, anio, ...params });
   },
 
   // Cuentas (creación/edición/eliminación)
@@ -1594,3 +1623,8 @@ export const purchaseAPI = {
 
 
 export default api;
+
+
+
+
+

@@ -197,8 +197,12 @@ const ProductsAndServices = () => {
   const queryClient = useQueryClient();
   
   // ✅ FIXED: Use BusinessContext instead of useParams
-  const { currentBusiness } = useBusinessContext();
+  const { currentBusiness, currentBranch, branches, branchesLoading } = useBusinessContext();
   const businessId = currentBusiness?.id;
+  const branchId = currentBranch?.id ?? null;
+  const branchSelectionRequired = !branchesLoading && (branches?.length ?? 0) > 1;
+  const branchReady = !branchSelectionRequired || !!branchId;
+  const branchParams = branchId ? { branch_id: branchId } : undefined;
   
   // Get permissions
   const { canEdit, canDelete, canView, isLoading: permissionsLoading } = useUserPermissions(businessId);
@@ -242,6 +246,44 @@ const ProductsAndServices = () => {
           </h3>
           <p style={{ color: '#6b7280', marginBottom: '24px' }}>
             Por favor selecciona un negocio desde el menú superior para gestionar productos y servicios.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (branchesLoading) {
+    return (
+      <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+        <div style={{
+          textAlign: 'center',
+          padding: '48px 0',
+          backgroundColor: '#f8f9fa',
+          borderRadius: '8px',
+          border: '1px solid #e9ecef'
+        }}>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p style={{ color: '#6b7280' }}>Cargando sucursales...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (branchSelectionRequired && !branchReady) {
+    return (
+      <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+        <div style={{
+          textAlign: 'center',
+          padding: '48px 0',
+          backgroundColor: '#fefce8',
+          borderRadius: '8px',
+          border: '1px solid #fde68a'
+        }}>
+          <h3 style={{ fontSize: '18px', fontWeight: '500', color: '#854d0e', marginBottom: '8px' }}>
+            Selecciona una sucursal
+          </h3>
+          <p style={{ color: '#a16207', marginBottom: '24px' }}>
+            Elige una sucursal desde el selector superior para continuar gestionando productos y servicios.
           </p>
         </div>
       </div>
@@ -294,9 +336,9 @@ const ProductsAndServices = () => {
     isLoading: loadingProducts,
     error: productsError
   } = useQuery({
-    queryKey: ['products', businessId],
-    queryFn: () => productAPI.getProducts(businessId),
-    enabled: !!businessId && !!currentBusiness, // Only fetch when we have a valid business
+    queryKey: ['products', businessId, branchId],
+    queryFn: () => productAPI.getProducts(businessId, branchParams),
+    enabled: !!businessId && !!currentBusiness && branchReady, // Only fetch when context is ready
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
@@ -307,9 +349,9 @@ const ProductsAndServices = () => {
     isLoading: loadingServices,
     error: servicesError
   } = useQuery({
-    queryKey: ['services', businessId],
-    queryFn: () => serviceAPI.getServices(businessId),
-    enabled: !!businessId && !!currentBusiness, // Only fetch when we have a valid business
+    queryKey: ['services', businessId, branchId],
+    queryFn: () => serviceAPI.getServices(businessId, branchParams),
+    enabled: !!businessId && !!currentBusiness && branchReady, // Only fetch when context is ready
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -319,9 +361,9 @@ const ProductsAndServices = () => {
     data: categories = [], 
     isLoading: loadingCategories
   } = useQuery({
-    queryKey: ['categories', businessId],
+    queryKey: ['categories', businessId, branchId],
     queryFn: () => categoryAPI.getCategories(businessId),
-    enabled: !!businessId && !!currentBusiness, // Only fetch when we have a valid business
+    enabled: !!businessId && !!currentBusiness && branchReady, // Only fetch when context is ready
     staleTime: 10 * 60 * 1000, // Categories change less frequently
     gcTime: 15 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -371,7 +413,7 @@ const ProductsAndServices = () => {
   const createProductMutation = useMutation({
     mutationFn: (payload) => productAPI.createProduct(businessId, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['products', businessId]);
+      queryClient.invalidateQueries(['products', businessId, branchId]);
       handleCloseModal();
     },
     onError: (error) => {
@@ -382,7 +424,7 @@ const ProductsAndServices = () => {
   const updateProductMutation = useMutation({
     mutationFn: ({ id, payload }) => productAPI.updateProduct(businessId, id, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['products', businessId]);
+      queryClient.invalidateQueries(['products', businessId, branchId]);
       handleCloseModal();
     }
   });
@@ -390,14 +432,14 @@ const ProductsAndServices = () => {
   const deleteProductMutation = useMutation({
     mutationFn: (id) => productAPI.deleteProduct(businessId, id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['products', businessId]);
+      queryClient.invalidateQueries(['products', businessId, branchId]);
     }
   });
 
   const createServiceMutation = useMutation({
     mutationFn: (payload) => serviceAPI.createService(businessId, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['services', businessId]);
+      queryClient.invalidateQueries(['services', businessId, branchId]);
       handleCloseModal();
     }
   });
@@ -405,7 +447,7 @@ const ProductsAndServices = () => {
   const updateServiceMutation = useMutation({
     mutationFn: ({ id, payload }) => serviceAPI.updateService(businessId, id, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['services', businessId]);
+      queryClient.invalidateQueries(['services', businessId, branchId]);
       handleCloseModal();
     }
   });
@@ -413,14 +455,14 @@ const ProductsAndServices = () => {
   const deleteServiceMutation = useMutation({
     mutationFn: (id) => serviceAPI.deleteService(businessId, id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['services', businessId]);
+      queryClient.invalidateQueries(['services', businessId, branchId]);
     }
   });
 
   const createCategoryMutation = useMutation({
     mutationFn: (payload) => categoryAPI.createCategory(businessId, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['categories', businessId]);
+      queryClient.invalidateQueries(['categories', businessId, branchId]);
       setCategoryFormData({ nombre: '', descripcion: '' });
       setShowCategoryModal(false);
     }
