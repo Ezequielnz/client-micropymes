@@ -350,7 +350,7 @@ const Compras = () => {
     refetchOnWindowFocus: false,
   });
 
-  const { data: suppliers = [], isLoading: loadingSuppliers } = useQuery({
+  const { data: suppliers = [] } = useQuery({
     queryKey: ['suppliers', businessId, branchId],
     queryFn: () => supplierAPI.getSuppliers(businessId),
     enabled: !!businessId && branchReady,
@@ -359,7 +359,7 @@ const Compras = () => {
     refetchOnWindowFocus: false,
   });
 
-  const { data: products = [], isLoading: loadingProducts } = useQuery({
+  const { data: products = [] } = useQuery({
     queryKey: ['products', businessId, branchId],
     queryFn: () => productAPI.getProducts(businessId),
     enabled: !!businessId && branchReady,
@@ -668,5 +668,6 @@ const Compras = () => {
 };
 
 export default Compras;
+
 
 

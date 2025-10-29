@@ -24,8 +24,7 @@ const FinanzasCategorias = () => {
     error,
     createCategoria,
     updateCategoria,
-    deleteCategoria,
-    refreshCategorias
+    deleteCategoria
   } = useFinanceData(currentBusiness, { branchId, branchReady });
 
   const [showModal, setShowModal] = useState(false);
@@ -52,7 +51,7 @@ const FinanzasCategorias = () => {
       resetForm();
     } catch (err) {
       console.error('Error saving category:', err);
-      alert(err.message);
+      alert(err instanceof Error ? err.message : 'No se pudo guardar la categoria');
     }
   };
 
@@ -64,7 +63,7 @@ const FinanzasCategorias = () => {
       await deleteCategoria.mutateAsync(id);
     } catch (err) {
       console.error('Error deleting category:', err);
-      alert(err.message);
+      alert(err instanceof Error ? err.message : 'No se pudo eliminar la categoria');
     }
   };
 
@@ -95,6 +94,17 @@ const FinanzasCategorias = () => {
 
   const categoriasIngresos = filteredCategorias.filter(c => c.tipo === 'ingreso');
   const categoriasEgresos = filteredCategorias.filter(c => c.tipo === 'egreso');
+  const combinedError = error ?? null;
+
+  if (branchSelectionRequired && !branchId) {
+    return (
+      <div className="p-6">
+        <div className="rounded-md border border-dashed border-gray-300 bg-white p-8 text-center text-gray-600">
+          Selecciona una sucursal para administrar las categorias financieras.
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return <PageLoader />;
@@ -102,6 +112,11 @@ const FinanzasCategorias = () => {
 
   return (
     <div className="p-6">
+      {combinedError && (
+        <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {combinedError}
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Categorías Financieras</h2>
@@ -311,3 +326,4 @@ const FinanzasCategorias = () => {
 };
 
 export default FinanzasCategorias;
+

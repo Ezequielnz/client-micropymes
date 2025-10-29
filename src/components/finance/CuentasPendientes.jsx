@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PermissionGuard from '../PermissionGuard';
 import { useBusinessContext } from '../../contexts/BusinessContext';
 import { useFinanceData } from '../../hooks/useFinanceData';
@@ -15,6 +15,7 @@ import {
   Filter
 } from 'lucide-react';
 import { PageLoader } from '../LoadingSpinner';
+import { customerAPI } from '../../utils/api';
 
 const CuentasPendientes = () => {
   const { currentBusiness, currentBranch, branches, branchesLoading } = useBusinessContext();
@@ -28,12 +29,15 @@ const CuentasPendientes = () => {
     createCuentaPendiente,
     updateCuentaPendiente,
     deleteCuentaPendiente,
-    refreshCuentasPendientes
+    markCuentaPendientePagada
   } = useFinanceData(currentBusiness, { branchId, branchReady });
 
   const [showModal, setShowModal] = useState(false);
   const [editingCuenta, setEditingCuenta] = useState(null);
   const [activeTab, setActiveTab] = useState('cobrar');
+  const [clientes, setClientes] = useState([]);
+  const [clientesLoading, setClientesLoading] = useState(false);
+  const [clientesError, setClientesError] = useState(null);
   const [filters, setFilters] = useState({
     estado: '',
     vencimiento_desde: '',
@@ -50,6 +54,50 @@ const CuentasPendientes = () => {
     descripcion: '',
     observaciones: ''
   });
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!currentBusiness?.id || !branchReady) {
+      setClientes([]);
+      setClientesError(null);
+      setClientesLoading(false);
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    const loadClientes = async () => {
+      try {
+        setClientesLoading(true);
+        setClientesError(null);
+        const params = { limit: 100 };
+        if (branchId) {
+          params.branch_id = branchId;
+        }
+        const data = await customerAPI.getCustomers(currentBusiness.id, params);
+        if (isMounted) {
+          setClientes(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        console.error('Error fetching customers:', err);
+        if (isMounted) {
+          setClientes([]);
+          setClientesError(err instanceof Error ? err.message : 'No se pudieron cargar los clientes');
+        }
+      } finally {
+        if (isMounted) {
+          setClientesLoading(false);
+        }
+      }
+    };
+
+    loadClientes();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [branchId, branchReady, currentBusiness?.id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -70,7 +118,7 @@ const CuentasPendientes = () => {
       resetForm();
     } catch (err) {
       console.error('Error saving account:', err);
-      alert(err.message);
+      alert(err instanceof Error ? err.message : 'No se pudo guardar la cuenta');
     }
   };
 
@@ -82,7 +130,7 @@ const CuentasPendientes = () => {
       await deleteCuentaPendiente.mutateAsync(id);
     } catch (err) {
       console.error('Error deleting account:', err);
-      alert(err.message);
+      alert(err instanceof Error ? err.message : 'No se pudo eliminar la cuenta');
     }
   };
 
@@ -116,6 +164,15 @@ const CuentasPendientes = () => {
     setShowModal(true);
   };
 
+  const handleMarkAsPaid = async (id) => {
+    try {
+      await markCuentaPendientePagada.mutateAsync(id);
+    } catch (err) {
+      console.error('Error marking account as paid:', err);
+      alert(err instanceof Error ? err.message : 'No se pudo marcar como pagada');
+    }
+  };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-AR', {
       style: 'currency',
@@ -145,15 +202,31 @@ const CuentasPendientes = () => {
   // Filtrar cuentas pendientes por tipo
   const cuentasCobrar = cuentasPendientes?.filter(c => c.tipo === 'por_cobrar') || [];
   const cuentasPagar = cuentasPendientes?.filter(c => c.tipo === 'por_pagar') || [];
-  
+  const combinedError = error || clientesError;
+
   const currentData = activeTab === 'cobrar' ? cuentasCobrar : cuentasPagar;
 
-  if (loading) {
+  if (branchSelectionRequired && !branchId) {
+    return (
+      <div className="p-6">
+        <div className="rounded-md border border-dashed border-gray-300 bg-white p-8 text-center text-gray-600">
+          Selecciona una sucursal para ver las cuentas pendientes.
+        </div>
+      </div>
+    );
+  }
+
+  if (loading || clientesLoading) {
     return <PageLoader />;
   }
 
   return (
     <div className="p-6">
+      {combinedError && (
+        <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {combinedError}
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Cuentas Pendientes</h2>
@@ -289,11 +362,12 @@ const CuentasPendientes = () => {
                     </div>
                     <div className="flex space-x-2">
                       {cuenta.estado === 'pendiente' && (
-                        <button
-                          onClick={() => handleMarkAsPaid(cuenta.id)}
-                          className="text-green-600 hover:text-green-900"
-                          title="Marcar como pagado"
-                        >
+            <button
+              onClick={() => handleMarkAsPaid(cuenta.id)}
+              className="text-green-600 hover:text-green-900 disabled:opacity-50"
+              title="Marcar como pagado"
+              disabled={markCuentaPendientePagada.isPending}
+            >
                           <CheckCircle className="h-4 w-4" />
                         </button>
                       )}
@@ -359,6 +433,7 @@ const CuentasPendientes = () => {
                     value={formData.cliente_id}
                     onChange={(e) => setFormData({...formData, cliente_id: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={clientesLoading}
                   >
                     <option value="">Seleccionar cliente</option>
                     {clientes.map(cliente => (
@@ -464,3 +539,4 @@ const CuentasPendientes = () => {
 };
 
 export default CuentasPendientes;
+

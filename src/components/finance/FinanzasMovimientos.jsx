@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { 
   Plus, 
   Search, 
@@ -17,7 +17,7 @@ import { PageLoader } from '../LoadingSpinner';
 import PermissionGuard from '../PermissionGuard';
  import { customerAPI } from '../../utils/api';
 
-const FinanzasMovimientos = ({ businessId, movimientoAction, onActionProcessed }) => {
+const FinanzasMovimientos = ({ movimientoAction, onActionProcessed }) => {
   const { currentBusiness, currentBranch, branches, branchesLoading } = useBusinessContext();
   const branchId = currentBranch?.id ?? null;
   const branchSelectionRequired = !branchesLoading && (branches?.length ?? 0) > 1;
@@ -40,8 +40,7 @@ const FinanzasMovimientos = ({ businessId, movimientoAction, onActionProcessed }
     error,
     createMovimiento,
     updateMovimiento,
-    deleteMovimiento,
-    refreshMovimientos
+    deleteMovimiento
   } = useFinanceData(currentBusiness, { branchId, branchReady });
 
   const [formData, setFormData] = useState({
@@ -57,17 +56,24 @@ const FinanzasMovimientos = ({ businessId, movimientoAction, onActionProcessed }
 
   // ✅ OPTIMIZED: Cargar clientes (mantenemos esto separado ya que no está en useFinanceData)
   const fetchClientes = useCallback(async () => {
-    if (!currentBusiness?.id) return;
+    if (!currentBusiness?.id || !branchReady) {
+      setClientes([]);
+      return;
+    }
 
     try {
       // Backend en `/clientes` valida limit <= 100. Usamos 100 para evitar 422.
-      const data = await customerAPI.getCustomers(currentBusiness.id, { limit: 100 });
+      const params = { limit: 100 };
+      if (branchId) {
+        params.branch_id = branchId;
+      }
+      const data = await customerAPI.getCustomers(currentBusiness.id, params);
       setClientes(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching clients:', err);
       setClientes([]);
     }
-  }, [currentBusiness?.id]);
+  }, [branchId, branchReady, currentBusiness?.id]);
 
   useEffect(() => {
     fetchClientes();
@@ -115,13 +121,13 @@ const FinanzasMovimientos = ({ businessId, movimientoAction, onActionProcessed }
       resetForm();
     } catch (err) {
       console.error('Error saving movement:', err);
-      alert(err.message || 'Error al guardar el movimiento');
+      alert(err instanceof Error ? err.message : 'No se pudo guardar el movimiento');
     }
   };
 
   // ✅ OPTIMIZED: Usar mutación de eliminación del hook useFinanceData
   const handleDelete = async (id) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este movimiento?')) {
+    if (!confirm('Estas seguro de que quieres eliminar este movimiento?')) {
       return;
     }
 
@@ -129,7 +135,7 @@ const FinanzasMovimientos = ({ businessId, movimientoAction, onActionProcessed }
       await deleteMovimiento.mutateAsync(id);
     } catch (err) {
       console.error('Error deleting movement:', err);
-      alert(err.message || 'Error al eliminar el movimiento');
+      alert(err instanceof Error ? err.message : 'No se pudo eliminar el movimiento');
     }
   };
 
@@ -172,8 +178,19 @@ const FinanzasMovimientos = ({ businessId, movimientoAction, onActionProcessed }
     return new Date(dateString).toLocaleDateString('es-AR');
   };
 
-  // Filtrar categorías por tipo y que estén activas
+  // Filtrar categorias por tipo y que esten activas
   const filteredCategorias = categorias.filter(cat => cat.tipo === formData.tipo && cat.activo === true);
+  const combinedError = error ?? null;
+
+  if (branchSelectionRequired && !branchId) {
+    return (
+      <div className="p-6">
+        <div className="rounded-md border border-dashed border-gray-300 bg-white p-8 text-center text-gray-600">
+          Selecciona una sucursal para administrar los movimientos financieros.
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return <PageLoader />;
@@ -181,6 +198,11 @@ const FinanzasMovimientos = ({ businessId, movimientoAction, onActionProcessed }
 
   return (
     <div className="p-6">
+      {combinedError && (
+        <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {combinedError}
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Movimientos Financieros</h2>
@@ -485,3 +507,8 @@ const FinanzasMovimientos = ({ businessId, movimientoAction, onActionProcessed }
 };
 
 export default FinanzasMovimientos;
+
+
+
+
+

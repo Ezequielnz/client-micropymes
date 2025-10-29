@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { businessAPI } from '../utils/api';
 import { X, Save, Loader2, AlertCircle } from 'lucide-react';
 
@@ -59,13 +59,10 @@ const BusinessSettingsForm = ({ business, isOpen, onClose, onSave }) => {
     { value: 90, label: '90 días' }
   ];
 
-  useEffect(() => {
-    if (isOpen && business) {
-      loadSettings();
+  const loadSettings = useCallback(async () => {
+    if (!business?.id) {
+      return;
     }
-  }, [isOpen, business]);
-
-  const loadSettings = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -79,12 +76,18 @@ const BusinessSettingsForm = ({ business, isOpen, onClose, onSave }) => {
         }));
       }
     } catch (err) {
-      console.log('No hay configuración previa, usando valores por defecto');
+      console.warn('No hay configuración previa, usando valores por defecto', err);
       // Si no existe configuración, usar valores por defecto
     } finally {
       setLoading(false);
     }
-  };
+  }, [business?.id]);
+
+  useEffect(() => {
+    if (isOpen && business) {
+      loadSettings();
+    }
+  }, [isOpen, business, loadSettings]);
 
   const handleSave = async () => {
     try {

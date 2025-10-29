@@ -6,7 +6,7 @@ class ErrorBoundary extends React.Component {
     this.state = { hasError: false, error: null, errorInfo: null };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError() {
     // Actualiza el state para mostrar la UI de error
     return { hasError: true };
   }
@@ -22,6 +22,7 @@ class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
+      const isDevelopment = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.MODE === 'development';
       // UI de error personalizada
       return (
         <div className="min-h-screen bg-white flex items-center justify-center">
@@ -53,7 +54,7 @@ class ErrorBoundary extends React.Component {
             </div>
             
             {/* Mostrar detalles del error en desarrollo */}
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {isDevelopment && this.state.error && (
               <details className="mt-6 text-left">
                 <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
                   Detalles del error (desarrollo)

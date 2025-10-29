@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, LogOut, Home, User, Settings, ChevronDown } from 'lucide-react';
 import { authAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -42,7 +42,6 @@ const PageHeader = ({
   children 
 }) => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuth();
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
@@ -191,10 +190,7 @@ const PageHeader = ({
                   {/* Action Buttons */}
                   <div style={{ backgroundColor: '#ffffff', padding: '0.5rem' }}>
                     <button
-                      onClick={() => {
-                        setShowUserDropdown(false);
-                        navigate('/profile');
-                      }}
+                      onClick={handleEditProfile}
                       style={{
                         width: '100%',
                         padding: '0.75rem',
@@ -224,41 +220,43 @@ const PageHeader = ({
                       <Settings style={{ width: '1rem', height: '1rem', color: '#374151' }} />
                       Editar perfil
                     </button>
-                    
-                    <button
-                      onClick={() => {
-                        setShowUserDropdown(false);
-                        handleLogout();
-                      }}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.75rem',
-                        color: '#374151',
-                        backgroundColor: '#ffffff',
-                        border: 'none',
-                        borderRadius: '0.375rem',
-                        cursor: 'pointer',
-                        fontSize: '0.875rem',
-                        outline: 'none',
-                        boxShadow: 'none',
-                        textDecoration: 'none'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.backgroundColor = '#f3f4f6';
-                        e.target.style.color = '#374151';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.backgroundColor = '#ffffff';
-                        e.target.style.color = '#374151';
-                      }}
-                      className=""
-                    >
-                      <LogOut style={{ width: '1rem', height: '1rem', color: '#374151' }} />
-                      Cerrar sesión
-                    </button>
+
+                    {showLogoutButton && (
+                      <button
+                        onClick={() => {
+                          setShowUserDropdown(false);
+                          handleLogout();
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.75rem',
+                          color: '#374151',
+                          backgroundColor: '#ffffff',
+                          border: 'none',
+                          borderRadius: '0.375rem',
+                          cursor: 'pointer',
+                          fontSize: '0.875rem',
+                          outline: 'none',
+                          boxShadow: 'none',
+                          textDecoration: 'none'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.backgroundColor = '#f3f4f6';
+                          e.target.style.color = '#374151';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.backgroundColor = '#ffffff';
+                          e.target.style.color = '#374151';
+                        }}
+                        className=""
+                      >
+                        <LogOut style={{ width: '1rem', height: '1rem', color: '#374151' }} />
+                        Cerrar sesion
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -281,3 +279,8 @@ const PageHeader = ({
 };
 
 export default PageHeader; 
+
+
+
+
+

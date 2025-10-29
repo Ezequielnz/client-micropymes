@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { businessAPI, authAPI } from '../utils/api';
 import { useBusinessContext } from '../contexts/BusinessContext';
-import { useAuth } from '../contexts/AuthContext';
 import { useUserPermissions } from '../hooks/useUserPermissions';
 import {
   AlertCircle,
@@ -12,9 +10,19 @@ import {
   Lock
 } from 'lucide-react';
 
+const MODULE_RESOURCE_MAP = {
+  inventario: 'productos',
+  productos: 'productos',
+  categorias: 'categorias',
+  clientes: 'clientes',
+  ventas: 'ventas',
+  tareas: 'tareas',
+  stock: 'stock',
+  facturacion: 'facturacion'
+};
+
 function PermissionGuard({ children, requiredModule, requiredAction = 'ver' }) {
   const navigate = useNavigate();
-  const { user } = useAuth();
   
   // ✅ FIXED: Use BusinessContext instead of useParams
   const { currentBusiness } = useBusinessContext();
@@ -24,17 +32,7 @@ function PermissionGuard({ children, requiredModule, requiredAction = 'ver' }) {
   const { isLoading: loading, canView, canEdit, canDelete, hasFullAccess, permissions } = useUserPermissions(businessId);
 
   // ✅ NEW: Map modules to permission resources
-  const moduleToResource = {
-    'inventario': 'productos',
-    'productos': 'productos', 
-    'categorias': 'categorias',
-    'clientes': 'clientes',
-    'ventas': 'ventas',
-    'tareas': 'tareas',
-    'stock': 'stock',
-    'facturacion': 'facturacion'
-  };
-
+  
   // ✅ NEW: Determine access based on new permission system
   const hasAccess = React.useMemo(() => {
     if (!permissions || loading) return false;
@@ -57,7 +55,7 @@ function PermissionGuard({ children, requiredModule, requiredAction = 'ver' }) {
     }
     
     // Map the required module to the actual resource
-    const resource = moduleToResource[requiredModule] || requiredModule;
+    const resource = MODULE_RESOURCE_MAP[requiredModule] || requiredModule;
     console.log('Mapped resource:', resource);
     
     // Check specific permission based on action
@@ -78,7 +76,7 @@ function PermissionGuard({ children, requiredModule, requiredAction = 'ver' }) {
     
     console.log(`Permission check result for ${requiredAction} on ${resource}:`, hasPermission);
     return hasPermission;
-  }, [permissions, loading, hasFullAccess, canView, canEdit, canDelete, requiredModule, requiredAction, moduleToResource]);
+  }, [permissions, loading, hasFullAccess, canView, canEdit, canDelete, requiredModule, requiredAction]);
 
   // ✅ FIXED: Handle case when no business is selected
   if (!currentBusiness) {
@@ -172,3 +170,8 @@ function PermissionGuard({ children, requiredModule, requiredAction = 'ver' }) {
 }
 
 export default PermissionGuard; 
+
+
+
+
+

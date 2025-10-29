@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useBusinessContext } from '../contexts/BusinessContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { tasksAPI, authAPI } from '../utils/api';
-import { getErrorMessage, isForbiddenError } from '../utils/errorHandler';
+import { tasksAPI } from '../utils/api';
+import { getErrorMessage } from '../utils/errorHandler';
 import PermissionGuard from '../components/PermissionGuard';
 import Layout from '../components/Layout';
 import '../styles/responsive-overrides.css';
@@ -75,7 +74,6 @@ const useDebounce = (value, delay) => {
 function Tasks() {
   const { currentBusiness } = useBusinessContext();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const businessId = currentBusiness?.id;
   
   const [vistaActual, setVistaActual] = useState('lista'); // 'lista' o 'calendario'
@@ -122,7 +120,7 @@ function Tasks() {
       if (!businessId) return { tareas: [] };
       // Filtrar parámetros vacíos
       const filtrosLimpios = Object.fromEntries(
-        Object.entries(filtros).filter(([key, value]) => value !== '' && value !== null && value !== undefined)
+        Object.entries(filtros).filter(([, value]) => value !== '' && value !== null && value !== undefined)
       );
       return await tasksAPI.getTasks(businessId, filtrosLimpios);
     },
@@ -255,12 +253,13 @@ function Tasks() {
 
   // ✅ OPTIMIZED: Memoized loading state
   const loading = React.useMemo(() => {
-    return loadingTasks || 
+    return loadingTasks ||
+           loadingEmployees || 
            createTaskMutation.isPending || 
            updateTaskMutation.isPending || 
            deleteTaskMutation.isPending || 
            changeStatusMutation.isPending;
-  }, [loadingTasks, createTaskMutation.isPending, updateTaskMutation.isPending, deleteTaskMutation.isPending, changeStatusMutation.isPending]);
+  }, [loadingTasks, loadingEmployees, createTaskMutation.isPending, updateTaskMutation.isPending, deleteTaskMutation.isPending, changeStatusMutation.isPending]);
 
   // ✅ OPTIMIZED: Memoized error state
   const error = React.useMemo(() => {
@@ -909,3 +908,4 @@ export default function ProtectedTasks() {
     </Layout>
   );
 } 
+

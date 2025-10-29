@@ -88,7 +88,7 @@ const HomeContent: React.FC = () => {
       return;
     }
     loadInitialData();
-  }, [navigate]);
+  }, [loadInitialData, navigate]);
 
   // ✅ OPTIMIZED: Memoized loadInitialData function
   const loadInitialData = useCallback(async () => {

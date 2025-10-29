@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -16,39 +16,8 @@ import {
   BarChart3,
   Truck
 } from 'lucide-react';
-import { authAPI, businessAPI } from '../utils/api';
-import { BusinessContext, useBusinessContext } from '../contexts/BusinessContext';
-import { useAuth } from '../contexts/AuthContext';
-
-// Export useBusinessContext for backward compatibility
-export { useBusinessContext };
-
-// Componente Button reutilizable
-const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', disabled = false, ...props }) => {
-  const baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
-  
-  const variants = {
-    default: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
-    outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500',
-    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-blue-500',
-    success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500',
-    warning: 'bg-yellow-600 text-white hover:bg-yellow-700 focus:ring-yellow-500'
-  };
-  
-  const sizes = {
-    sm: 'h-8 px-3 text-sm',
-    default: 'h-10 px-4 py-2',
-    lg: 'h-12 px-6 text-lg'
-  };
-  
-  const classes = `${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`;
-  
-  return (
-    <button className={classes} onClick={onClick} disabled={disabled} {...props}>
-      {children}
-    </button>
-  );
-};
+import { businessAPI } from '../utils/api';
+import { BusinessContext } from '../contexts/BusinessContext';
 
 // Sidebar Component
 const Sidebar = ({ activeSection, setActiveSection, currentBusiness, currentBranch, branches, branchesLoading }) => {
@@ -321,7 +290,6 @@ const Header = ({
   branchError,
   onBusinessChange,
   onBranchChange,
-  onLogout,
   setSidebarOpen,
 }) => {
   const [showBusinessDropdown, setShowBusinessDropdown] = useState(false);
@@ -507,10 +475,8 @@ const Header = ({
 
 // Layout Component Principal
 const Layout = ({ children, activeSection }) => {
-  const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
   const [currentBusiness, setCurrentBusiness] = useState(null);
   const [businesses, setBusinesses] = useState([]);
   const [currentBranch, setCurrentBranch] = useState(null);
@@ -637,11 +603,7 @@ const Layout = ({ children, activeSection }) => {
   // Determinar la sección activa
   const currentActiveSection = activeSection || getActiveSectionFromPath();
 
-  useEffect(() => {
-    loadInitialData();
-  }, []);
-
-  const loadInitialData = async () => {
+  const loadInitialData = useCallback(async () => {
     try {
       setLoading(true);
       // Solo cargar businesses, el usuario ya está disponible en AuthContext
@@ -673,7 +635,11 @@ const Layout = ({ children, activeSection }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [loadBranches]);
+
+  useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
 
   const handleBusinessChange = (business) => {
     setCurrentBusiness(business);
@@ -700,14 +666,6 @@ const Layout = ({ children, activeSection }) => {
     queryClient.invalidateQueries({ queryKey: ['tasks', business.id] });
     queryClient.invalidateQueries({ queryKey: ['purchases', business.id] });
     queryClient.invalidateQueries({ queryKey: ['suppliers', business.id] });
-  };
-
-  const handleLogout = () => {
-    // Esta función ahora se implementa directamente en el botón del sidebar
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.clear();
-    navigate('/login');
   };
 
   if (loading) {
@@ -794,7 +752,6 @@ const Layout = ({ children, activeSection }) => {
       branchError={branchError}
       onBusinessChange={handleBusinessChange}
       onBranchChange={handleBranchChange}
-      onLogout={handleLogout}
       setSidebarOpen={setSidebarOpen}
     />
     <main className="flex-1 min-w-0">
@@ -807,3 +764,4 @@ const Layout = ({ children, activeSection }) => {
 };
 
 export default Layout; 
+

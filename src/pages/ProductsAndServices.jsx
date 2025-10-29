@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productAPI, serviceAPI, categoryAPI } from '../utils/api';
 import PermissionGuard from '../components/PermissionGuard';
@@ -193,7 +192,6 @@ const OptimizedTable = React.memo(({
 });
 
 const ProductsAndServices = () => {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   
   // ✅ FIXED: Use BusinessContext instead of useParams
@@ -231,104 +229,94 @@ const ProductsAndServices = () => {
   const canViewProducts = useMemo(() => canView('productos'), [canView]);
 
   // ✅ FIXED: Better loading and undefined handling
-  if (!currentBusiness) {
-    return (
-      <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '48px 0',
-          backgroundColor: '#f8f9fa',
-          borderRadius: '8px',
-          border: '1px solid #e9ecef'
-        }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '500', color: '#111827', marginBottom: '8px' }}>
-            No hay negocio seleccionado
-          </h3>
-          <p style={{ color: '#6b7280', marginBottom: '24px' }}>
-            Por favor selecciona un negocio desde el menú superior para gestionar productos y servicios.
-          </p>
-        </div>
+  const businessGuard = !currentBusiness ? (
+    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ 
+        textAlign: 'center', 
+        padding: '48px 0',
+        backgroundColor: '#f8f9fa',
+        borderRadius: '8px',
+        border: '1px solid #e9ecef'
+      }}>
+        <h3 style={{ fontSize: '18px', fontWeight: '500', color: '#111827', marginBottom: '8px' }}>
+          No hay negocio seleccionado
+        </h3>
+        <p style={{ color: '#6b7280', marginBottom: '24px' }}>
+          Por favor selecciona un negocio desde el menú superior para gestionar productos y servicios.
+        </p>
       </div>
-    );
-  }
+    </div>
+  ) : null;
 
-  if (branchesLoading) {
-    return (
-      <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{
-          textAlign: 'center',
-          padding: '48px 0',
-          backgroundColor: '#f8f9fa',
-          borderRadius: '8px',
-          border: '1px solid #e9ecef'
-        }}>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p style={{ color: '#6b7280' }}>Cargando sucursales...</p>
-        </div>
+  const branchesLoadingGuard = branchesLoading ? (
+    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{
+        textAlign: 'center',
+        padding: '48px 0',
+        backgroundColor: '#f8f9fa',
+        borderRadius: '8px',
+        border: '1px solid #e9ecef'
+      }}>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p style={{ color: '#6b7280' }}>Cargando sucursales...</p>
       </div>
-    );
-  }
+    </div>
+  ) : null;
 
-  if (branchSelectionRequired && !branchReady) {
-    return (
-      <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{
-          textAlign: 'center',
-          padding: '48px 0',
-          backgroundColor: '#fefce8',
-          borderRadius: '8px',
-          border: '1px solid #fde68a'
-        }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '500', color: '#854d0e', marginBottom: '8px' }}>
-            Selecciona una sucursal
-          </h3>
-          <p style={{ color: '#a16207', marginBottom: '24px' }}>
-            Elige una sucursal desde el selector superior para continuar gestionando productos y servicios.
-          </p>
-        </div>
+  const branchSelectionGuard = branchSelectionRequired && !branchReady ? (
+    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{
+        textAlign: 'center',
+        padding: '48px 0',
+        backgroundColor: '#fefce8',
+        borderRadius: '8px',
+        border: '1px solid #fde68a'
+      }}>
+        <h3 style={{ fontSize: '18px', fontWeight: '500', color: '#854d0e', marginBottom: '8px' }}>
+          Selecciona una sucursal
+        </h3>
+        <p style={{ color: '#a16207', marginBottom: '24px' }}>
+          Elige una sucursal desde el selector superior para continuar gestionando productos y servicios.
+        </p>
       </div>
-    );
-  }
+    </div>
+  ) : null;
 
-  // Show loading while permissions are being fetched
-  if (permissionsLoading) {
-    return (
-      <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '48px 0',
-          backgroundColor: '#f8f9fa',
-          borderRadius: '8px',
-          border: '1px solid #e9ecef'
-        }}>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p style={{ color: '#6b7280' }}>Cargando permisos...</p>
-        </div>
+  const permissionsGuard = permissionsLoading ? (
+    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ 
+        textAlign: 'center', 
+        padding: '48px 0',
+        backgroundColor: '#f8f9fa',
+        borderRadius: '8px',
+        border: '1px solid #e9ecef'
+      }}>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p style={{ color: '#6b7280' }}>Cargando permisos...</p>
       </div>
-    );
-  }
+    </div>
+  ) : null;
 
-  // Check if user can view products at all
-  if (!canViewProducts) {
-    return (
-      <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '48px 0',
-          backgroundColor: '#fef2f2',
-          borderRadius: '8px',
-          border: '1px solid #fecaca'
-        }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '500', color: '#991b1b', marginBottom: '8px' }}>
-            Acceso denegado
-          </h3>
-          <p style={{ color: '#7f1d1d', marginBottom: '24px' }}>
-            No tienes permisos para ver productos y servicios.
-          </p>
-        </div>
+  const noAccessGuard = !permissionsLoading && !canViewProducts ? (
+    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ 
+        textAlign: 'center', 
+        padding: '48px 0',
+        backgroundColor: '#fef2f2',
+        borderRadius: '8px',
+        border: '1px solid #fecaca'
+      }}>
+        <h3 style={{ fontSize: '18px', fontWeight: '500', color: '#991b1b', marginBottom: '8px' }}>
+          Acceso denegado
+        </h3>
+        <p style={{ color: '#7f1d1d', marginBottom: '24px' }}>
+          No tienes permisos para ver productos y servicios.
+        </p>
       </div>
-    );
-  }
+    </div>
+  ) : null;
+
+  const queriesEnabled = Boolean(businessId && currentBusiness && branchReady);
 
   // ✅ OPTIMIZED: React Query for data fetching with smart caching - Only when businessId is available
   const { 
@@ -338,7 +326,7 @@ const ProductsAndServices = () => {
   } = useQuery({
     queryKey: ['products', businessId, branchId],
     queryFn: () => productAPI.getProducts(businessId, branchParams),
-    enabled: !!businessId && !!currentBusiness && branchReady, // Only fetch when context is ready
+    enabled: queriesEnabled, // Only fetch when context is ready
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
@@ -351,7 +339,7 @@ const ProductsAndServices = () => {
   } = useQuery({
     queryKey: ['services', businessId, branchId],
     queryFn: () => serviceAPI.getServices(businessId, branchParams),
-    enabled: !!businessId && !!currentBusiness && branchReady, // Only fetch when context is ready
+    enabled: queriesEnabled, // Only fetch when context is ready
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -363,7 +351,7 @@ const ProductsAndServices = () => {
   } = useQuery({
     queryKey: ['categories', businessId, branchId],
     queryFn: () => categoryAPI.getCategories(businessId),
-    enabled: !!businessId && !!currentBusiness && branchReady, // Only fetch when context is ready
+    enabled: queriesEnabled, // Only fetch when context is ready
     staleTime: 10 * 60 * 1000, // Categories change less frequently
     gcTime: 15 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -399,9 +387,11 @@ const ProductsAndServices = () => {
 
   // ✅ OPTIMIZED: Computed loading state
   const isLoading = useMemo(() => {
-    if (activeTab === 'products') return loadingProducts;
+    if (activeTab === 'products') {
+      return loadingProducts || loadingCategories;
+    }
     return loadingServices;
-  }, [activeTab, loadingProducts, loadingServices]);
+  }, [activeTab, loadingProducts, loadingServices, loadingCategories]);
 
   // ✅ OPTIMIZED: Computed error state
   const currentError = useMemo(() => {
@@ -592,6 +582,17 @@ const ProductsAndServices = () => {
     }
     return '';
   }, [currentError, activeTab]);
+
+  const guardToShow =
+    businessGuard ||
+    branchesLoadingGuard ||
+    branchSelectionGuard ||
+    permissionsGuard ||
+    noAccessGuard;
+
+  if (guardToShow) {
+    return guardToShow;
+  }
 
   return (
       <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>

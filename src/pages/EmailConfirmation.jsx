@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,9 +48,9 @@ function EmailConfirmation() {
     if (email) {
       checkConfirmationStatus();
     }
-  }, [email]);
+  }, [email, checkConfirmationStatus]);
 
-  const checkConfirmationStatus = async () => {
+  const checkConfirmationStatus = useCallback(async () => {
     if (!email) return;
     
     setLoading(true);
@@ -71,8 +71,7 @@ function EmailConfirmation() {
     } finally {
       setLoading(false);
     }
-  };
-
+  }, [email]);
   const handleResendConfirmation = async () => {
     if (!email) {
       setError('Por favor ingresa tu email');

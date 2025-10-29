@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Calendar,
   TrendingUp,
@@ -20,7 +20,7 @@ const FlujoCajaChart = ({ businessId, onAddIngreso, onAddEgreso }) => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchFlujoCaja = async () => {
+  const fetchFlujoCaja = useCallback(async () => {
     try {
       setRefreshing(true);
       const data = await financeAPI.getCashFlow(businessId, { mes: selectedMonth, anio: selectedYear });
@@ -34,13 +34,16 @@ const FlujoCajaChart = ({ businessId, onAddIngreso, onAddEgreso }) => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  
+  }, [businessId, selectedMonth, selectedYear]);
+
+
 
   useEffect(() => {
     if (businessId) {
       fetchFlujoCaja();
     }
-  }, [businessId, selectedMonth, selectedYear]);
+  }, [businessId, fetchFlujoCaja]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-AR', {
@@ -344,3 +347,4 @@ const FlujoCajaChart = ({ businessId, onAddIngreso, onAddEgreso }) => {
 };
 
 export default FlujoCajaChart;
+

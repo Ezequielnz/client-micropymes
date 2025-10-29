@@ -144,26 +144,41 @@ const LoadingSpinner = ({
  * Componente de loading para páginas completas
  */
 export const PageLoader = ({ 
-  message = 'Cargando página...', 
+  message = 'Cargando pagina...', 
   variant = 'primary',
   showLogo = true 
 }) => {
+  const accentByVariant = {
+    primary: 'text-erp-primary',
+    secondary: 'text-erp-neutral-600',
+    success: 'text-erp-success',
+    warning: 'text-erp-warning',
+    error: 'text-erp-error'
+  };
+  const accentClass = accentByVariant[variant] || accentByVariant.primary;
+
   return (
     <div className="loader-operixml w-full h-screen">
       <div className="flex flex-col items-center justify-center w-full">
-        <div className="flex flex-col items-center">
-  <div className="loader-operixml-logo mb-4">
-    <span style={{fontWeight:'bold',fontSize:'2rem',color:'#2563eb'}}>O</span>
-    <Zap className="h-6 w-6 text-white" />
-  </div>
-  <h1 className="text-2xl font-bold text-erp-neutral-900">
-    OperixML
-  </h1>
-</div>
+        {showLogo && (
+          <div className="flex flex-col items-center">
+            <div className="loader-operixml-logo mb-4 flex items-center justify-center rounded-full bg-erp-primary px-3 py-2">
+              <span className="font-bold text-2xl text-white">O</span>
+              <Zap className="h-6 w-6 text-white ml-1" />
+            </div>
+            <h1 className="text-2xl font-bold text-erp-neutral-900">
+              OperixML
+            </h1>
+          </div>
+        )}
+        <p className={`mt-6 text-lg font-medium text-center ${accentClass}`}>
+          {message}
+        </p>
       </div>
     </div>
   );
-}
+};
+
 
 /**
  * Componente de loading para secciones específicas

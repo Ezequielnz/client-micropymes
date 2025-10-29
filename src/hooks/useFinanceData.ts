@@ -35,8 +35,8 @@ interface CuentaPendiente {
   descripcion: string;
   monto: number;
   fecha_vencimiento: string;
-  tipo: 'cobrar' | 'pagar';
-  estado: 'pendiente' | 'pagada';
+  tipo: 'cobrar' | 'pagar' | 'por_cobrar' | 'por_pagar';
+  estado: 'pendiente' | 'pagada' | 'pagado' | 'vencido';
 }
 
 interface FlujoCajaData {
@@ -82,6 +82,7 @@ interface UseFinanceDataReturn {
   createCuentaPendiente: any;
   updateCuentaPendiente: any;
   deleteCuentaPendiente: any;
+  markCuentaPendientePagada: any;
 }
 
 interface FinanceScopeOptions {
@@ -266,6 +267,14 @@ export const useFinanceData = (
     }
   });
 
+  const markCuentaPendientePagadaMutation = useMutation({
+    mutationFn: (id: string) => financeAPI.markCuentaPendientePagada(businessId!, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['finance-cuentas-pendientes', businessId, branchKey] });
+      queryClient.invalidateQueries({ queryKey: ['finance-stats', businessId, branchKey] });
+    }
+  });
+
   // ✅ OPTIMIZED: Memoized computed states
   const loading = useMemo(() => {
     if (!baseEnabled) {
@@ -391,6 +400,7 @@ export const useFinanceData = (
     deleteCategoria: deleteCategoriaMutation,
     createCuentaPendiente: createCuentaPendienteMutation,
     updateCuentaPendiente: updateCuentaPendienteMutation,
-    deleteCuentaPendiente: deleteCuentaPendienteMutation
+    deleteCuentaPendiente: deleteCuentaPendienteMutation,
+    markCuentaPendientePagada: markCuentaPendientePagadaMutation
   };
 };

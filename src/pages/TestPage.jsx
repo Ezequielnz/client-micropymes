@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useBusinessContext } from '../contexts/BusinessContext';
 import { useUserPermissions } from '../hooks/useUserPermissions';
@@ -18,13 +18,9 @@ function TestPage() {
   const [diagnostics, setDiagnostics] = useState(null);
   const [testResults, setTestResults] = useState({});
 
-  useEffect(() => {
-    runDiagnostics();
-  }, []);
+  const runDiagnostics = useCallback(async () => {
+    console.log('=== EJECUTANDO DIAGNOSTICOS ===');
 
-  const runDiagnostics = async () => {
-    console.log('=== EJECUTANDO DIAGNÓSTICOS ===');
-    
     const results = {
       localStorage: {
         hasToken: !!localStorage.getItem('token'),
@@ -52,7 +48,6 @@ function TestPage() {
       }
     };
 
-    // Test API endpoints
     if (localStorage.getItem('token')) {
       try {
         console.log('Testing /auth/me endpoint...');
@@ -60,27 +55,27 @@ function TestPage() {
         results.apiTests = {
           authMe: { success: true, data: authResponse }
         };
-        
+
         console.log('Testing /businesses endpoint...');
         const businessesResponse = await businessAPI.getBusinesses();
         results.apiTests.businesses = { success: true, data: businessesResponse };
-        
+
         if (businessesResponse && businessesResponse.length > 0) {
           const firstBusiness = businessesResponse[0];
           console.log(`Testing /businesses/${firstBusiness.id}/permissions endpoint...`);
-          
+
           try {
             const permissionsResponse = await fetch(`${API_BASE_URL}/api/v1/businesses/${firstBusiness.id}/permissions`, {
               cache: 'no-store',
               headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
                 'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Pragma': 'no-cache',
+                Accept: 'application/json',
+                Pragma: 'no-cache',
                 'Cache-Control': 'no-cache'
               }
             });
-            
+
             if (permissionsResponse.ok) {
               const permissionsData = await permissionsResponse.json();
               results.apiTests.permissions = { success: true, data: permissionsData };
@@ -103,7 +98,11 @@ function TestPage() {
 
     setDiagnostics(results);
     console.log('Diagnostic results:', results);
-  };
+  }, [authLoading, isAuthenticated, user, currentBusiness, businesses, permissions, permissionsLoading, permissionsError]);
+
+  useEffect(() => {
+    runDiagnostics();
+  }, [runDiagnostics]);
 
   const clearLocalStorage = () => {
     localStorage.removeItem('token');
@@ -286,3 +285,7 @@ function TestPage() {
 }
 
 export default TestPage; 
+
+
+
+

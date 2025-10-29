@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, Save, ArrowLeft, Eye, EyeOff, AlertCircle, CheckCircle, Edit } from 'lucide-react';
 import { authAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -92,8 +91,6 @@ function Profile() {
     confirmPassword: ''
   });
   
-  const navigate = useNavigate();
-
   useEffect(() => {
     const loadUserData = async () => {
       try {

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,10 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { subscriptionAPI, serviceAPI, customerAPI } from '../utils/api';
 import { getErrorMessage } from '../utils/errorHandler';
+import { useBusinessContext } from '../contexts/BusinessContext';
+import { useUserPermissions } from '../hooks/useUserPermissions';
+import Layout from '../components/Layout';
+import PermissionGuard from '../components/PermissionGuard';
 import { 
   CreditCard, 
   Plus, 
@@ -18,15 +22,11 @@ import {
   Filter, 
   AlertTriangle,
   DollarSign,
-  Calendar,
-  User,
-  Settings,
   Menu,
   X,
   ArrowLeft,
   Loader2,
   Search,
-  Clock,
   CheckCircle,
   PauseCircle,
   XCircle,
@@ -53,19 +53,6 @@ const subscriptionTypes = [
   { value: 'anual', label: 'Anual' }
 ];
 
-const frequencyOptions = [
-  { value: 'semanal', label: 'Semanal' },
-  { value: 'mensual', label: 'Mensual' },
-  { value: 'trimestral', label: 'Trimestral' },
-  { value: 'cuatrimestral', label: 'Cuatrimestral' },
-  { value: 'anual', label: 'Anual' }
-];
-
-const schedulingTypes = [
-  { value: 'mismo_dia', label: 'Mismo día del mes' },
-  { value: 'dia_especifico', label: 'Día específico del mes' },
-  { value: 'dia_semana', label: 'Día de la semana' }
-];
 
 const weekDays = [
   { value: 0, label: 'Domingo' },
@@ -88,9 +75,14 @@ const subscriptionStatuses = [
  * Subscriptions component for managing client subscriptions to services.
  */
 function Subscriptions() {
-  const { businessId } = useParams();
+  const { currentBusiness } = useBusinessContext();
+  const businessId = currentBusiness?.id;
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const { canView, canEdit, isLoading: permissionsLoading } = useUserPermissions(businessId);
+  const canViewSubscriptions = useMemo(() => canView('suscripciones'), [canView]);
+  const canManageSubscriptions = useMemo(() => canEdit('suscripciones'), [canEdit]);
 
   const [subscriptions, setSubscriptions] = useState([]);
   const [services, setServices] = useState([]);
@@ -109,9 +101,42 @@ function Subscriptions() {
   const [showForm, setShowForm] = useState(false);
   const [subscriptionForm, setSubscriptionForm] = useState(initialFormState);
 
+  const businessGuard = !currentBusiness ? (
+    <div className="max-w-4xl mx-auto py-16">
+      <Card className="border border-gray-200 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-xl text-gray-900">Selecciona un negocio</CardTitle>
+          <CardDescription className="text-gray-600">
+            Para administrar suscripciones necesitás elegir un negocio activo desde el selector superior.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    </div>
+  ) : null;
+
+  const permissionsGuard = permissionsLoading ? (
+    <div className="max-w-4xl mx-auto py-16 text-center text-gray-600">
+      <Loader2 className="h-6 w-6 mx-auto mb-4 animate-spin" />
+      Verificando permisos...
+    </div>
+  ) : null;
+
+  const noAccessGuard = !permissionsLoading && !canViewSubscriptions ? (
+    <div className="max-w-4xl mx-auto py-16">
+      <Card className="border border-red-200 bg-red-50">
+        <CardHeader>
+          <CardTitle className="text-xl text-red-700">Acceso denegado</CardTitle>
+          <CardDescription className="text-red-600">
+            Tu usuario no tiene permisos para ver suscripciones en este negocio.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    </div>
+  ) : null;
+
   const fetchSubscriptions = useCallback(async () => {
-    if (!businessId) {
-      setError('Business ID is missing.');
+    if (!businessId || !canViewSubscriptions) {
+      setSubscriptions([]);
       setLoading(false);
       return;
     }
@@ -137,7 +162,7 @@ function Subscriptions() {
     } finally {
       setLoading(false);
     }
-  }, [businessId, selectedCustomer, selectedService, selectedStatus]);
+  }, [businessId, canViewSubscriptions, selectedCustomer, selectedService, selectedStatus]);
 
   const fetchServices = useCallback(async () => {
     if (!businessId) return;
@@ -180,7 +205,11 @@ function Subscriptions() {
     e.preventDefault();
     setFormError('');
     if (!businessId) {
-      setFormError('Business ID is missing.');
+      setFormError('Selecciona un negocio antes de gestionar suscripciones.');
+      return;
+    }
+    if (!canManageSubscriptions) {
+      setFormError('No tienes permisos para gestionar suscripciones.');
       return;
     }
     
@@ -227,7 +256,7 @@ function Subscriptions() {
 
       // Filtrar valores null para no enviarlos
       const finalData = Object.fromEntries(
-        Object.entries(cleanedData).filter(([key, value]) => value !== null)
+        Object.entries(cleanedData).filter(([, value]) => value !== null)
       );
 
       if (isEditing && currentSubscription) {
@@ -273,6 +302,11 @@ function Subscriptions() {
       return;
     }
 
+    if (!businessId || !canManageSubscriptions) {
+      setError('No tienes permisos para eliminar suscripciones.');
+      return;
+    }
+
     setLoading(true);
     try {
       await subscriptionAPI.deleteSubscription(businessId, subscriptionId);
@@ -287,6 +321,11 @@ function Subscriptions() {
   };
 
   const handleStatusChange = async (subscriptionId, newStatus) => {
+    if (!businessId || !canManageSubscriptions) {
+      setError('No tienes permisos para actualizar el estado de suscripciones.');
+      return;
+    }
+
     setLoading(true);
     try {
       await subscriptionAPI.updateSubscriptionStatus(businessId, subscriptionId, newStatus);
@@ -332,6 +371,12 @@ function Subscriptions() {
     getCustomerName(subscription.cliente_id).toLowerCase().includes(searchTerm.toLowerCase()) ||
     getServiceName(subscription.servicio_id).toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const guardToShow = businessGuard || permissionsGuard || noAccessGuard;
+
+  if (guardToShow) {
+    return guardToShow;
+  }
 
   return (
     <div className="page-container">
@@ -818,4 +863,13 @@ function Subscriptions() {
   );
 }
 
-export default Subscriptions; 
+export default function ProtectedSubscriptions() {
+  return (
+    <Layout activeSection="subscriptions">
+      <PermissionGuard requiredModule="suscripciones" requiredAction="ver">
+        <Subscriptions />
+      </PermissionGuard>
+    </Layout>
+  );
+} 
+

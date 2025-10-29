@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import {
   Activity,
@@ -39,28 +39,7 @@ const MonitoringDashboard: React.FC<{ tenantId: string }> = ({ tenantId }) => {
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
 
-  useEffect(() => {
-    fetchMonitoringData();
-    const interval = setInterval(fetchMonitoringData, 60000); // Refresh every minute
-    return () => clearInterval(interval);
-  }, [tenantId]);
-
-  // Show notification for critical alerts
-  useEffect(() => {
-    if (alerts.length > 0) {
-      const criticalAlerts = alerts.filter(a => a.severity === 'critical');
-      if (criticalAlerts.length > 0) {
-        setNotificationMessage(`⚠️ ${criticalAlerts.length} alerta(s) crítica(s) detectada(s)`);
-        setShowNotification(true);
-        
-        // Auto-hide after 10 seconds
-        const timer = setTimeout(() => setShowNotification(false), 10000);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [alerts]);
-
-  const fetchMonitoringData = async () => {
+  const fetchMonitoringData = useCallback(async () => {
     try {
       setError(null);
       const token = localStorage.getItem('token');
@@ -128,7 +107,31 @@ const MonitoringDashboard: React.FC<{ tenantId: string }> = ({ tenantId }) => {
       setAlerts([]);
       setLoading(false);
     }
-  };
+  
+  }, [tenantId]);
+
+  useEffect(() => {
+    fetchMonitoringData();
+    const interval = setInterval(fetchMonitoringData, 60000); // Refresh every minute
+    return () => clearInterval(interval);
+  }, [fetchMonitoringData]);
+
+  // Show notification for critical alerts
+  useEffect(() => {
+    if (alerts.length > 0) {
+      const criticalAlerts = alerts.filter(a => a.severity === 'critical');
+      if (criticalAlerts.length > 0) {
+        setNotificationMessage(`⚠️ ${criticalAlerts.length} alerta(s) crítica(s) detectada(s)`);
+        setShowNotification(true);
+        
+        // Auto-hide after 10 seconds
+        const timer = setTimeout(() => setShowNotification(false), 10000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [alerts]);
+
+
 
   if (loading) {
     return (

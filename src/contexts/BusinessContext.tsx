@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext } from 'react';
 
 // TypeScript interfaces
@@ -41,3 +42,4 @@ export const useBusinessContext = () => {
 
 export { BusinessContext };
 export type { Business, Branch, BusinessContextType }; 
+

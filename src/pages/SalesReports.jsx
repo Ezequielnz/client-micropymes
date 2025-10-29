@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useBusinessContext } from '../contexts/BusinessContext';
 import { salesAPI, customerAPI } from '../utils/api';
 import { PageLoader } from '../components/LoadingSpinner';
@@ -142,7 +141,6 @@ const Badge = ({ children, variant = 'default', className = '' }) => {
  */
 function SalesReportsComponent() {
   const { currentBusiness } = useBusinessContext();
-  const navigate = useNavigate();
 
   /** @type {[Array<SaleRecord>, function]} sales - State for storing the list of sales records. */
   const [sales, setSales] = useState([]);
