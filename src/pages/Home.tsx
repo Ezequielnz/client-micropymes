@@ -80,16 +80,6 @@ const HomeContent: React.FC = () => {
     return !!currentBusiness;
   }, [currentBusiness]);
 
-  // Efecto para cargar datos iniciales (solo verificar token y obtener negocios)
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
-    loadInitialData();
-  }, [loadInitialData, navigate]);
-
   // ✅ OPTIMIZED: Memoized loadInitialData function
   const loadInitialData = useCallback(async () => {
     try {
@@ -115,6 +105,16 @@ const HomeContent: React.FC = () => {
       setLoading(false);
     }
   }, [navigate]);
+
+  // Efecto para cargar datos iniciales (solo verificar token y obtener negocios)
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+    loadInitialData();
+  }, [loadInitialData, navigate]);
 
   // ✅ OPTIMIZED: Memoized handlePeriodChange function
   const handlePeriodChange = useCallback((period: string) => {
