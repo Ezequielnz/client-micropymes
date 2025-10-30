@@ -47,25 +47,6 @@ const Sidebar = ({
   const [showSalesDropdown, setShowSalesDropdown] = useState(false);
   const [showInventoryDropdown, setShowInventoryDropdown] = useState(false);
   const [showPurchasesDropdown, setShowPurchasesDropdown] = useState(false);
-  const [showMobileBusinessDropdown, setShowMobileBusinessDropdown] = useState(false);
-  const [showMobileBranchDropdown, setShowMobileBranchDropdown] = useState(false);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showMobileBusinessDropdown && !event.target.closest('.mobile-business-dropdown')) {
-        setShowMobileBusinessDropdown(false);
-      }
-      if (showMobileBranchDropdown && !event.target.closest('.mobile-branch-dropdown')) {
-        setShowMobileBranchDropdown(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showMobileBusinessDropdown, showMobileBranchDropdown]);
-  
   // Helper function to safely navigate with business validation
   const safeNavigate = (path) => {
     if (!currentBusiness?.id) {
@@ -138,116 +119,6 @@ const Sidebar = ({
   </div>
 </div>
 
-      <div className="lg:hidden px-4 py-4 border-b border-gray-200 space-y-4" style={{ backgroundColor: '#ffffff' }}>
-        <div className="mobile-business-dropdown relative">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-            Negocio
-          </p>
-          <button
-            onClick={() => setShowMobileBusinessDropdown((open) => !open)}
-            className="flex items-center justify-between gap-2 w-full px-3 py-2 border border-gray-300 rounded-lg transition-colors bg-slate-50 hover:bg-slate-100"
-            aria-haspopup="true"
-            aria-expanded={showMobileBusinessDropdown}
-          >
-            <span className="font-semibold text-sm text-blue-600 truncate">
-              {currentBusiness?.nombre || 'Seleccionar negocio'}
-            </span>
-            <ChevronDown className="h-4 w-4 text-gray-500 flex-shrink-0" />
-          </button>
-          {showMobileBusinessDropdown && (
-            <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-              <div className="py-1 max-h-60 overflow-auto">
-                {Array.isArray(businesses) && businesses.length ? (
-                  businesses.map((business) => {
-                    const isActive = business.id === currentBusiness?.id;
-                    return (
-                      <button
-                        key={business.id}
-                        onClick={() => {
-                          onBusinessChange?.(business);
-                          setShowMobileBusinessDropdown(false);
-                        }}
-                        className={`w-full flex items-center gap-2 px-4 py-2 text-left transition-colors ${
-                          isActive ? 'bg-blue-50 text-blue-700' : 'bg-white text-gray-900 hover:bg-gray-50'
-                        }`}
-                      >
-                        <span className="font-medium truncate">{business.nombre}</span>
-                      </button>
-                    );
-                  })
-                ) : (
-                  <div className="px-4 py-2 text-sm text-gray-500">
-                    Sin negocios disponibles
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="mobile-branch-dropdown">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-            Sucursal
-          </p>
-          {branchesLoading ? (
-            <div className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg bg-slate-100 text-gray-600">
-              <div className="w-3.5 h-3.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-              <span className="text-xs font-medium">Cargando...</span>
-            </div>
-          ) : branchError ? (
-            <div className="px-3 py-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg">
-              {branchError}
-            </div>
-          ) : !branches?.length ? (
-            <div className="px-3 py-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg">
-              Sin sucursal asignada
-            </div>
-          ) : (
-            <div className="relative mobile-branch-dropdown">
-              <button
-                onClick={() => setShowMobileBranchDropdown((open) => !open)}
-                className="flex items-center justify-between gap-2 w-full px-3 py-2 border border-gray-300 rounded-lg transition-colors bg-slate-50 hover:bg-slate-100"
-                aria-haspopup="true"
-                aria-expanded={showMobileBranchDropdown}
-              >
-                <span className="font-semibold text-sm text-blue-600 truncate">
-                  {currentBranch?.nombre || 'Seleccionar sucursal'}
-                </span>
-                <div className="flex items-center gap-2">
-                  <BranchBadge branch={currentBranch} />
-                  <ChevronDown className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                </div>
-              </button>
-
-              {showMobileBranchDropdown && (
-                <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                  <div className="py-1 max-h-60 overflow-auto">
-                    {branches.map((branch) => {
-                      const isActive = branch.id === currentBranch?.id;
-                      return (
-                        <button
-                          key={branch.id}
-                          onClick={() => {
-                            onBranchChange?.(branch);
-                            setShowMobileBranchDropdown(false);
-                          }}
-                          className={`w-full flex items-center justify-between gap-2 px-4 py-2 text-left transition-colors ${
-                            isActive ? 'bg-blue-50 text-blue-700' : 'bg-white text-gray-900 hover:bg-gray-50'
-                          }`}
-                        >
-                          <span className="font-medium truncate">{branch.nombre}</span>
-                          <BranchBadge branch={branch} />
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-      
       <nav className="flex-1 p-4 space-y-2" style={{ backgroundColor: '#ffffff' }}>
         {sidebarItems.map((item) => {
           const Icon = item.icon;
@@ -404,7 +275,7 @@ const Sidebar = ({
           );
         })}
         
-        {/* Botón de cerrar sesión inmediatamente después de los items del sidebar */}
+        {/* Boton de cerrar sesion inmediatamente despues de los items del sidebar */}
         <button
           onClick={() => {
             localStorage.removeItem('token');
@@ -461,8 +332,69 @@ const Header = ({
     };
   }, [showBusinessDropdown, showBranchDropdown]);
 
-  const renderBranchSelector = () => {
-    const widthClasses = 'min-w-[11.5rem] max-w-[15rem]';
+  const renderBusinessSelector = (variant = 'desktop') => {
+    const isMobile = variant === 'mobile';
+    const widthClasses = isMobile ? 'flex-1 min-w-0' : 'min-w-[12rem] max-w-[16rem]';
+    const dropdownWidth = isMobile ? 'w-full' : 'w-full min-w-[12rem]';
+    const containerClasses = isMobile
+      ? 'relative business-dropdown flex-1 min-w-0'
+      : 'relative business-dropdown inline-flex';
+
+    return (
+      <div className={containerClasses}>
+        <button
+          onClick={() => setShowBusinessDropdown((open) => !open)}
+          className={`flex items-center justify-between gap-2 px-3 py-1.5 border border-gray-300 rounded-lg transition-colors bg-slate-50 hover:bg-slate-100 ${widthClasses}`}
+          aria-haspopup="true"
+          aria-expanded={showBusinessDropdown}
+        >
+          <span className="font-semibold text-blue-600 text-sm truncate">
+            {currentBusiness?.nombre || 'Seleccionar negocio'}
+          </span>
+          {!isMobile && currentBusiness?.tipo && (
+            <span className="text-xs text-gray-500 hidden xl:inline">
+              ({currentBusiness.tipo})
+            </span>
+          )}
+          <ChevronDown className="h-4 w-4 text-gray-500 flex-shrink-0" />
+        </button>
+
+        {showBusinessDropdown && (
+          <div
+            className={`absolute top-full left-0 mt-1 ${dropdownWidth} max-h-60 overflow-auto bg-white border border-gray-200 rounded-lg shadow-lg z-50`}
+          >
+            <div className="py-1">
+              {businesses.map((business) => {
+                const isActive = business.id === currentBusiness?.id;
+                return (
+                  <button
+                    key={business.id}
+                    onClick={() => {
+                      onBusinessChange(business);
+                      setShowBusinessDropdown(false);
+                    }}
+                    className={`w-full flex items-center gap-2 px-4 py-2 text-left transition-colors ${
+                      isActive ? 'bg-blue-50 text-blue-700' : 'bg-white text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className="font-medium truncate">{business.nombre}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderBranchSelector = (variant = 'desktop') => {
+    const isMobile = variant === 'mobile';
+    const widthClasses = isMobile ? 'flex-1 min-w-0' : 'min-w-[11.5rem] max-w-[15rem]';
+    const dropdownWidth = isMobile ? 'w-full' : 'w-full min-w-[11.5rem]';
+    const containerClasses = isMobile
+      ? 'relative branch-dropdown flex-1 min-w-0'
+      : 'relative branch-dropdown inline-flex';
 
     if (branchesLoading) {
       return (
@@ -490,7 +422,7 @@ const Header = ({
     }
 
     return (
-      <div className="relative branch-dropdown inline-flex">
+      <div className={containerClasses}>
         <button
           onClick={() => setShowBranchDropdown((open) => !open)}
           className={`flex items-center justify-between gap-2 px-3 py-1.5 border border-gray-300 rounded-lg transition-colors bg-slate-50 hover:bg-slate-100 ${widthClasses}`}
@@ -507,7 +439,7 @@ const Header = ({
         </button>
 
         {showBranchDropdown && (
-          <div className="absolute top-full left-0 mt-1 w-full min-w-[11.5rem] max-h-60 overflow-auto bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+          <div className={`absolute top-full left-0 mt-1 ${dropdownWidth} max-h-60 overflow-auto bg-white border border-gray-200 rounded-lg shadow-lg z-50`}>
             <div className="py-1">
               {branches.map((branch) => {
                 const isActive = branch.id === currentBranch?.id;
@@ -535,74 +467,39 @@ const Header = ({
   };
 
   return (
-    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6" style={{ backgroundColor: '#ffffff' }}>
-      {/* Botón hamburguesa solo en móvil */}
-      <button
-        className="md:hidden mr-4 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-        onClick={() => setSidebarOpen(true)}
-        aria-label="Abrir menu"
-      >
-        <svg className="h-6 w-6 text-blue-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-      <div className="hidden lg:flex items-end gap-4 ml-2 lg:ml-4">
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-            Negocio
-          </span>
-          <div className="relative business-dropdown inline-flex">
-            <button
-              onClick={() => setShowBusinessDropdown(!showBusinessDropdown)}
-              className="flex items-center justify-between gap-2 px-3 py-1.5 border border-gray-300 rounded-lg transition-colors bg-slate-50 hover:bg-slate-100 min-w-[12rem] max-w-[16rem]"
-              aria-haspopup="true"
-              aria-expanded={showBusinessDropdown}
-            >
-              <span className="font-semibold text-blue-600 text-sm truncate">
-                {currentBusiness?.nombre || 'Seleccionar negocio'}
-              </span>
-              {currentBusiness?.tipo && (
-                <span className="text-xs text-gray-500 hidden xl:inline">
-                  ({currentBusiness.tipo})
-                </span>
-              )}
-              <ChevronDown className="h-4 w-4 text-gray-500 flex-shrink-0" />
-            </button>
+    <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-2" style={{ backgroundColor: '#ffffff' }}>
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Boton hamburguesa solo en movil */}
+        <button
+          className="md:hidden p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Abrir menu"
+        >
+          <svg className="h-6 w-6 text-blue-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
 
-            {showBusinessDropdown && (
-              <div className="absolute top-full left-0 mt-1 w-full min-w-[12rem] max-h-60 overflow-auto bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                <div className="py-1">
-                  {businesses.map((business) => {
-                    const isActive = business.id === currentBusiness?.id;
-                    return (
-                      <button
-                        key={business.id}
-                        onClick={() => {
-                          onBusinessChange(business);
-                          setShowBusinessDropdown(false);
-                        }}
-                        className={`w-full flex items-center gap-2 px-4 py-2 text-left transition-colors ${
-                          isActive ? 'bg-blue-50 text-blue-700' : 'bg-white text-gray-900 hover:bg-gray-50'
-                        }`}
-                      >
-                        <span className="font-medium truncate">{business.nombre}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+        <div className="flex flex-1 items-center gap-2 min-w-0 lg:hidden">
+          {renderBusinessSelector('mobile')}
+          {renderBranchSelector('mobile')}
+        </div>
+
+        <div className="hidden lg:flex items-end gap-4 ml-auto">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              Negocio
+            </span>
+            {renderBusinessSelector('desktop')}
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              Sucursal
+            </span>
+            {renderBranchSelector('desktop')}
           </div>
         </div>
-
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-            Sucursal
-          </span>
-          {renderBranchSelector()}
-        </div>
       </div>
-      {/* El botón de cerrar sesión se ha movido al fondo del sidebar */}
     </header>
   );
 };
@@ -862,12 +759,8 @@ const Layout = ({ children, activeSection }) => {
         currentBranch={currentBranch}
         branches={branches}
         branchesLoading={branchesLoading}
-        businesses={businesses}
-        branchError={branchError}
-        onBusinessChange={handleBusinessChange}
-        onBranchChange={handleBranchChange}
       />
-      {/* Botón cerrar en móvil */}
+      {/* Boton cerrar en movil */}
       <button
         className="absolute top-4 right-4 md:hidden p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
         onClick={() => setSidebarOpen(false)}
