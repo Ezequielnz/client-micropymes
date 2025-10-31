@@ -14,7 +14,8 @@ import {
   ChevronRight,
   Clock,
   BarChart3,
-  Truck
+  Truck,
+  ArrowLeftRight
 } from 'lucide-react';
 import { businessAPI } from '../utils/api';
 import { BusinessContext } from '../contexts/BusinessContext';
@@ -100,6 +101,7 @@ const Sidebar = ({
         { id: 'categories', label: 'Categorías', icon: BarChart3, onClick: () => safeNavigate('/categories') }
       ]
     },
+    { id: 'stock-transfers', label: 'Transferencias', icon: ArrowLeftRight, onClick: () => safeNavigate('/stock-transfers') },
     { id: 'clients', label: 'Clientes', icon: Users, onClick: () => safeNavigate('/customers') },
     { id: 'finances', label: 'Finanzas', icon: BarChart3, onClick: () => safeNavigate('/finanzas') },
     { id: 'tasks', label: 'Tareas', icon: Clock, onClick: () => safeNavigate('/tasks') },
@@ -514,6 +516,9 @@ const Layout = ({ children, activeSection }) => {
   const [branches, setBranches] = useState([]);
   const [branchesLoading, setBranchesLoading] = useState(false);
   const [branchError, setBranchError] = useState(null);
+  const [branchSettings, setBranchSettings] = useState(null);
+  const [branchSettingsLoading, setBranchSettingsLoading] = useState(false);
+  const [branchSettingsError, setBranchSettingsError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [error, setError] = useState('');
@@ -533,6 +538,36 @@ const Layout = ({ children, activeSection }) => {
       });
     },
     [queryClient]
+  );
+  const loadBranchSettings = useCallback(
+    async (businessIdParam) => {
+      const targetBusinessId = businessIdParam || currentBusiness?.id;
+      if (!targetBusinessId) {
+        setBranchSettings(null);
+        setBranchSettingsError(null);
+        return;
+      }
+
+      setBranchSettingsLoading(true);
+      try {
+        const response = await businessAPI.getBranchSettings(targetBusinessId);
+        setBranchSettings(response || null);
+        setBranchSettingsError(null);
+      } catch (apiError) {
+        console.error('Error loading branch settings:', apiError);
+        const status = apiError?.response?.status;
+        if (status === 404) {
+          setBranchSettings(null);
+          setBranchSettingsError(null);
+        } else {
+          setBranchSettings(null);
+          setBranchSettingsError('No se pudo cargar la configuración del negocio.');
+        }
+      } finally {
+        setBranchSettingsLoading(false);
+      }
+    },
+    [currentBusiness?.id]
   );
   const applyBranchSelection = useCallback(
     (branch, businessIdOverride = null) => {
@@ -611,6 +646,13 @@ const Layout = ({ children, activeSection }) => {
     },
     [currentBusiness?.id, loadBranches]
   );
+  const refreshBranchSettings = useCallback(
+    async (businessId = null) => {
+      const targetBusinessId = businessId || currentBusiness?.id;
+      await loadBranchSettings(targetBusinessId);
+    },
+    [currentBusiness?.id, loadBranchSettings]
+  );
   
   // Función para determinar la sección activa basándose en la URL
   const getActiveSectionFromPath = () => {
@@ -620,6 +662,7 @@ const Layout = ({ children, activeSection }) => {
     if (path.includes('/products-and-services')) return 'products';
     if (path.includes('/categories')) return 'categories';
     if (path.includes('/proveedores')) return 'suppliers';
+    if (path.includes('/stock-transfers')) return 'stock-transfers';
     if (path.includes('/compras')) return 'purchases';
     if (path.includes('/pos')) return 'pos';
     if (path.includes('/reports')) return 'reports';
@@ -654,11 +697,14 @@ const Layout = ({ children, activeSection }) => {
         if (selectedBusiness?.id) {
           localStorage.setItem(ACTIVE_BUSINESS_STORAGE_KEY, selectedBusiness.id);
           await loadBranches(selectedBusiness.id);
+          await loadBranchSettings(selectedBusiness.id);
         }
       } else {
         setCurrentBusiness(null);
         setBranches([]);
         setCurrentBranch(null);
+        setBranchSettings(null);
+        setBranchSettingsError(null);
       }
     } catch (error) {
       console.error('Error loading initial data:', error);
@@ -680,11 +726,14 @@ const Layout = ({ children, activeSection }) => {
       setBranches([]);
       applyBranchSelection(null, business.id);
       loadBranches(business.id);
+      loadBranchSettings(business.id);
       invalidateQueriesForBusiness(business.id);
     } else {
       localStorage.removeItem(ACTIVE_BUSINESS_STORAGE_KEY);
       setBranches([]);
       applyBranchSelection(null, null);
+      setBranchSettings(null);
+      setBranchSettingsError(null);
     }
 
     // Invalidate permissions cache when business changes
@@ -735,9 +784,13 @@ const Layout = ({ children, activeSection }) => {
         branches,
         branchesLoading,
         branchError,
+        branchSettings,
+        branchSettingsLoading,
+        branchSettingsError,
         handleBusinessChange,
         handleBranchChange,
         refreshBranches,
+        refreshBranchSettings,
       }}
     >
       <div className="min-h-screen bg-gray-50 flex overflow-x-hidden">

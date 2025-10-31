@@ -1047,6 +1047,31 @@ export const businessAPI = {
   },
 
   /**
+   * Fetches negocio_configuracion (branch settings) for the given business.
+   */
+  getBranchSettings: async (businessId) => {
+    if (!businessId) {
+      return null;
+    }
+    const response = await api.get(`/businesses/${businessId}/branch-settings`);
+    return response.data;
+  },
+
+  /**
+   * Updates negocio_configuracion (branch settings) for the given business.
+   * @param {string} businessId
+   * @param {object} payload
+   * @returns {Promise<object>}
+   */
+  updateBranchSettings: async (businessId, payload) => {
+    if (!businessId) {
+      throw new Error('businessId is required to update branch settings');
+    }
+    const response = await api.put(`/businesses/${businessId}/branch-settings`, payload);
+    return response.data;
+  },
+
+  /**
    * Fetches a single business by ID.
    * @param {string} businessId - The ID of the business to fetch.
    * @returns {Promise<object>} A promise that resolves to the business object.
@@ -1617,6 +1642,74 @@ export const purchaseAPI = {
    */
   deletePurchase: async (businessId, purchaseId) => {
     const response = await api.delete(`/businesses/${businessId}/compras/${purchaseId}`);
+    return response.data;
+  },
+};
+
+/**
+ * @namespace stockTransferAPI
+ * @description API helpers for stock transfer flows between branches.
+ */
+export const stockTransferAPI = {
+  /**
+   * Retrieves stock transfers for a business.
+   * @param {string} businessId
+   * @param {object} [params]
+   */
+  list: async (businessId, params = {}) => {
+    if (!businessId) {
+      return [];
+    }
+    const response = await api.get(`/businesses/${businessId}/stock-transfers`, { params });
+    return Array.isArray(response.data) ? response.data : [];
+  },
+
+  /**
+   * Creates a new stock transfer.
+   * @param {string} businessId
+   * @param {object} payload
+   */
+  create: async (businessId, payload) => {
+    if (!businessId) {
+      throw new Error('businessId is required to create a stock transfer');
+    }
+    const response = await api.post(`/businesses/${businessId}/stock-transfers`, payload);
+    return response.data;
+  },
+
+  /**
+   * Confirms a draft transfer.
+   * @param {string} businessId
+   * @param {string} transferId
+   */
+  confirm: async (businessId, transferId) => {
+    const response = await api.post(
+      `/businesses/${businessId}/stock-transfers/${transferId}/confirm`
+    );
+    return response.data;
+  },
+
+  /**
+   * Marks a confirmed transfer as received.
+   * @param {string} businessId
+   * @param {string} transferId
+   */
+  receive: async (businessId, transferId) => {
+    const response = await api.post(
+      `/businesses/${businessId}/stock-transfers/${transferId}/receive`
+    );
+    return response.data;
+  },
+
+  /**
+   * Deletes a draft transfer.
+   * @param {string} businessId
+   * @param {string} transferId
+   */
+  delete: async (businessId, transferId) => {
+    const response = await api.delete(
+      `/businesses/${businessId}/stock-transfers/${transferId}`
+    );
     return response.data;
   },
 };

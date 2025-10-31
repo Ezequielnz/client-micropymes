@@ -24,6 +24,7 @@ import SalesReports from './pages/SalesReports';
 import Subscriptions from './pages/Subscriptions';
 import Tasks from './pages/Tasks';
 import TestPage from './pages/TestPage';
+import StockTransfers from './pages/StockTransfers';
 
 const App: React.FC = () => (
   <ErrorBoundary>
@@ -51,6 +52,7 @@ const App: React.FC = () => (
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/reports" element={<SalesReports />} />
         <Route path="/finanzas" element={<Finanzas />} />
+        <Route path="/stock-transfers" element={<StockTransfers />} />
         <Route
           path="/compras"
           element={

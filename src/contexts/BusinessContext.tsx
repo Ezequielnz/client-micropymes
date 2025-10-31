@@ -17,6 +17,19 @@ interface Branch {
   is_main?: boolean;
 }
 
+interface BranchSettings {
+  negocio_id: string;
+  inventario_modo: 'centralizado' | 'por_sucursal';
+  servicios_modo: 'centralizado' | 'por_sucursal';
+  catalogo_producto_modo: 'compartido' | 'por_sucursal';
+  permite_transferencias: boolean;
+  transferencia_auto_confirma: boolean;
+  default_branch_id?: string | null;
+  metadata?: Record<string, unknown>;
+  created_at?: string;
+  updated_at?: string;
+}
+
 interface BusinessContextType {
   currentBusiness: Business | null;
   currentBranch: Branch | null;
@@ -24,9 +37,13 @@ interface BusinessContextType {
   branches: Branch[];
   branchesLoading: boolean;
   branchError: string | null;
+  branchSettings: BranchSettings | null;
+  branchSettingsLoading: boolean;
+  branchSettingsError: string | null;
   handleBusinessChange: (business: Business) => void;
   handleBranchChange: (branch: Branch | null) => void;
   refreshBranches: (businessId?: string) => Promise<void>;
+  refreshBranchSettings: (businessId?: string) => Promise<void>;
 }
 
 // Business Context
@@ -41,5 +58,5 @@ export const useBusinessContext = () => {
 };
 
 export { BusinessContext };
-export type { Business, Branch, BusinessContextType }; 
+export type { Business, Branch, BranchSettings, BusinessContextType }; 
 
