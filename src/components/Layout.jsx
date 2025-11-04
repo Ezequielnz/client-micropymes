@@ -106,7 +106,7 @@ const Sidebar = ({
     { id: 'finances', label: 'Finanzas', icon: BarChart3, onClick: () => safeNavigate('/finanzas') },
     { id: 'tasks', label: 'Tareas', icon: Clock, onClick: () => safeNavigate('/tasks') },
     { id: 'billing', label: 'Facturación (próximamente)', icon: FileText, disabled: true },
-    { id: 'settings', label: 'Configuración (próximamente)', icon: Settings, disabled: true },
+    { id: 'settings', label: 'Configuración', icon: Settings, onClick: () => safeNavigate('/settings/branch-preferences') },
   ];
 
   return (
@@ -669,6 +669,7 @@ const Layout = ({ children, activeSection }) => {
     if (path.includes('/customers')) return 'clients';
     if (path.includes('/tasks')) return 'tasks';
     if (path.includes('/business-users')) return 'businesses';
+    if (path.includes('/settings')) return 'settings';
     if (path.includes('/home')) return 'dashboard';
     
     return 'dashboard'; // Por defecto

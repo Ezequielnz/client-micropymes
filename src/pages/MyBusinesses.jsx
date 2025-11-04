@@ -7,10 +7,8 @@ import {
   Building2, 
   Plus, 
   Package, 
-  Tag, 
   Users, 
   ShoppingCart,
-  LogOut,
   Loader2,
   User,
   Mail,
@@ -23,7 +21,15 @@ import {
   Activity,
   Trash2,
   Edit,
-  AlertTriangle
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+  MapPin,
+  Hash,
+  Star,
+  CheckCircle2,
+  XCircle,
+  RefreshCw
 } from 'lucide-react';
 
 // Componente Button simple sin dependencias externas
@@ -115,6 +121,838 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message, busines
           </SimpleButton>
         </div>
       </div>
+    </div>
+  );
+};
+
+const extractErrorMessage = (error, fallback = 'Ocurrió un error inesperado.') => {
+  if (!error) {
+    return fallback;
+  }
+  if (typeof error === 'string' && error.trim().length > 0) {
+    return error;
+  }
+  if (error.response?.data?.detail) {
+    return error.response.data.detail;
+  }
+  if (error.response?.data?.message) {
+    return error.response.data.message;
+  }
+  if (error.response?.data?.error) {
+    return error.response.data.error;
+  }
+  if (error.message) {
+    return error.message;
+  }
+  return fallback;
+};
+
+const mapSettingsToFormState = (cfg) => ({
+  inventario_modo: cfg?.inventario_modo || 'por_sucursal',
+  servicios_modo: cfg?.servicios_modo || 'por_sucursal',
+  catalogo_producto_modo: cfg?.catalogo_producto_modo || 'por_sucursal',
+  permite_transferencias: cfg?.permite_transferencias ?? true,
+  transferencia_auto_confirma: cfg?.transferencia_auto_confirma ?? false,
+  default_branch_id: cfg?.default_branch_id ? String(cfg.default_branch_id) : '',
+});
+
+const BranchFormModal = ({
+  isOpen,
+  title,
+  submitLabel,
+  initialData,
+  onClose,
+  onSubmit,
+  saving,
+  error,
+}) => {
+  const [nombre, setNombre] = useState(initialData?.nombre || '');
+  const [codigo, setCodigo] = useState(initialData?.codigo || '');
+  const [direccion, setDireccion] = useState(initialData?.direccion || '');
+  const [activo, setActivo] = useState(initialData?.activo ?? true);
+  const [isMain, setIsMain] = useState(initialData?.is_main ?? false);
+  const [localError, setLocalError] = useState(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setNombre(initialData?.nombre || '');
+      setCodigo(initialData?.codigo || '');
+      setDireccion(initialData?.direccion || '');
+      setActivo(initialData?.activo ?? true);
+      setIsMain(initialData?.is_main ?? false);
+      setLocalError(null);
+    } else {
+      setLocalError(null);
+    }
+  }, [initialData, isOpen]);
+
+  if (!isOpen) {
+    return null;
+  }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!nombre.trim()) {
+      setLocalError('El nombre de la sucursal es obligatorio.');
+      return;
+    }
+
+    const payload = {
+      nombre: nombre.trim(),
+      codigo: codigo.trim(),
+      direccion: direccion.trim(),
+      activo,
+      is_main: isMain,
+    };
+
+    try {
+      await onSubmit(payload);
+    } catch {
+      // El manejador superior se encarga de mostrar el error.
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
+        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+            disabled={saving}
+          >
+            <XCircle className="h-5 w-5" />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="px-6 py-6 space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nombre de la sucursal
+            </label>
+            <input
+              type="text"
+              value={nombre}
+              onChange={(event) => setNombre(event.target.value)}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring focus:ring-blue-200 text-gray-900"
+              placeholder="Ej. Sucursal Centro"
+              disabled={saving}
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Código interno</label>
+              <input
+                type="text"
+                value={codigo}
+                onChange={(event) => setCodigo(event.target.value)}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring focus:ring-blue-200 text-gray-900"
+                placeholder="Ej. CENTRO"
+                disabled={saving}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+              <input
+                type="text"
+                value={direccion}
+                onChange={(event) => setDireccion(event.target.value)}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring focus:ring-blue-200 text-gray-900"
+                placeholder="Calle, número y ciudad"
+                disabled={saving}
+              />
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={activo}
+                onChange={(event) => setActivo(event.target.checked)}
+                className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                disabled={saving}
+              />
+              La sucursal está activa
+            </label>
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={isMain}
+                onChange={(event) => setIsMain(event.target.checked)}
+                className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                disabled={saving}
+              />
+              Marcar como sucursal principal
+            </label>
+          </div>
+          {(localError || error) && (
+            <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-md">
+              {localError || error}
+            </div>
+          )}
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:gap-3 gap-3">
+            <SimpleButton
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="w-full sm:w-auto"
+              disabled={saving}
+            >
+              Cancelar
+            </SimpleButton>
+            <SimpleButton
+              type="submit"
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+              disabled={saving}
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  {submitLabel}
+                </>
+              )}
+            </SimpleButton>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const BranchSettingsPanel = ({ branches, settings, saving, error, onSave }) => {
+  const [formState, setFormState] = useState(() => mapSettingsToFormState(settings));
+  const [dirty, setDirty] = useState(false);
+  const settingsKey = settings ? `${settings.negocio_id}-${settings.updated_at}` : null;
+
+  useEffect(() => {
+    setFormState(mapSettingsToFormState(settings));
+    setDirty(false);
+  }, [settingsKey]);
+
+  const handleChange = (field, value) => {
+    setFormState((prev) => ({ ...prev, [field]: value }));
+    setDirty(true);
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!settings) {
+      return;
+    }
+
+    const payload = {};
+    if (formState.inventario_modo !== settings.inventario_modo) {
+      payload.inventario_modo = formState.inventario_modo;
+    }
+    if (formState.servicios_modo !== settings.servicios_modo) {
+      payload.servicios_modo = formState.servicios_modo;
+    }
+    if (formState.catalogo_producto_modo !== settings.catalogo_producto_modo) {
+      payload.catalogo_producto_modo = formState.catalogo_producto_modo;
+    }
+    if (formState.permite_transferencias !== settings.permite_transferencias) {
+      payload.permite_transferencias = formState.permite_transferencias;
+    }
+    if (formState.transferencia_auto_confirma !== settings.transferencia_auto_confirma) {
+      payload.transferencia_auto_confirma = formState.transferencia_auto_confirma;
+    }
+
+    const normalizedDefault = formState.default_branch_id ? formState.default_branch_id : null;
+    const currentDefault = settings.default_branch_id ? String(settings.default_branch_id) : null;
+    if (normalizedDefault !== currentDefault) {
+      payload.default_branch_id = normalizedDefault;
+    }
+
+    if (Object.keys(payload).length === 0) {
+      setDirty(false);
+      return;
+    }
+
+    const success = await onSave(payload);
+    if (success) {
+      setDirty(false);
+    }
+  };
+
+  const handleReset = (event) => {
+    event.preventDefault();
+    setFormState(mapSettingsToFormState(settings));
+    setDirty(false);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 space-y-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Modo de inventario
+          </label>
+          <select
+            value={formState.inventario_modo}
+            onChange={(event) => handleChange('inventario_modo', event.target.value)}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring focus:ring-blue-200 text-gray-900"
+            disabled={saving}
+          >
+            <option value="por_sucursal">Por sucursal (recomendado)</option>
+            <option value="centralizado">Centralizado</option>
+          </select>
+          <p className="text-xs text-gray-500 mt-1">
+            Controla si el stock se administra por sucursal o de forma unificada.
+          </p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Modo de servicios
+          </label>
+          <select
+            value={formState.servicios_modo}
+            onChange={(event) => handleChange('servicios_modo', event.target.value)}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring focus:ring-blue-200 text-gray-900"
+            disabled={saving}
+          >
+            <option value="por_sucursal">Configurar por sucursal</option>
+            <option value="centralizado">Compartir entre todas las sucursales</option>
+          </select>
+          <p className="text-xs text-gray-500 mt-1">
+            Establece si la oferta de servicios varía por ubicación.
+          </p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Catálogo de productos
+          </label>
+          <select
+            value={formState.catalogo_producto_modo}
+            onChange={(event) => handleChange('catalogo_producto_modo', event.target.value)}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring focus:ring-blue-200 text-gray-900"
+            disabled={saving}
+          >
+            <option value="por_sucursal">Personalizado por sucursal</option>
+            <option value="compartido">Compartido entre todas</option>
+          </select>
+          <p className="text-xs text-gray-500 mt-1">
+            Define si cada sucursal puede manejar precios y visibilidad propios.
+          </p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Sucursal predeterminada
+          </label>
+          <select
+            value={formState.default_branch_id}
+            onChange={(event) => handleChange('default_branch_id', event.target.value)}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring focus:ring-blue-200 text-gray-900"
+            disabled={saving || branches.length === 0}
+          >
+            <option value="">Seleccionar automáticamente</option>
+            {branches.map((branch) => (
+              <option key={branch.id} value={String(branch.id)}>
+                {branch.nombre} {branch.is_main ? '(Principal)' : ''}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-500 mt-1">
+            Se utiliza como sucursal por defecto al crear nuevos registros.
+          </p>
+        </div>
+      </div>
+
+      <div className="border-t border-gray-200 pt-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <label className="flex items-center gap-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              checked={formState.permite_transferencias}
+              onChange={(event) => handleChange('permite_transferencias', event.target.checked)}
+              className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+              disabled={saving}
+            />
+            Permitir transferencias entre sucursales
+          </label>
+          <label
+            className={`flex items-center gap-2 text-sm ${
+              formState.permite_transferencias ? 'text-gray-700' : 'text-gray-400'
+            }`}
+          >
+            <input
+              type="checkbox"
+              checked={formState.transferencia_auto_confirma}
+              onChange={(event) => handleChange('transferencia_auto_confirma', event.target.checked)}
+              className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+              disabled={saving || !formState.permite_transferencias}
+            />
+            Confirmar transferencias automáticamente
+          </label>
+        </div>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-end">
+          <SimpleButton
+            type="button"
+            variant="outline"
+            onClick={handleReset}
+            className="sm:w-auto"
+            disabled={!dirty || saving}
+          >
+            Restablecer
+          </SimpleButton>
+          <SimpleButton
+            type="submit"
+            className="sm:w-auto bg-blue-600 hover:bg-blue-700"
+            disabled={!dirty || saving}
+          >
+            {saving ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Guardando...
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+                Guardar cambios
+              </>
+            )}
+          </SimpleButton>
+        </div>
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-md">
+          {error}
+        </div>
+      )}
+    </form>
+  );
+};
+
+const BranchManager = ({ business, canManage }) => {
+  const [expanded, setExpanded] = useState(false);
+  const [branches, setBranches] = useState([]);
+  const [branchesLoaded, setBranchesLoaded] = useState(false);
+  const [branchesLoading, setBranchesLoading] = useState(false);
+  const [branchesError, setBranchesError] = useState(null);
+  const [settings, setSettings] = useState(null);
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [settingsError, setSettingsError] = useState(null);
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [editingBranch, setEditingBranch] = useState(null);
+  const [formError, setFormError] = useState(null);
+  const [savingBranch, setSavingBranch] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [updatingBranchId, setUpdatingBranchId] = useState(null);
+  const [feedbackMessage, setFeedbackMessage] = useState(null);
+
+  const sortBranches = useCallback((list) => {
+    return [...(list || [])].sort((a, b) => {
+      const aScore = a.is_main ? 0 : 1;
+      const bScore = b.is_main ? 0 : 1;
+      if (aScore !== bScore) {
+        return aScore - bScore;
+      }
+      const aName = (a.nombre || '').toLowerCase();
+      const bName = (b.nombre || '').toLowerCase();
+      if (aName < bName) return -1;
+      if (aName > bName) return 1;
+      return 0;
+    });
+  }, []);
+
+  const loadData = useCallback(async () => {
+    setFeedbackMessage(null);
+    setBranchesLoading(true);
+    setBranchesError(null);
+    try {
+      const fetchedBranches = await businessAPI.getBranches(business.id);
+      setBranches(sortBranches(fetchedBranches));
+      setBranchesLoaded(true);
+    } catch (error) {
+      setBranchesError(extractErrorMessage(error, 'No se pudieron cargar las sucursales.'));
+    } finally {
+      setBranchesLoading(false);
+    }
+
+    if (canManage) {
+      setSettingsLoading(true);
+      setSettingsError(null);
+      try {
+        const fetchedSettings = await businessAPI.getBranchSettings(business.id);
+        setSettings(fetchedSettings);
+      } catch (error) {
+        setSettings(null);
+        setSettingsError(extractErrorMessage(error, 'No se pudo obtener la configuración del negocio.'));
+      } finally {
+        setSettingsLoading(false);
+      }
+    }
+  }, [business.id, canManage, sortBranches]);
+
+  const handleToggle = useCallback(() => {
+    setExpanded((prev) => {
+      const next = !prev;
+      if (next && !branchesLoaded && !branchesLoading) {
+        loadData();
+      }
+      return next;
+    });
+  }, [branchesLoaded, branchesLoading, loadData]);
+
+  const handleRefresh = useCallback(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleOpenCreate = useCallback(() => {
+    setEditingBranch(null);
+    setFormError(null);
+    setFeedbackMessage(null);
+    setShowFormModal(true);
+  }, []);
+
+  const handleEditBranch = useCallback((branch) => {
+    setEditingBranch(branch);
+    setFormError(null);
+    setFeedbackMessage(null);
+    setShowFormModal(true);
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    if (!savingBranch) {
+      setShowFormModal(false);
+      setEditingBranch(null);
+      setFormError(null);
+    }
+  }, [savingBranch]);
+
+  const handleBranchSubmit = useCallback(
+    async (values) => {
+      setSavingBranch(true);
+      setFormError(null);
+      try {
+        const payload = {
+          nombre: values.nombre,
+          codigo: values.codigo ? values.codigo : null,
+          direccion: values.direccion ? values.direccion : null,
+          activo: values.activo,
+          is_main: values.is_main,
+        };
+
+        if (editingBranch) {
+          await businessAPI.updateBranch(business.id, String(editingBranch.id), payload);
+          setFeedbackMessage('Sucursal actualizada correctamente.');
+        } else {
+          await businessAPI.createBranch(business.id, payload);
+          setFeedbackMessage('Sucursal creada correctamente.');
+        }
+
+        setShowFormModal(false);
+        setEditingBranch(null);
+        await loadData();
+      } catch (error) {
+        setFormError(extractErrorMessage(error, 'No se pudo guardar la sucursal.'));
+        throw error;
+      } finally {
+        setSavingBranch(false);
+      }
+    },
+    [business.id, editingBranch, loadData]
+  );
+
+  const handleToggleActive = useCallback(
+    async (branch) => {
+      const branchId = String(branch.id);
+      setUpdatingBranchId(branchId);
+      setBranchesError(null);
+      setFeedbackMessage(null);
+      try {
+        await businessAPI.updateBranch(business.id, branchId, { activo: !branch.activo });
+        await loadData();
+        setFeedbackMessage(
+          branch.activo ? 'Sucursal desactivada correctamente.' : 'Sucursal activada correctamente.'
+        );
+      } catch (error) {
+        setBranchesError(extractErrorMessage(error, 'No se pudo actualizar el estado de la sucursal.'));
+      } finally {
+        setUpdatingBranchId(null);
+      }
+    },
+    [business.id, loadData]
+  );
+
+  const handleSetMain = useCallback(
+    async (branch) => {
+      const branchId = String(branch.id);
+      setUpdatingBranchId(branchId);
+      setBranchesError(null);
+      setFeedbackMessage(null);
+      try {
+        await businessAPI.updateBranch(business.id, branchId, { is_main: true });
+        await loadData();
+        setFeedbackMessage('La sucursal principal se actualizó correctamente.');
+      } catch (error) {
+        setBranchesError(extractErrorMessage(error, 'No se pudo establecer la sucursal principal.'));
+      } finally {
+        setUpdatingBranchId(null);
+      }
+    },
+    [business.id, loadData]
+  );
+
+  const handleSaveSettings = useCallback(
+    async (changes) => {
+      setSavingSettings(true);
+      setSettingsError(null);
+      setFeedbackMessage(null);
+      try {
+        const updated = await businessAPI.updateBranchSettings(business.id, changes);
+        setSettings(updated);
+        setFeedbackMessage('La configuración del negocio se actualizó correctamente.');
+        return true;
+      } catch (error) {
+        setSettingsError(extractErrorMessage(error, 'No se pudieron guardar las preferencias.'));
+        return false;
+      } finally {
+        setSavingSettings(false);
+      }
+    },
+    [business.id]
+  );
+
+  const currentRole = (business.rol || '').toLowerCase();
+  const canEditBranches = canManage;
+  const hasBranches = branches.length > 0;
+
+  return (
+    <div className="mt-4 border-t border-gray-200 pt-4">
+      <button
+        type="button"
+        onClick={handleToggle}
+        className="w-full flex items-center justify-between text-left text-gray-800 hover:text-blue-600"
+      >
+        <span className="flex items-center gap-3">
+          <MapPin className="h-5 w-5 text-blue-600" />
+          <span className="font-medium">
+            Sucursales y configuración operativa
+            <span className="block text-sm font-normal text-gray-500">
+              {hasBranches ? `${branches.length} sucursal(es) registradas` : 'Sin sucursales registradas'}
+            </span>
+          </span>
+        </span>
+        <span className="flex items-center gap-2">
+          {currentRole && (
+            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-100 px-2 py-1 rounded">
+              {currentRole}
+            </span>
+          )}
+          {expanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+        </span>
+      </button>
+
+      {expanded && (
+        <div className="mt-5 space-y-5">
+          {feedbackMessage && (
+            <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-md flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4" />
+              <span>{feedbackMessage}</span>
+            </div>
+          )}
+
+          {branchesError && (
+            <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-md">
+              {branchesError}
+            </div>
+          )}
+
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <h4 className="text-base font-semibold text-gray-900">Listado de sucursales</h4>
+              <p className="text-sm text-gray-500">
+                Visualiza y administra las ubicaciones habilitadas para este negocio.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <SimpleButton
+                variant="ghost"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={branchesLoading || settingsLoading}
+                className="text-gray-700 hover:text-blue-600"
+              >
+                {branchesLoading || settingsLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Actualizando...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Actualizar
+                  </>
+                )}
+              </SimpleButton>
+              {canEditBranches && (
+                <SimpleButton size="sm" onClick={handleOpenCreate} className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nueva sucursal
+                </SimpleButton>
+              )}
+            </div>
+          </div>
+
+          {branchesLoading && (
+            <div className="flex items-center gap-2 text-blue-600 text-sm">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Cargando sucursales...</span>
+            </div>
+          )}
+
+          {!branchesLoading && !hasBranches && (
+            <div className="border border-dashed border-gray-300 rounded-lg px-5 py-8 text-center bg-white">
+              <div className="flex items-center justify-center gap-2 text-gray-500 mb-3">
+                <MapPin className="h-5 w-5" />
+                <span>No se encontraron sucursales para este negocio.</span>
+              </div>
+              {canEditBranches && (
+                <SimpleButton onClick={handleOpenCreate} className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Crear primera sucursal
+                </SimpleButton>
+              )}
+            </div>
+          )}
+
+          {!branchesLoading && hasBranches && (
+            <div className="space-y-4">
+              {branches.map((branch) => {
+                const branchId = String(branch.id);
+                const isUpdating = updatingBranchId === branchId;
+                return (
+                  <div
+                    key={branchId}
+                    className="bg-white border border-gray-200 rounded-lg shadow-sm px-5 py-4 flex flex-col gap-3"
+                  >
+                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-3">
+                          <h5 className="text-lg font-semibold text-gray-900">{branch.nombre}</h5>
+                          {branch.is_main && (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded-full">
+                              <Star className="h-3 w-3" />
+                              Principal
+                            </span>
+                          )}
+                          {!branch.activo && (
+                            <span className="inline-flex items-center text-xs font-medium text-red-700 bg-red-50 px-2 py-1 rounded-full">
+                              Inactiva
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-2 space-y-1 text-sm text-gray-600">
+                          {branch.codigo && (
+                            <div className="flex items-center gap-2">
+                              <Hash className="h-4 w-4 text-gray-400" />
+                              <span>{branch.codigo}</span>
+                            </div>
+                          )}
+                          {branch.direccion && (
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-gray-400" />
+                              <span>{branch.direccion}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {canEditBranches && (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <SimpleButton
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditBranch(branch)}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Editar
+                          </SimpleButton>
+                          <SimpleButton
+                            variant={branch.activo ? 'outline' : 'success'}
+                            size="sm"
+                            onClick={() => handleToggleActive(branch)}
+                            disabled={isUpdating}
+                          >
+                            {isUpdating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                            <span>{branch.activo ? 'Desactivar' : 'Activar'}</span>
+                          </SimpleButton>
+                          {!branch.is_main && (
+                            <SimpleButton
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleSetMain(branch)}
+                              disabled={isUpdating}
+                              className="text-gray-700 hover:text-blue-600"
+                            >
+                              {isUpdating ? (
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              ) : (
+                                <Star className="h-4 w-4 mr-2" />
+                              )}
+                              Hacer principal
+                            </SimpleButton>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {canManage && (
+            <div className="space-y-3">
+              <div>
+                <h4 className="text-base font-semibold text-gray-900">Preferencias del negocio</h4>
+                <p className="text-sm text-gray-500">
+                  Ajusta cómo operan las sucursales en inventario, servicios y transferencias.
+                </p>
+              </div>
+              {settingsLoading && (
+                <div className="flex items-center gap-2 text-blue-600 text-sm">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Cargando configuración...</span>
+                </div>
+              )}
+              {!settingsLoading && settings && (
+                <BranchSettingsPanel
+                  branches={branches}
+                  settings={settings}
+                  saving={savingSettings}
+                  error={settingsError}
+                  onSave={handleSaveSettings}
+                />
+              )}
+              {!settingsLoading && !settings && (
+                <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-md">
+                  {settingsError || 'No se pudo cargar la configuración actual de este negocio.'}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {showFormModal && (
+        <BranchFormModal
+          isOpen={showFormModal}
+          title={editingBranch ? 'Editar sucursal' : 'Nueva sucursal'}
+          submitLabel={editingBranch ? 'Guardar cambios' : 'Crear sucursal'}
+          initialData={editingBranch}
+          onClose={handleCloseModal}
+          onSubmit={handleBranchSubmit}
+          saving={savingBranch}
+          error={formError}
+        />
+      )}
     </div>
   );
 };
@@ -541,6 +1379,11 @@ function MyBusinesses() {
                           Configurar
                         </SimpleButton>
                       </div>
+
+                      <BranchManager
+                        business={business}
+                        canManage={['admin', 'owner'].includes((business.rol || '').toLowerCase())}
+                      />
                     </div>
                   </div>
                 ))}

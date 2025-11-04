@@ -1047,6 +1047,33 @@ export const businessAPI = {
   },
 
   /**
+   * Creates a new branch for the given business.
+   * @param {string} businessId - ID del negocio.
+   * @param {object} payload - Datos de la sucursal (nombre, codigo, direccion, activo, is_main).
+   */
+  createBranch: async (businessId, payload) => {
+    if (!businessId) {
+      throw new Error('businessId is required to create a branch');
+    }
+    const response = await api.post(`/businesses/${businessId}/branches`, payload);
+    return response.data;
+  },
+
+  /**
+   * Updates an existing branch.
+   * @param {string} businessId - ID del negocio.
+   * @param {string} branchId - ID de la sucursal.
+   * @param {object} payload - Campos a actualizar.
+   */
+  updateBranch: async (businessId, branchId, payload) => {
+    if (!businessId || !branchId) {
+      throw new Error('businessId and branchId are required to update a branch');
+    }
+    const response = await api.patch(`/businesses/${businessId}/branches/${branchId}`, payload);
+    return response.data;
+  },
+
+  /**
    * Fetches negocio_configuracion (branch settings) for the given business.
    */
   getBranchSettings: async (businessId) => {

@@ -891,7 +891,7 @@ const StockTransfers = () => {
                         availability !== null && Number(item.quantity) > availability;
                       const availabilityText = form.origin
                         ? availability !== null
-                          ? ${availabilityLabel}: 
+                          ? `${availabilityLabel}: ${availability.toLocaleString('es-AR')}`
                           : 'Stock visible no disponible.'
                         : 'Selecciona una sucursal de origen para ver disponibilidad.';
                       const availabilityClass = form.origin
@@ -907,13 +907,15 @@ const StockTransfers = () => {
                           className="flex items-center justify-between rounded border border-slate-200 bg-white px-3 py-2"
                         >
                           <span className="flex flex-col">
-                            <span>{product?.nombre || item.productId.slice(0, 8)}</span>
-                            <span className={	ext-xs }>
+                            <span className="font-medium text-slate-800">
+                              {product?.nombre || item.productId.slice(0, 8)}
+                            </span>
+                            <span className={`text-xs ${availabilityClass}`}>
                               {availabilityText}
                               {insufficient ? ' (insuficiente)' : ''}
                             </span>
                           </span>
-                          <span className={ont-medium }>
+                          <span className="font-medium text-slate-700">
                             {Number(item.quantity).toLocaleString('es-AR')}
                           </span>
                         </li>
@@ -923,7 +925,6 @@ const StockTransfers = () => {
                 </div>
               )}
             </div>
-
             <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3 text-sm">
               <div className="text-slate-500">Paso {wizardStep + 1} de 3</div>
               <div className="flex items-center gap-2">
