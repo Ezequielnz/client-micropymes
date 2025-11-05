@@ -482,7 +482,7 @@ const BranchSettingsPanel = ({ branches, settings, saving, error, onSave }) => {
 };
 
 const BranchManager = ({ business, canManage }) => {
-  const [expanded, setExpanded] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [branches, setBranches] = useState([]);
   const [branchesLoaded, setBranchesLoaded] = useState(false);
   const [branchesLoading, setBranchesLoading] = useState(false);
@@ -542,15 +542,40 @@ const BranchManager = ({ business, canManage }) => {
     }
   }, [business.id, canManage, sortBranches]);
 
-  const handleToggle = useCallback(() => {
-    setExpanded((prev) => {
-      const next = !prev;
-      if (next && !branchesLoaded && !branchesLoading) {
-        loadData();
+  const handleOpenManager = useCallback(() => {
+    setFeedbackMessage(null);
+    setIsModalOpen(true);
+    loadData();
+  }, [loadData]);
+
+  const handleCloseManager = useCallback(() => {
+    setIsModalOpen(false);
+    setShowFormModal(false);
+    setEditingBranch(null);
+    setFormError(null);
+  }, []);
+
+  useEffect(() => {
+    if (!isModalOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && !showFormModal) {
+        handleCloseManager();
       }
-      return next;
-    });
-  }, [branchesLoaded, branchesLoading, loadData]);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isModalOpen, showFormModal, handleCloseManager]);
 
   const handleRefresh = useCallback(() => {
     loadData();
@@ -570,7 +595,7 @@ const BranchManager = ({ business, canManage }) => {
     setShowFormModal(true);
   }, []);
 
-  const handleCloseModal = useCallback(() => {
+  const handleCloseBranchForm = useCallback(() => {
     if (!savingBranch) {
       setShowFormModal(false);
       setEditingBranch(null);
@@ -673,28 +698,63 @@ const BranchManager = ({ business, canManage }) => {
   );
 
   const hasBranches = branches.length > 0;
-  const collapseLabel = expanded
-    ? 'Ocultar sucursales y preferencias'
-    : hasBranches
-      ? `Ver ${branches.length} sucursal(es)`
-      : 'Gestionar sucursales';
+  const manageLabel =
+    branchesLoaded && hasBranches
+      ? `Gestionar ${branches.length} sucursal${branches.length !== 1 ? 'es' : ''} y preferencias`
+      : 'Gestionar sucursales y preferencias';
 
   return (
     <div className="mt-4 border-t border-gray-100 pt-4">
       <button
         type="button"
-        onClick={handleToggle}
-        className="w-full flex items-center justify-between text-left text-sm text-gray-700 hover:text-blue-600"
+        onClick={handleOpenManager}
+        className={`w-full flex items-center justify-between text-left text-sm rounded-lg px-4 py-2 transition-colors border ${
+          isModalOpen
+            ? 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'
+            : 'bg-slate-50 text-gray-700 border-slate-200 hover:bg-blue-50 hover:text-blue-600'
+        }`}
       >
         <span className="flex items-center gap-2 font-medium">
           <MapPin className="h-4 w-4 text-blue-500" />
-          {collapseLabel}
+          {manageLabel}
         </span>
-        {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        {isModalOpen ? <ChevronUp className="h-4 w-4 text-blue-500" /> : <ChevronDown className="h-4 w-4 text-gray-500" />}
       </button>
 
-      {expanded && (
-        <div className="mt-4 space-y-4">
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={handleCloseManager}
+            aria-hidden="true"
+          />
+          <div className="relative z-10 w-full max-w-4xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
+              <div>
+                <div className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                  <Building2 className="h-5 w-5 text-blue-600" />
+                  {business.nombre}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Gestiona las sucursales activas y las preferencias operativas de este negocio.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400 hidden sm:inline">
+                  ID: {business.id}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCloseManager}
+                  className="rounded-md p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                  aria-label="Cerrar gestor de sucursales"
+                >
+                  <XCircle className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
           {feedbackMessage && (
             <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-md flex items-center gap-2">
               <CheckCircle className="h-4 w-4" />
@@ -721,6 +781,7 @@ const BranchManager = ({ business, canManage }) => {
                 size="sm"
                 onClick={handleRefresh}
                 disabled={branchesLoading || settingsLoading}
+                className="bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 hover:text-blue-700 disabled:bg-blue-50 disabled:text-blue-300"
               >
                 {branchesLoading || settingsLoading ? (
                   <>
@@ -831,7 +892,7 @@ const BranchManager = ({ business, canManage }) => {
                               size="sm"
                               onClick={() => handleSetMain(branch)}
                               disabled={isUpdating}
-                              className="text-gray-700 hover:text-blue-600"
+                              className="bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 hover:text-blue-700 disabled:bg-blue-50 disabled:text-blue-300"
                             >
                               {isUpdating ? (
                                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -880,6 +941,8 @@ const BranchManager = ({ business, canManage }) => {
               )}
             </div>
           )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -889,7 +952,7 @@ const BranchManager = ({ business, canManage }) => {
           title={editingBranch ? 'Editar sucursal' : 'Nueva sucursal'}
           submitLabel={editingBranch ? 'Guardar cambios' : 'Crear sucursal'}
           initialData={editingBranch}
-          onClose={handleCloseModal}
+          onClose={handleCloseBranchForm}
           onSubmit={handleBranchSubmit}
           saving={savingBranch}
           error={formError}

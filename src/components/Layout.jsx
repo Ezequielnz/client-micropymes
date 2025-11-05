@@ -334,27 +334,21 @@ const Header = ({
     };
   }, [showBusinessDropdown, showBranchDropdown]);
 
-  const renderBusinessSelector = (variant = 'desktop') => {
-    const isMobile = variant === 'mobile';
-    const widthClasses = isMobile ? 'flex-1 min-w-0' : 'min-w-[12rem] max-w-[16rem]';
-    const dropdownWidth = isMobile ? 'w-full' : 'w-full min-w-[12rem]';
-    const containerClasses = isMobile
-      ? 'relative business-dropdown flex-1 min-w-0'
-      : 'relative business-dropdown inline-flex';
-
+  const renderBusinessSelector = (wrapperClass = '') => {
+    const dropdownWidth = 'w-full';
     return (
-      <div className={containerClasses}>
+      <div className={`relative business-dropdown w-full ${wrapperClass}`}>
         <button
           onClick={() => setShowBusinessDropdown((open) => !open)}
-          className={`flex items-center justify-between gap-2 px-3 py-1.5 border border-gray-300 rounded-lg transition-colors bg-slate-50 hover:bg-slate-100 ${widthClasses}`}
+          className="flex w-full items-center justify-between gap-2 px-3 py-1.5 border border-gray-300 rounded-lg transition-colors bg-slate-50 hover:bg-slate-100"
           aria-haspopup="true"
           aria-expanded={showBusinessDropdown}
         >
           <span className="font-semibold text-blue-600 text-sm truncate">
             {currentBusiness?.nombre || 'Seleccionar negocio'}
           </span>
-          {!isMobile && currentBusiness?.tipo && (
-            <span className="text-xs text-gray-500 hidden xl:inline">
+          {currentBusiness?.tipo && (
+            <span className="hidden text-xs text-gray-500 lg:inline">
               ({currentBusiness.tipo})
             </span>
           )}
@@ -390,17 +384,12 @@ const Header = ({
     );
   };
 
-  const renderBranchSelector = (variant = 'desktop') => {
-    const isMobile = variant === 'mobile';
-    const widthClasses = isMobile ? 'flex-1 min-w-0' : 'min-w-[11.5rem] max-w-[15rem]';
-    const dropdownWidth = isMobile ? 'w-full' : 'w-full min-w-[11.5rem]';
-    const containerClasses = isMobile
-      ? 'relative branch-dropdown flex-1 min-w-0'
-      : 'relative branch-dropdown inline-flex';
+  const renderBranchSelector = (wrapperClass = '') => {
+    const dropdownWidth = 'w-full';
 
     if (branchesLoading) {
       return (
-        <div className={`flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-lg bg-slate-100 text-gray-600 ${widthClasses}`}>
+        <div className={`flex w-full items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-lg bg-slate-100 text-gray-600 ${wrapperClass}`}>
           <div className="w-3.5 h-3.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
           <span className="text-xs font-medium">Cargando...</span>
         </div>
@@ -409,7 +398,7 @@ const Header = ({
 
     if (branchError) {
       return (
-        <div className={`px-3 py-1.5 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg ${widthClasses}`}>
+        <div className={`w-full px-3 py-1.5 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg ${wrapperClass}`}>
           {branchError}
         </div>
       );
@@ -417,17 +406,17 @@ const Header = ({
 
     if (!branches?.length) {
       return (
-        <div className={`px-3 py-1.5 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg ${widthClasses}`}>
+        <div className={`w-full px-3 py-1.5 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg ${wrapperClass}`}>
           Sin sucursal asignada
         </div>
       );
     }
 
     return (
-      <div className={containerClasses}>
+      <div className={`relative branch-dropdown w-full ${wrapperClass}`}>
         <button
           onClick={() => setShowBranchDropdown((open) => !open)}
-          className={`flex items-center justify-between gap-2 px-3 py-1.5 border border-gray-300 rounded-lg transition-colors bg-slate-50 hover:bg-slate-100 ${widthClasses}`}
+          className="flex w-full items-center justify-between gap-2 px-3 py-1.5 border border-gray-300 rounded-lg transition-colors bg-slate-50 hover:bg-slate-100"
           aria-haspopup="true"
           aria-expanded={showBranchDropdown}
         >
@@ -482,23 +471,18 @@ const Header = ({
           </svg>
         </button>
 
-        <div className="flex flex-1 items-center gap-2 min-w-0 lg:hidden">
-          {renderBusinessSelector('mobile')}
-          {renderBranchSelector('mobile')}
-        </div>
-
-        <div className="hidden lg:flex items-end gap-4 ml-auto">
-          <div className="flex flex-col gap-1">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-              Negocio
-            </span>
-            {renderBusinessSelector('desktop')}
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-              Sucursal
-            </span>
-            {renderBranchSelector('desktop')}
+        <div className="flex flex-1 min-w-0 md:justify-end">
+          <div className="w-full min-w-0 md:ml-auto md:max-w-[28rem]">
+            <div className="grid w-full min-w-0 gap-3 md:grid-cols-2 md:gap-4">
+              <div className="flex flex-col gap-1 md:items-end">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide md:text-right">Negocio</span>
+                {renderBusinessSelector('md:w-[13rem]')}
+              </div>
+              <div className="flex flex-col gap-1 md:items-end">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide md:text-right">Sucursal</span>
+                {renderBranchSelector('md:w-[13rem]')}
+              </div>
+            </div>
           </div>
         </div>
       </div>

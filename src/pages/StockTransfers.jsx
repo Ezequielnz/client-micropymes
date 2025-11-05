@@ -1,9 +1,9 @@
-ï»¿import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Plus, RefreshCw, Check, X, Trash2 } from 'lucide-react';
 
 import Layout from '../components/Layout';
-import { useBusinessContext } from '../contexts/BusinessContext';
+import { BusinessContext, useBusinessContext } from '../contexts/BusinessContext';
 import { productAPI, stockTransferAPI } from '../utils/api';
 
 const STATUS_META = {
@@ -32,7 +32,7 @@ const formatDate = (iso) => {
   }
 };
 
-const StockTransfers = () => {
+const StockTransfersInner = () => {
   const queryClient = useQueryClient();
   const {
     currentBusiness,
@@ -266,7 +266,7 @@ const StockTransfers = () => {
       }
       const formatted = availability.toLocaleString('es-AR');
       const scopeLabel = isCentralized ? 'Stock total' : 'Stock origen';
-      return `${baseLabel} â€“ ${scopeLabel}: ${formatted}`;
+      return `${baseLabel} – ${scopeLabel}: ${formatted}`;
     },
     [getProductAvailability, isCentralized],
   );
@@ -403,7 +403,7 @@ const StockTransfers = () => {
   const goNext = () => {
     if (wizardStep === 0) {
       if (!form.origin || !form.destination || form.origin === form.destination) {
-        setMessage({ type: 'error', text: 'Selecciona sucursales vÃ¡lidas.' });
+        setMessage({ type: 'error', text: 'Selecciona sucursales válidas.' });
         return;
       }
     }
@@ -422,7 +422,7 @@ const StockTransfers = () => {
 
   const handleCreate = async () => {
     if (!form.origin || !form.destination || form.origin === form.destination) {
-      setMessage({ type: 'error', text: 'Selecciona sucursales vÃ¡lidas.' });
+      setMessage({ type: 'error', text: 'Selecciona sucursales válidas.' });
       return;
     }
     if (!form.items.length) {
@@ -501,7 +501,7 @@ const StockTransfers = () => {
     if (!transfers.length) {
       return (
         <div className="rounded border border-slate-200 bg-white p-6 text-center text-slate-600">
-          AÃºn no registraste transferencias en este negocio.
+          Aún no registraste transferencias en este negocio.
         </div>
       );
     }
@@ -625,8 +625,7 @@ const StockTransfers = () => {
     );
   };
   return (
-    <Layout activeSection="stock-transfers">
-      <div className="mx-auto max-w-5xl space-y-4 px-4 py-6">
+    <div className="mx-auto max-w-5xl space-y-4 px-4 py-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold text-slate-900">Transferencias de stock</h1>
@@ -694,7 +693,6 @@ const StockTransfers = () => {
         )}
 
         {renderTransfers()}
-      </div>
 
       {wizardOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
@@ -963,8 +961,23 @@ const StockTransfers = () => {
           </div>
         </div>
       )}
-    </Layout>
+    </div>
   );
 };
 
+const StockTransfers = () => {
+  const context = useContext(BusinessContext);
+
+  if (!context) {
+    return (
+      <Layout activeSection="stock-transfers">
+        <StockTransfersInner />
+      </Layout>
+    );
+  }
+
+  return <StockTransfersInner />;
+};
+
 export default StockTransfers;
+
