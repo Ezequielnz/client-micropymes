@@ -1377,22 +1377,24 @@ export const financeAPI = {
     return response.data;
   },
   // Compat: unificar ambas listas para el hook existente
-  getCuentasPendientes: async (businessId) => {
+  getCuentasPendientes: async (businessId, params = {}) => {
+    const requestConfig = {
+      params,
+      headers: {
+        'Accept': 'application/json',
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache',
+      },
+    };
     const [cobrar, pagar] = await Promise.all([
-      api.get(`/businesses/${businessId}/finanzas/cuentas-cobrar`, {
-        headers: {
-          'Accept': 'application/json',
-          'Pragma': 'no-cache',
-          'Cache-Control': 'no-cache',
-        },
-      }),
-      api.get(`/businesses/${businessId}/finanzas/cuentas-pagar`, {
-        headers: {
-          'Accept': 'application/json',
-          'Pragma': 'no-cache',
-          'Cache-Control': 'no-cache',
-        },
-      }),
+      api.get(
+        `/businesses/${businessId}/finanzas/cuentas-cobrar`,
+        requestConfig
+      ),
+      api.get(
+        `/businesses/${businessId}/finanzas/cuentas-pagar`,
+        requestConfig
+      ),
     ]);
     return [...(cobrar.data || []), ...(pagar.data || [])];
   },
