@@ -97,7 +97,7 @@ export const useDashboardData = (
     dataUpdatedAt: statsUpdatedAt
   } = useQuery({
     queryKey: ['dashboard-stats', businessId, selectedPeriod],
-    queryFn: () => salesAPI.getDashboardStatsV2(businessId!),
+    queryFn: () => salesAPI.getDashboardStatsV2(businessId!, selectedPeriod),
     enabled: !!businessId,
     staleTime: 2 * 60 * 1000, // 2 minutes - stats change frequently
     gcTime: 5 * 60 * 1000, // 5 minutes cache

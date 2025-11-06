@@ -1,8 +1,15 @@
-import React, { useEffect, useState, useCallback } from 'react';
+﻿import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { businessAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import PageHeader from '../components/PageHeader';
+import {
+  useBusinessesQuery,
+  useBusinessBranchesQuery,
+  useBusinessSettingsQuery,
+  businessKeys,
+} from '../hooks/useBusinesses';
 import { 
   Building2, 
   Plus, 
@@ -59,7 +66,7 @@ const SimpleButton = ({ children, onClick, variant = 'default', size = 'default'
   );
 };
 
-// Componente Modal de confirmación
+// Componente Modal de confirmaciÃ³n
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message, businessName, isDeleting }) => {
   if (!isOpen) return null;
 
@@ -80,14 +87,14 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message, busines
           <div className="bg-red-50 border border-red-200 rounded-lg p-3">
             <p className="text-red-800 font-medium">"{businessName}"</p>
             <p className="text-red-600 text-sm mt-1">
-              Esta acción eliminará permanentemente:
+              Esta acciÃ³n eliminarÃ¡ permanentemente:
             </p>
             <ul className="text-red-600 text-sm mt-2 list-disc list-inside">
               <li>Todos los productos</li>
-              <li>Todas las categorías</li>
+              <li>Todas las categorÃ­as</li>
               <li>Todos los clientes</li>
               <li>Todas las ventas</li>
-              <li>Toda la configuración</li>
+              <li>Toda la configuraciÃ³n</li>
             </ul>
           </div>
         </div>
@@ -125,7 +132,7 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message, busines
   );
 };
 
-const extractErrorMessage = (error, fallback = 'Ocurrió un error inesperado.') => {
+const extractErrorMessage = (error, fallback = 'OcurriÃ³ un error inesperado.') => {
   if (!error) {
     return fallback;
   }
@@ -242,7 +249,7 @@ const BranchFormModal = ({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Código interno</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">CÃ³digo interno</label>
               <input
                 type="text"
                 value={codigo}
@@ -253,13 +260,13 @@ const BranchFormModal = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">DirecciÃ³n</label>
               <input
                 type="text"
                 value={direccion}
                 onChange={(event) => setDireccion(event.target.value)}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring focus:ring-blue-200 text-gray-900"
-                placeholder="Calle, número y ciudad"
+                placeholder="Calle, nÃºmero y ciudad"
                 disabled={saving}
               />
             </div>
@@ -273,7 +280,7 @@ const BranchFormModal = ({
                 className="h-4 w-4 text-blue-600 border-gray-300 rounded"
                 disabled={saving}
               />
-              La sucursal está activa
+              La sucursal estÃ¡ activa
             </label>
             <label className="flex items-center gap-2 text-sm text-gray-700">
               <input
@@ -333,7 +340,7 @@ const BranchSettingsPanel = ({ branches, settings, saving, error, onSave }) => {
   useEffect(() => {
     setFormState(mapSettingsToFormState(settings));
     setDirty(false);
-  }, [settingsKey]);
+  }, [settingsKey, settings]);
 
   const handleChange = (field, value) => {
     setFormState((prev) => ({ ...prev, [field]: value }));
@@ -420,12 +427,12 @@ const BranchSettingsPanel = ({ branches, settings, saving, error, onSave }) => {
             <option value="centralizado">Compartir entre todas las sucursales</option>
           </select>
           <p className="text-xs text-gray-500 mt-1">
-            Establece si la oferta de servicios varía por ubicación.
+            Establece si la oferta de servicios varÃ­a por ubicaciÃ³n.
           </p>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Catálogo de productos
+            CatÃ¡logo de productos
           </label>
           <select
             value={formState.catalogo_producto_modo}
@@ -450,7 +457,7 @@ const BranchSettingsPanel = ({ branches, settings, saving, error, onSave }) => {
             className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring focus:ring-blue-200 text-gray-900"
             disabled={saving || branches.length === 0}
           >
-            <option value="">Seleccionar automáticamente</option>
+            <option value="">Seleccionar automÃ¡ticamente</option>
             {branches.map((branch) => (
               <option key={branch.id} value={String(branch.id)}>
                 {branch.nombre} {branch.is_main ? '(Principal)' : ''}
@@ -487,7 +494,7 @@ const BranchSettingsPanel = ({ branches, settings, saving, error, onSave }) => {
               className="h-4 w-4 text-blue-600 border-gray-300 rounded"
               disabled={saving || !formState.permite_transferencias}
             />
-            Confirmar transferencias automáticamente
+            Confirmar transferencias automÃ¡ticamente
           </label>
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-end">
@@ -530,13 +537,11 @@ const BranchSettingsPanel = ({ branches, settings, saving, error, onSave }) => {
 };
 
 const BranchManager = ({ business, canManage }) => {
+  const queryClient = useQueryClient();
   const [expanded, setExpanded] = useState(false);
   const [branches, setBranches] = useState([]);
-  const [branchesLoaded, setBranchesLoaded] = useState(false);
-  const [branchesLoading, setBranchesLoading] = useState(false);
   const [branchesError, setBranchesError] = useState(null);
   const [settings, setSettings] = useState(null);
-  const [settingsLoading, setSettingsLoading] = useState(false);
   const [settingsError, setSettingsError] = useState(null);
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingBranch, setEditingBranch] = useState(null);
@@ -545,6 +550,24 @@ const BranchManager = ({ business, canManage }) => {
   const [savingSettings, setSavingSettings] = useState(false);
   const [updatingBranchId, setUpdatingBranchId] = useState(null);
   const [feedbackMessage, setFeedbackMessage] = useState(null);
+
+  const {
+    data: branchesData,
+    isFetching: branchesFetching,
+    isError: branchesQueryHasError,
+    error: branchesQueryError,
+    refetch: refetchBranches,
+    isSuccess: branchesQuerySuccess,
+  } = useBusinessBranchesQuery(business.id, expanded);
+
+  const {
+    data: settingsData,
+    isFetching: settingsFetching,
+    isError: settingsQueryHasError,
+    error: settingsQueryError,
+    refetch: refetchSettings,
+    isSuccess: settingsQuerySuccess,
+  } = useBusinessSettingsQuery(business.id, expanded && canManage);
 
   const sortBranches = useCallback((list) => {
     return [...(list || [])].sort((a, b) => {
@@ -561,48 +584,62 @@ const BranchManager = ({ business, canManage }) => {
     });
   }, []);
 
-  const loadData = useCallback(async () => {
-    setFeedbackMessage(null);
-    setBranchesLoading(true);
-    setBranchesError(null);
-    try {
-      const fetchedBranches = await businessAPI.getBranches(business.id);
-      setBranches(sortBranches(fetchedBranches));
-      setBranchesLoaded(true);
-    } catch (error) {
-      setBranchesError(extractErrorMessage(error, 'No se pudieron cargar las sucursales.'));
-    } finally {
-      setBranchesLoading(false);
+  useEffect(() => {
+    if (!expanded) {
+      return;
     }
+    if (branchesQuerySuccess) {
+      setBranches(sortBranches(branchesData || []));
+      setBranchesError(null);
+    }
+  }, [expanded, branchesQuerySuccess, branchesData, sortBranches]);
 
-    if (canManage) {
-      setSettingsLoading(true);
-      setSettingsError(null);
-      try {
-        const fetchedSettings = await businessAPI.getBranchSettings(business.id);
-        setSettings(fetchedSettings);
-      } catch (error) {
-        setSettings(null);
-        setSettingsError(extractErrorMessage(error, 'No se pudo obtener la configuración del negocio.'));
-      } finally {
-        setSettingsLoading(false);
-      }
+  useEffect(() => {
+    if (!branchesQueryHasError || !branchesQueryError) {
+      return;
     }
-  }, [business.id, canManage, sortBranches]);
+    setBranchesError(extractErrorMessage(branchesQueryError, 'No se pudieron cargar las sucursales.'));
+  }, [branchesQueryHasError, branchesQueryError]);
+
+  useEffect(() => {
+    if (!expanded || !canManage) {
+      return;
+    }
+    if (settingsQuerySuccess) {
+      setSettings(settingsData ?? null);
+      setSettingsError(null);
+    }
+  }, [expanded, canManage, settingsQuerySuccess, settingsData]);
+
+  useEffect(() => {
+    if (!settingsQueryHasError || !settingsQueryError) {
+      return;
+    }
+    setSettings(null);
+    setSettingsError(extractErrorMessage(settingsQueryError, 'No se pudo obtener la configuraciÃ³n del negocio.'));
+  }, [settingsQueryHasError, settingsQueryError]);
 
   const handleToggle = useCallback(() => {
     setExpanded((prev) => {
       const next = !prev;
-      if (next && !branchesLoaded && !branchesLoading) {
-        loadData();
+      if (next) {
+        setFeedbackMessage(null);
+        setBranchesError(null);
+        setSettingsError(null);
       }
       return next;
     });
-  }, [branchesLoaded, branchesLoading, loadData]);
+  }, []);
 
   const handleRefresh = useCallback(() => {
-    loadData();
-  }, [loadData]);
+    setFeedbackMessage(null);
+    setBranchesError(null);
+    setSettingsError(null);
+    refetchBranches();
+    if (canManage) {
+      refetchSettings();
+    }
+  }, [canManage, refetchBranches, refetchSettings]);
 
   const handleOpenCreate = useCallback(() => {
     setEditingBranch(null);
@@ -649,7 +686,7 @@ const BranchManager = ({ business, canManage }) => {
 
         setShowFormModal(false);
         setEditingBranch(null);
-        await loadData();
+        await queryClient.invalidateQueries({ queryKey: businessKeys.branches(business.id) });
       } catch (error) {
         setFormError(extractErrorMessage(error, 'No se pudo guardar la sucursal.'));
         throw error;
@@ -657,7 +694,7 @@ const BranchManager = ({ business, canManage }) => {
         setSavingBranch(false);
       }
     },
-    [business.id, editingBranch, loadData]
+    [business.id, editingBranch, queryClient]
   );
 
   const handleToggleActive = useCallback(
@@ -668,7 +705,7 @@ const BranchManager = ({ business, canManage }) => {
       setFeedbackMessage(null);
       try {
         await businessAPI.updateBranch(business.id, branchId, { activo: !branch.activo });
-        await loadData();
+        await queryClient.invalidateQueries({ queryKey: businessKeys.branches(business.id) });
         setFeedbackMessage(
           branch.activo ? 'Sucursal desactivada correctamente.' : 'Sucursal activada correctamente.'
         );
@@ -678,7 +715,7 @@ const BranchManager = ({ business, canManage }) => {
         setUpdatingBranchId(null);
       }
     },
-    [business.id, loadData]
+    [business.id, queryClient]
   );
 
   const handleSetMain = useCallback(
@@ -689,15 +726,15 @@ const BranchManager = ({ business, canManage }) => {
       setFeedbackMessage(null);
       try {
         await businessAPI.updateBranch(business.id, branchId, { is_main: true });
-        await loadData();
-        setFeedbackMessage('La sucursal principal se actualizó correctamente.');
+        await queryClient.invalidateQueries({ queryKey: businessKeys.branches(business.id) });
+        setFeedbackMessage('La sucursal principal se actualizÃ³ correctamente.');
       } catch (error) {
         setBranchesError(extractErrorMessage(error, 'No se pudo establecer la sucursal principal.'));
       } finally {
         setUpdatingBranchId(null);
       }
     },
-    [business.id, loadData]
+    [business.id, queryClient]
   );
 
   const handleSaveSettings = useCallback(
@@ -708,7 +745,8 @@ const BranchManager = ({ business, canManage }) => {
       try {
         const updated = await businessAPI.updateBranchSettings(business.id, changes);
         setSettings(updated);
-        setFeedbackMessage('La configuración del negocio se actualizó correctamente.');
+        setFeedbackMessage('La configuraciÃ³n del negocio se actualizÃ³ correctamente.');
+        queryClient.setQueryData(businessKeys.settings(business.id), updated);
         return true;
       } catch (error) {
         setSettingsError(extractErrorMessage(error, 'No se pudieron guardar las preferencias.'));
@@ -717,9 +755,11 @@ const BranchManager = ({ business, canManage }) => {
         setSavingSettings(false);
       }
     },
-    [business.id]
+    [business.id, queryClient]
   );
 
+  const branchesLoading = expanded && branchesFetching;
+  const settingsLoading = canManage ? (expanded && settingsFetching) : false;
   const currentRole = (business.rol || '').toLowerCase();
   const canEditBranches = canManage;
   const hasBranches = branches.length > 0;
@@ -734,7 +774,7 @@ const BranchManager = ({ business, canManage }) => {
         <span className="flex items-center gap-3">
           <MapPin className="h-5 w-5 text-blue-600" />
           <span className="font-medium">
-            Sucursales y configuración operativa
+            Sucursales y configuraciÃ³n operativa
             <span className="block text-sm font-normal text-gray-500">
               {hasBranches ? `${branches.length} sucursal(es) registradas` : 'Sin sucursales registradas'}
             </span>
@@ -913,13 +953,13 @@ const BranchManager = ({ business, canManage }) => {
               <div>
                 <h4 className="text-base font-semibold text-gray-900">Preferencias del negocio</h4>
                 <p className="text-sm text-gray-500">
-                  Ajusta cómo operan las sucursales en inventario, servicios y transferencias.
+                  Ajusta cÃ³mo operan las sucursales en inventario, servicios y transferencias.
                 </p>
               </div>
               {settingsLoading && (
                 <div className="flex items-center gap-2 text-blue-600 text-sm">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Cargando configuración...</span>
+                  <span>Cargando configuraciÃ³n...</span>
                 </div>
               )}
               {!settingsLoading && settings && (
@@ -933,7 +973,7 @@ const BranchManager = ({ business, canManage }) => {
               )}
               {!settingsLoading && !settings && (
                 <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-md">
-                  {settingsError || 'No se pudo cargar la configuración actual de este negocio.'}
+                  {settingsError || 'No se pudo cargar la configuraciÃ³n actual de este negocio.'}
                 </div>
               )}
             </div>
@@ -959,60 +999,37 @@ const BranchManager = ({ business, canManage }) => {
 
 function MyBusinesses() {
   const { user } = useAuth();
-  const [businesses, setBusinesses] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [dataLoaded, setDataLoaded] = useState(false);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
   const [openMenuId, setOpenMenuId] = useState(null);
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, business: null });
-  const [deleting, setDeleting] = useState(false);
-  const navigate = useNavigate();
-  
-  // Función manual para cargar datos
-  const loadData = useCallback(async () => {
-    console.log('Loading businesses data...');
-    setLoading(true);
-    setError(null);
+  const [uiError, setUiError] = useState(null);
 
-    try {
-      console.log('Fetching businesses...');
+  const {
+    data: businesses = [],
+    isLoading,
+    isFetched,
+    error: businessesQueryError,
+    refetch,
+  } = useBusinessesQuery(Boolean(user));
 
-      // El usuario ya está disponible en AuthContext
-      if (!user) {
-        setError('Usuario no autenticado');
-        setLoading(false);
-        return;
-      }
+  const deleteBusinessMutation = useMutation({
+    mutationFn: (businessId) => businessAPI.deleteBusiness(businessId),
+    onSuccess: (_data, businessId) => {
+      queryClient.invalidateQueries({ queryKey: businessKeys.list() });
+      queryClient.setQueryData(businessKeys.list(), (prev) => {
+        if (!Array.isArray(prev)) {
+          return prev;
+        }
+        return prev.filter((b) => b.id !== businessId);
+      });
+    },
+  });
 
-      const businessesData = await businessAPI.getBusinesses();
-      console.log('Businesses data received:', businessesData);
-      setBusinesses(businessesData || []);
+  const deleting = deleteBusinessMutation.isPending;
+  const dataLoaded = isFetched;
 
-      setDataLoaded(true);
-      console.log('Data fetching completed successfully');
-    } catch (error) {
-      console.error('Error fetching data:', error);
-
-      // Manejo específico para timeouts
-      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-        setError('La conexión tardó demasiado tiempo. Verifica tu conexión a internet e intenta nuevamente.');
-      } else if (error.response?.status === 401) {
-        console.log('Unauthorized, removing token and redirecting to login');
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.clear();
-        navigate('/login');
-      } else {
-        console.log('Non-auth error, staying on page');
-        const errorMessage = error.response?.data?.detail || error.message || 'Error loading data';
-        setError(errorMessage);
-      }
-    } finally {
-      console.log('Setting loading to false');
-      setLoading(false);
-    }
-  }, [user, navigate]);
-  
   useEffect(() => {
     console.log('MyBusinesses component mounted');
 
@@ -1022,113 +1039,109 @@ function MyBusinesses() {
     if (!token) {
       console.log('No token found, redirecting to login');
       navigate('/login');
-      return;
     }
-
-    // Cargar datos automáticamente
-    loadData();
-  }, [navigate, loadData]);
+  }, [navigate]);
   
-  // Función para manejar el menú desplegable
+  // FunciÃ³n para manejar el menÃº desplegable
   const toggleMenu = (businessId) => {
     setOpenMenuId(openMenuId === businessId ? null : businessId);
   };
 
-  // Función para cerrar el menú cuando se hace clic fuera
+  // FunciÃ³n para cerrar el menÃº cuando se hace clic fuera
   const closeMenu = () => {
     setOpenMenuId(null);
   };
 
-  // Función para abrir el modal de confirmación
+  // FunciÃ³n para abrir el modal de confirmaciÃ³n
   const openDeleteModal = (business) => {
     setDeleteModal({ isOpen: true, business });
-    setOpenMenuId(null); // Cerrar el menú
+    setOpenMenuId(null); // Cerrar el menÃº
   };
 
-  // Función para cerrar el modal de confirmación
+  // FunciÃ³n para cerrar el modal de confirmaciÃ³n
   const closeDeleteModal = () => {
     setDeleteModal({ isOpen: false, business: null });
   };
 
-  // Función para eliminar el negocio
+  // FunciÃ³n para eliminar el negocio
   const handleDeleteBusiness = async () => {
     if (!deleteModal.business) return;
 
-    setDeleting(true);
     try {
-      await businessAPI.deleteBusiness(deleteModal.business.id);
-      
-      // Actualizar la lista de negocios eliminando el negocio borrado
-      setBusinesses(prev => prev.filter(b => b.id !== deleteModal.business.id));
-      
-      // Cerrar el modal
+      await deleteBusinessMutation.mutateAsync(deleteModal.business.id);
+      setUiError(null);
       closeDeleteModal();
-      
       console.log(`Business ${deleteModal.business.id} deleted successfully`);
     } catch (error) {
       console.error('Error deleting business:', error);
-      
-      // Mostrar error específico
-      const errorMessage = error.response?.data?.detail || error.message || 'Error al eliminar el negocio';
-      setError(errorMessage);
-      
-      // Cerrar el modal incluso si hay error para que el usuario pueda ver el mensaje
+      setUiError(extractErrorMessage(error, 'Error al eliminar el negocio'));
       closeDeleteModal();
-    } finally {
-      setDeleting(false);
     }
   };
 
-  // Función de debug temporal
+  // FunciÃ³n de debug temporal
   const debugBusinesses = async () => {
     if (!user) return;
     
     try {
-      console.log('🐛 DEBUG: Checking businesses for user:', user.id);
+      console.log('ðŸ› DEBUG: Checking businesses for user:', user.id);
       const debugData = await businessAPI.debugUserBusinesses(user.id);
-      console.log('🐛 DEBUG DATA:', debugData);
+      console.log('ðŸ› DEBUG DATA:', debugData);
       alert(`Debug info logged to console. Total relationships: ${debugData.total_relationships}, Total businesses: ${debugData.total_businesses}`);
     } catch (error) {
-      console.error('🐛 DEBUG ERROR:', error);
+      console.error('ðŸ› DEBUG ERROR:', error);
       alert(error?.response?.data?.detail || 'Error al ejecutar debug');
     }
   };
 
-  // Función de reparación
+  // FunciÃ³n de reparaciÃ³n
   const repairBusinesses = async () => {
     if (!user) return;
     
     try {
-      console.log('🔧 REPAIR: Starting repair for user:', user.id);
+      console.log('ðŸ”§ REPAIR: Starting repair for user:', user.id);
       const repairData = await businessAPI.repairUserBusinesses(user.id);
-      console.log('🔧 REPAIR DATA:', repairData);
+      console.log('ðŸ”§ REPAIR DATA:', repairData);
       
       if (repairData.relationships_repaired > 0) {
-        alert(`¡Reparación exitosa! Se crearon ${repairData.relationships_repaired} relaciones faltantes.`);
+        alert(`Â¡ReparaciÃ³n exitosa! Se crearon ${repairData.relationships_repaired} relaciones faltantes.`);
         // Recargar los datos
-        loadData();
+        await refetch();
       } else {
-        alert('No se encontraron negocios huérfanos para reparar.');
+        alert('No se encontraron negocios huÃ©rfanos para reparar.');
       }
     } catch (error) {
-      console.error('🔧 REPAIR ERROR:', error);
-      alert(error?.response?.data?.detail || 'Error durante la reparación. Revisa la consola.');
+      console.error('ðŸ”§ REPAIR ERROR:', error);
+      alert(error?.response?.data?.detail || 'Error durante la reparaciÃ³n. Revisa la consola.');
     }
   };
   
+  const queryErrorMessage = businessesQueryError
+    ? extractErrorMessage(businessesQueryError, 'Error al cargar los datos')
+    : null;
+
+  const errorMessage = uiError ?? (!user ? 'Usuario no autenticado' : queryErrorMessage);
+
   // Error state
-  if (error) {
+  if (errorMessage) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
           <div className="text-red-600 text-lg font-medium mb-4">
-            Error: {error}
+            Error: {errorMessage}
           </div>
           <div className="space-y-3">
             <SimpleButton onClick={() => window.location.reload()} className="w-full">
-              Recargar página
+              Recargar pÃ¡gina
             </SimpleButton>
-            <SimpleButton onClick={loadData} variant="outline" className="w-full">
+            <SimpleButton
+              onClick={() => {
+                setUiError(null);
+                refetch();
+              }}
+              variant="outline"
+              className="w-full"
+            >
               Reintentar
             </SimpleButton>
           </div>
@@ -1138,7 +1151,7 @@ function MyBusinesses() {
   }
   
   // Loading state
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="flex items-center gap-3 text-blue-600">
@@ -1178,7 +1191,7 @@ function MyBusinesses() {
                   onClick={debugBusinesses}
                   className="bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100"
                 >
-                  🐛 Debug
+                  ðŸ› Debug
                 </SimpleButton>
               )}
               {user && (
@@ -1188,7 +1201,7 @@ function MyBusinesses() {
                   onClick={repairBusinesses}
                   className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
                 >
-                  🔧 Reparar
+                  ðŸ”§ Reparar
                 </SimpleButton>
               )}
               <SimpleButton 
@@ -1206,7 +1219,7 @@ function MyBusinesses() {
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 mb-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <User className="h-5 w-5 text-blue-600" />
-                Información del Usuario
+                InformaciÃ³n del Usuario
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="flex items-center gap-3">
@@ -1281,22 +1294,22 @@ function MyBusinesses() {
                             <MoreVertical className="h-4 w-4" />
                           </SimpleButton>
                           
-                          {/* Menú desplegable */}
+                          {/* MenÃº desplegable */}
                           {openMenuId === business.id && (
                             <>
-                              {/* Overlay para cerrar el menú */}
+                              {/* Overlay para cerrar el menÃº */}
                               <div 
                                 className="fixed inset-0 z-10" 
                                 onClick={closeMenu}
                               ></div>
                               
-                              {/* Menú */}
+                              {/* MenÃº */}
                               <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20 overflow-hidden">
                                 <div className="py-1">
                                   <button
                                     onClick={() => {
                                       closeMenu();
-                                      alert('Próximamente: Editar negocio');
+                                      alert('PrÃ³ximamente: Editar negocio');
                                     }}
                                     className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-150 border-none outline-none"
                                     style={{ color: '#374151', backgroundColor: 'white' }}
@@ -1372,7 +1385,7 @@ function MyBusinesses() {
                         <SimpleButton 
                           variant="outline"
                           size="sm"
-                          onClick={() => alert('Próximamente: Configuración del negocio')}
+                          onClick={() => alert('PrÃ³ximamente: ConfiguraciÃ³n del negocio')}
                           className="w-full text-gray-700 hover:bg-gray-50"
                         >
                           <Settings className="h-4 w-4 mr-2" />
@@ -1453,7 +1466,7 @@ function MyBusinesses() {
           onClose={closeDeleteModal}
           onConfirm={handleDeleteBusiness}
           title="Eliminar Negocio"
-          message="¿Estás seguro de que quieres eliminar este negocio?"
+          message="Â¿EstÃ¡s seguro de que quieres eliminar este negocio?"
           businessName={deleteModal.business?.nombre || ''}
           isDeleting={deleting}
         />
@@ -1463,3 +1476,6 @@ function MyBusinesses() {
 }
 
 export default MyBusinesses; 
+
+
+

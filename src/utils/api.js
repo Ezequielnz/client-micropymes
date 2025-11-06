@@ -724,12 +724,16 @@ export const salesAPI = {
    * @returns {Promise<object>} A promise that resolves to the dashboard statistics.
    * @throws {Error} If the API request fails.
    */
-  getDashboardStatsV2: async (businessId) => {
+  getDashboardStatsV2: async (businessId, period) => {
     if (!businessId) {
       throw new Error('businessId is required to fetch dashboard stats v2.');
     }
+    const params = { negocio_id: businessId };
+    if (period) {
+      params.period = period;
+    }
     const response = await api.get(`/businesses/${businessId}/ventas/dashboard-stats-v2`, {
-      params: { negocio_id: businessId }
+      params
     });
     return response.data;
   },

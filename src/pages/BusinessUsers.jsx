@@ -1,10 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { businessAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { PageLoader } from '../components/LoadingSpinner';
 import Layout from '../components/Layout';
 import BusinessSettingsForm from '../components/BusinessSettingsForm';
+import {
+  useBusinessesQuery,
+  useBusinessBranchesQuery,
+  useBusinessSettingsQuery,
+  businessKeys,
+} from '../hooks/useBusinesses';
 import '../styles/responsive-overrides.css';
 import {
   Building2,
@@ -76,7 +83,7 @@ const CardTitle = ({ children, className = '' }) => (
   </h3>
 );
 
-const extractErrorMessage = (error, fallback = 'Ocurrió un error inesperado.') => {
+const extractErrorMessage = (error, fallback = 'OcurriÃ³ un error inesperado.') => {
   if (!error) {
     return fallback;
   }
@@ -195,7 +202,7 @@ const BranchFormModal = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Código interno
+                CÃ³digo interno
               </label>
               <input
                 type="text"
@@ -208,14 +215,14 @@ const BranchFormModal = ({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Dirección
+                DirecciÃ³n
               </label>
               <input
                 type="text"
                 value={direccion}
                 onChange={(event) => setDireccion(event.target.value)}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring focus:ring-blue-200 text-gray-900"
-                placeholder="Calle, número y ciudad"
+                placeholder="Calle, nÃºmero y ciudad"
                 disabled={saving}
               />
             </div>
@@ -229,7 +236,7 @@ const BranchFormModal = ({
                 className="h-4 w-4 text-blue-600 border-gray-300 rounded"
                 disabled={saving}
               />
-              La sucursal está activa
+              La sucursal estÃ¡ activa
             </label>
             <label className="flex items-center gap-2 text-sm text-gray-700">
               <input
@@ -288,7 +295,7 @@ const BranchSettingsPanel = ({ branches, settings, saving, error, onSave }) => {
   useEffect(() => {
     setFormState(mapSettingsToFormState(settings));
     setDirty(false);
-  }, [settingsKey]);
+  }, [settingsKey, settings]);
 
   const handleChange = (field, value) => {
     setFormState((prev) => ({ ...prev, [field]: value }));
@@ -375,12 +382,12 @@ const BranchSettingsPanel = ({ branches, settings, saving, error, onSave }) => {
             <option value="centralizado">Compartir entre todas las sucursales</option>
           </select>
           <p className="text-xs text-gray-500 mt-1">
-            Define si la oferta de servicios cambia según la ubicación.
+            Define si la oferta de servicios cambia segÃºn la ubicaciÃ³n.
           </p>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Catálogo de productos
+            CatÃ¡logo de productos
           </label>
           <select
             value={formState.catalogo_producto_modo}
@@ -405,7 +412,7 @@ const BranchSettingsPanel = ({ branches, settings, saving, error, onSave }) => {
             className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring focus:ring-blue-200 text-gray-900"
             disabled={saving || branches.length === 0}
           >
-            <option value="">Seleccionar automáticamente</option>
+            <option value="">Seleccionar automÃ¡ticamente</option>
             {branches.map((branch) => (
               <option key={branch.id} value={String(branch.id)}>
                 {branch.nombre} {branch.is_main ? '(Principal)' : ''}
@@ -413,7 +420,7 @@ const BranchSettingsPanel = ({ branches, settings, saving, error, onSave }) => {
             ))}
           </select>
           <p className="text-xs text-gray-500 mt-1">
-            Se usará por defecto al crear nuevas operaciones.
+            Se usarÃ¡ por defecto al crear nuevas operaciones.
           </p>
         </div>
       </div>
@@ -442,7 +449,7 @@ const BranchSettingsPanel = ({ branches, settings, saving, error, onSave }) => {
               className="h-4 w-4 text-blue-600 border-gray-300 rounded"
               disabled={saving || !formState.permite_transferencias}
             />
-            Confirmar transferencias automáticamente
+            Confirmar transferencias automÃ¡ticamente
           </label>
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-end">
@@ -482,13 +489,12 @@ const BranchSettingsPanel = ({ branches, settings, saving, error, onSave }) => {
 };
 
 const BranchManager = ({ business, canManage }) => {
+  const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [branches, setBranches] = useState([]);
   const [branchesLoaded, setBranchesLoaded] = useState(false);
-  const [branchesLoading, setBranchesLoading] = useState(false);
   const [branchesError, setBranchesError] = useState(null);
   const [settings, setSettings] = useState(null);
-  const [settingsLoading, setSettingsLoading] = useState(false);
   const [settingsError, setSettingsError] = useState(null);
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingBranch, setEditingBranch] = useState(null);
@@ -497,6 +503,24 @@ const BranchManager = ({ business, canManage }) => {
   const [savingSettings, setSavingSettings] = useState(false);
   const [updatingBranchId, setUpdatingBranchId] = useState(null);
   const [feedbackMessage, setFeedbackMessage] = useState(null);
+
+  const {
+    data: branchesData,
+    isFetching: branchesFetching,
+    isError: branchesQueryHasError,
+    error: branchesQueryError,
+    refetch: refetchBranches,
+    isSuccess: branchesQuerySuccess,
+  } = useBusinessBranchesQuery(business.id, isModalOpen);
+
+  const {
+    data: settingsData,
+    isFetching: settingsFetching,
+    isError: settingsQueryHasError,
+    error: settingsQueryError,
+    refetch: refetchSettings,
+    isSuccess: settingsQuerySuccess,
+  } = useBusinessSettingsQuery(business.id, isModalOpen && canManage);
 
   const sortBranches = useCallback((list) => {
     return [...(list || [])].sort((a, b) => {
@@ -513,46 +537,56 @@ const BranchManager = ({ business, canManage }) => {
     });
   }, []);
 
-  const loadData = useCallback(async () => {
-    setFeedbackMessage(null);
-    setBranchesLoading(true);
-    setBranchesError(null);
-    try {
-      const fetchedBranches = await businessAPI.getBranches(business.id);
-      setBranches(sortBranches(fetchedBranches));
+  useEffect(() => {
+    if (!isModalOpen) {
+      return;
+    }
+    if (branchesQuerySuccess) {
+      setBranches(sortBranches(branchesData || []));
       setBranchesLoaded(true);
-    } catch (error) {
-      setBranchesError(extractErrorMessage(error, 'No se pudieron cargar las sucursales.'));
-    } finally {
-      setBranchesLoading(false);
+      setBranchesError(null);
     }
+  }, [isModalOpen, branchesQuerySuccess, branchesData, sortBranches]);
 
-    if (canManage) {
-      setSettingsLoading(true);
-      setSettingsError(null);
-      try {
-        const fetchedSettings = await businessAPI.getBranchSettings(business.id);
-        setSettings(fetchedSettings);
-      } catch (error) {
-        setSettings(null);
-        setSettingsError(extractErrorMessage(error, 'No se pudo obtener la configuración del negocio.'));
-      } finally {
-        setSettingsLoading(false);
-      }
+  useEffect(() => {
+    if (!branchesQueryHasError || !branchesQueryError) {
+      return;
     }
-  }, [business.id, canManage, sortBranches]);
+    setBranchesError(extractErrorMessage(branchesQueryError, 'No se pudieron cargar las sucursales.'));
+  }, [branchesQueryHasError, branchesQueryError]);
+
+  useEffect(() => {
+    if (!isModalOpen || !canManage) {
+      return;
+    }
+    if (settingsQuerySuccess) {
+      setSettings(settingsData ?? null);
+      setSettingsError(null);
+    }
+  }, [isModalOpen, canManage, settingsQuerySuccess, settingsData]);
+
+  useEffect(() => {
+    if (!settingsQueryHasError || !settingsQueryError) {
+      return;
+    }
+    setSettings(null);
+    setSettingsError(extractErrorMessage(settingsQueryError, 'No se pudo obtener la configuraciÃ³n del negocio.'));
+  }, [settingsQueryHasError, settingsQueryError]);
 
   const handleOpenManager = useCallback(() => {
     setFeedbackMessage(null);
+    setBranchesError(null);
+    setSettingsError(null);
     setIsModalOpen(true);
-    loadData();
-  }, [loadData]);
+  }, []);
 
   const handleCloseManager = useCallback(() => {
     setIsModalOpen(false);
     setShowFormModal(false);
     setEditingBranch(null);
     setFormError(null);
+    setBranchesError(null);
+    setSettingsError(null);
   }, []);
 
   useEffect(() => {
@@ -578,8 +612,14 @@ const BranchManager = ({ business, canManage }) => {
   }, [isModalOpen, showFormModal, handleCloseManager]);
 
   const handleRefresh = useCallback(() => {
-    loadData();
-  }, [loadData]);
+    setFeedbackMessage(null);
+    setBranchesError(null);
+    setSettingsError(null);
+    refetchBranches();
+    if (canManage) {
+      refetchSettings();
+    }
+  }, [canManage, refetchBranches, refetchSettings]);
 
   const handleOpenCreate = useCallback(() => {
     setEditingBranch(null);
@@ -626,7 +666,7 @@ const BranchManager = ({ business, canManage }) => {
 
         setShowFormModal(false);
         setEditingBranch(null);
-        await loadData();
+        await queryClient.invalidateQueries({ queryKey: businessKeys.branches(business.id) });
       } catch (error) {
         setFormError(extractErrorMessage(error, 'No se pudo guardar la sucursal.'));
         throw error;
@@ -634,7 +674,7 @@ const BranchManager = ({ business, canManage }) => {
         setSavingBranch(false);
       }
     },
-    [business.id, editingBranch, loadData]
+    [business.id, editingBranch, queryClient]
   );
 
   const handleToggleActive = useCallback(
@@ -645,7 +685,7 @@ const BranchManager = ({ business, canManage }) => {
       setFeedbackMessage(null);
       try {
         await businessAPI.updateBranch(business.id, branchId, { activo: !branch.activo });
-        await loadData();
+        await queryClient.invalidateQueries({ queryKey: businessKeys.branches(business.id) });
         setFeedbackMessage(
           branch.activo ? 'Sucursal desactivada correctamente.' : 'Sucursal activada correctamente.'
         );
@@ -655,7 +695,7 @@ const BranchManager = ({ business, canManage }) => {
         setUpdatingBranchId(null);
       }
     },
-    [business.id, loadData]
+    [business.id, queryClient]
   );
 
   const handleSetMain = useCallback(
@@ -666,15 +706,15 @@ const BranchManager = ({ business, canManage }) => {
       setFeedbackMessage(null);
       try {
         await businessAPI.updateBranch(business.id, branchId, { is_main: true });
-        await loadData();
-        setFeedbackMessage('La sucursal principal se actualizó correctamente.');
+        await queryClient.invalidateQueries({ queryKey: businessKeys.branches(business.id) });
+        setFeedbackMessage('La sucursal principal se actualizÃ³ correctamente.');
       } catch (error) {
         setBranchesError(extractErrorMessage(error, 'No se pudo establecer la sucursal principal.'));
       } finally {
         setUpdatingBranchId(null);
       }
     },
-    [business.id, loadData]
+    [business.id, queryClient]
   );
 
   const handleSaveSettings = useCallback(
@@ -685,7 +725,8 @@ const BranchManager = ({ business, canManage }) => {
       try {
         const updated = await businessAPI.updateBranchSettings(business.id, changes);
         setSettings(updated);
-        setFeedbackMessage('La configuración del negocio se actualizó correctamente.');
+        setFeedbackMessage('La configuraciÃ³n del negocio se actualizÃ³ correctamente.');
+        queryClient.setQueryData(businessKeys.settings(business.id), updated);
         return true;
       } catch (error) {
         setSettingsError(extractErrorMessage(error, 'No se pudieron guardar las preferencias.'));
@@ -694,9 +735,11 @@ const BranchManager = ({ business, canManage }) => {
         setSavingSettings(false);
       }
     },
-    [business.id]
+    [business.id, queryClient]
   );
 
+  const branchesLoading = isModalOpen && branchesFetching;
+  const settingsLoading = canManage ? (isModalOpen && settingsFetching) : false;
   const hasBranches = branches.length > 0;
   const manageLabel =
     branchesLoaded && hasBranches
@@ -916,13 +959,13 @@ const BranchManager = ({ business, canManage }) => {
               <div>
                 <h4 className="text-sm font-semibold text-gray-900">Preferencias del negocio</h4>
                 <p className="text-xs text-gray-500">
-                  Ajusta cómo operan las sucursales en inventario, servicios y transferencias.
+                  Ajusta cÃ³mo operan las sucursales en inventario, servicios y transferencias.
                 </p>
               </div>
               {settingsLoading && (
                 <div className="flex items-center gap-2 text-blue-600 text-sm">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Cargando configuración...</span>
+                  <span>Cargando configuraciÃ³n...</span>
                 </div>
               )}
               {!settingsLoading && settings && (
@@ -936,7 +979,7 @@ const BranchManager = ({ business, canManage }) => {
               )}
               {!settingsLoading && !settings && (
                 <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-md">
-                  {settingsError || 'No se pudo cargar la configuración actual de este negocio.'}
+                  {settingsError || 'No se pudo cargar la configuraciÃ³n actual de este negocio.'}
                 </div>
               )}
             </div>
@@ -965,19 +1008,37 @@ const BranchManager = ({ business, canManage }) => {
 function BusinessUsers() {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
-  
-  const [businesses, setBusinesses] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
+
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newBusiness, setNewBusiness] = useState({
     nombre: '',
     tipo: '',
     descripcion: ''
   });
-  const [creating, setCreating] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [showSettingsForm, setShowSettingsForm] = useState(false);
+
+  const {
+    data: businesses = [],
+    isLoading,
+    error: businessesQueryError,
+    refetch,
+  } = useBusinessesQuery(Boolean(currentUser));
+
+  const createBusinessMutation = useMutation({
+    mutationFn: (payload) => businessAPI.createBusiness(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: businessKeys.list() });
+    },
+  });
+
+  const deleteBusinessMutation = useMutation({
+    mutationFn: (businessId) => businessAPI.deleteBusiness(businessId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: businessKeys.list() });
+    },
+  });
 
   const businessTypes = [
     'Comercio',
@@ -989,33 +1050,8 @@ function BusinessUsers() {
     'Otro'
   ];
 
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // El usuario ya está disponible en AuthContext
-      if (!currentUser) {
-        setError('Usuario no autenticado');
-        setLoading(false);
-        return;
-      }
-
-      // Cargar negocios del usuario
-      const businessData = await businessAPI.getBusinesses();
-      setBusinesses(businessData || []);
-
-    } catch (err) {
-      console.error('Error loading data:', err);
-      setError(err.message || 'Error al cargar los datos');
-    } finally {
-      setLoading(false);
-    }
-  }, [currentUser]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  const creating = createBusinessMutation.isPending;
+  const deleting = deleteBusinessMutation.isPending;
 
   const handleCreateBusiness = async (e) => {
     e.preventDefault();
@@ -1026,33 +1062,28 @@ function BusinessUsers() {
     }
 
     try {
-      setCreating(true);
-      await businessAPI.createBusiness(newBusiness);
+      await createBusinessMutation.mutateAsync(newBusiness);
       setNewBusiness({ nombre: '', tipo: '', descripcion: '' });
       setShowCreateForm(false);
-      await loadData(); // Recargar la lista
     } catch (err) {
       console.error('Error creating business:', err);
-      alert('Error al crear el negocio: ' + (err.response?.data?.detail || err.message));
-    } finally {
-      setCreating(false);
+      alert('Error al crear el negocio: ' + extractErrorMessage(err, 'Intenta nuevamente mÃ¡s tarde.'));
     }
   };
 
   const handleDeleteBusiness = async (businessId, businessName) => {
-    if (!confirm(`¿Estás seguro de que quieres eliminar el negocio "${businessName}"? Esta acción no se puede deshacer.`)) {
+    if (!confirm(`Â¿EstÃ¡s seguro de que quieres eliminar el negocio "${businessName}"? Esta acciÃ³n no se puede deshacer.`)) {
       return;
     }
     
     try {
-      await businessAPI.deleteBusiness(businessId);
-      await loadData(); // Recargar la lista
+      await deleteBusinessMutation.mutateAsync(businessId);
     } catch (err) {
       console.error('Error deleting business:', err);
       if (err?.response?.status === 403) {
         alert('No tienes permisos para eliminar este negocio. Solo los administradores pueden eliminarlo.');
       } else {
-        alert('Error al eliminar el negocio: ' + (err.response?.data?.detail || err.message));
+        alert('Error al eliminar el negocio: ' + extractErrorMessage(err, 'Intenta nuevamente mÃ¡s tarde.'));
       }
     }
   };
@@ -1072,7 +1103,13 @@ function BusinessUsers() {
     console.log('Settings saved successfully');
   };
 
-  if (loading) {
+  const errorMessage = !currentUser
+    ? 'Usuario no autenticado'
+    : businessesQueryError
+    ? extractErrorMessage(businessesQueryError, 'Error al cargar los datos')
+    : null;
+
+  if (isLoading) {
     return (
       <Layout activeSection="businesses">
         <div className="flex-1 bg-gray-50 min-h-screen flex items-center justify-center">
@@ -1082,7 +1119,7 @@ function BusinessUsers() {
     );
   }
 
-  if (error) {
+  if (errorMessage) {
     return (
       <Layout activeSection="businesses">
         <div className="flex-1 bg-gray-50 min-h-screen flex items-center justify-center">
@@ -1090,9 +1127,9 @@ function BusinessUsers() {
             <div className="text-center p-8">
               <AlertCircle className="h-12 w-12 text-red-600 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Error</h3>
-              <p className="text-gray-600 mb-4">{error}</p>
+              <p className="text-gray-600 mb-4">{errorMessage}</p>
               <div className="flex gap-2">
-                <Button onClick={loadData} className="flex-1">
+                <Button onClick={() => refetch()} className="flex-1">
                   Reintentar
                 </Button>
                 <Button onClick={() => navigate('/home')} variant="outline" className="flex-1">
@@ -1134,7 +1171,7 @@ function BusinessUsers() {
         {/* Main Content */}
         <div className="max-w-full md:max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-8">
         
-          {/* Formulario de creación */}
+          {/* Formulario de creaciÃ³n */}
           {showCreateForm && (
             <Card className="mb-8">
               <CardHeader>
@@ -1177,14 +1214,14 @@ function BusinessUsers() {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Descripción
+                      DescripciÃ³n
                     </label>
                     <textarea
                       value={newBusiness.descripcion}
                       onChange={(e) => setNewBusiness(prev => ({ ...prev, descripcion: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                       rows="3"
-                      placeholder="Descripción opcional del negocio"
+                      placeholder="DescripciÃ³n opcional del negocio"
                     />
                   </div>
                   
@@ -1253,12 +1290,13 @@ function BusinessUsers() {
                             <Settings className="h-4 w-4" />
                           </button>
                           {business.rol === 'admin' && (
-                            <button
-                              onClick={() => handleDeleteBusiness(business.id, business.nombre)}
-                              className="p-2 rounded-md bg-white border border-gray-200 text-red-600 hover:bg-red-50 hover:border-red-200 transition-colors"
-                              title="Eliminar negocio"
-                              aria-label={`Eliminar ${business.nombre}`}
-                            >
+                          <button
+                            onClick={() => handleDeleteBusiness(business.id, business.nombre)}
+                            className="p-2 rounded-md bg-white border border-gray-200 text-red-600 hover:bg-red-50 hover:border-red-200 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                            title="Eliminar negocio"
+                            aria-label={`Eliminar ${business.nombre}`}
+                            disabled={deleting}
+                          >
                               <Trash2 className="h-4 w-4" />
                             </button>
                           )}
@@ -1307,3 +1345,4 @@ function BusinessUsers() {
 }
 
 export default BusinessUsers;
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -39,10 +39,6 @@ const Sidebar = ({
   currentBranch,
   branches,
   branchesLoading,
-  businesses,
-  branchError,
-  onBusinessChange,
-  onBranchChange,
 }) => {
   const navigate = useNavigate();
   const [showSalesDropdown, setShowSalesDropdown] = useState(false);
@@ -87,7 +83,7 @@ const Sidebar = ({
       icon: ShoppingCart,
       hasDropdown: true,
       subItems: [
-        { id: 'purchases', label: 'Órdenes de compra', icon: ShoppingCart, onClick: () => safeNavigate('/compras') },
+        { id: 'purchases', label: 'Ã“rdenes de compra', icon: ShoppingCart, onClick: () => safeNavigate('/compras') },
         { id: 'suppliers', label: 'Proveedores', icon: Truck, onClick: () => safeNavigate('/proveedores') }
       ]
     },
@@ -98,15 +94,15 @@ const Sidebar = ({
       hasDropdown: true,
       subItems: [
         { id: 'products', label: 'Productos y servicios', icon: Package, onClick: () => safeNavigate('/products-and-services') },
-        { id: 'categories', label: 'Categorías', icon: BarChart3, onClick: () => safeNavigate('/categories') }
+        { id: 'categories', label: 'CategorÃ­as', icon: BarChart3, onClick: () => safeNavigate('/categories') }
       ]
     },
     { id: 'stock-transfers', label: 'Transferencias', icon: ArrowLeftRight, onClick: () => safeNavigate('/stock-transfers') },
     { id: 'clients', label: 'Clientes', icon: Users, onClick: () => safeNavigate('/customers') },
     { id: 'finances', label: 'Finanzas', icon: BarChart3, onClick: () => safeNavigate('/finanzas') },
     { id: 'tasks', label: 'Tareas', icon: Clock, onClick: () => safeNavigate('/tasks') },
-    { id: 'billing', label: 'Facturación (próximamente)', icon: FileText, disabled: true },
-    { id: 'settings', label: 'Configuración', icon: Settings, onClick: () => safeNavigate('/settings/branch-preferences') },
+    { id: 'billing', label: 'FacturaciÃ³n (prÃ³ximamente)', icon: FileText, disabled: true },
+    { id: 'settings', label: 'ConfiguraciÃ³n', icon: Settings, onClick: () => safeNavigate('/settings/branch-preferences') },
   ];
 
   return (
@@ -117,7 +113,7 @@ const Sidebar = ({
   </div>
   <div>
     <h1 className="text-2xl font-bold text-blue-700">OperixML</h1>
-    <p className="text-sm text-gray-600 mt-1">Sistema de Gestión</p>
+    <p className="text-sm text-gray-600 mt-1">Sistema de GestiÃ³n</p>
   </div>
 </div>
 
@@ -173,7 +169,7 @@ const Sidebar = ({
                     <ChevronRight className="h-4 w-4 text-gray-500" />
                   )}
                   {isDisabled && (
-                    <span className="ml-auto text-xs text-gray-400">Próximamente</span>
+                    <span className="ml-auto text-xs text-gray-400">PrÃ³ximamente</span>
                   )}
                 </button>
                 
@@ -268,7 +264,7 @@ const Sidebar = ({
               }`} />
               <span className="font-medium">{item.label}</span>
               {isDisabled && (
-                <span className="ml-auto text-xs text-gray-400">Próximamente</span>
+                <span className="ml-auto text-xs text-gray-400">PrÃ³ximamente</span>
               )}
               {!currentBusiness?.id && ['products', 'clients', 'finances', 'tasks'].includes(item.id) && (
                 <span className="ml-auto text-xs text-orange-500">Sin negocio</span>
@@ -289,7 +285,7 @@ const Sidebar = ({
           style={{ backgroundColor: '#ffffff' }}
         >
           <LogOut className="h-5 w-5 text-gray-500" />
-          <span className="font-medium">Cerrar Sesión</span>
+          <span className="font-medium">Cerrar SesiÃ³n</span>
         </button>
       </nav>
       
@@ -545,7 +541,7 @@ const Layout = ({ children, activeSection }) => {
           setBranchSettingsError(null);
         } else {
           setBranchSettings(null);
-          setBranchSettingsError('No se pudo cargar la configuración del negocio.');
+          setBranchSettingsError('No se pudo cargar la configuraciÃ³n del negocio.');
         }
       } finally {
         setBranchSettingsLoading(false);
@@ -638,7 +634,7 @@ const Layout = ({ children, activeSection }) => {
     [currentBusiness?.id, loadBranchSettings]
   );
   
-  // Función para determinar la sección activa basándose en la URL
+  // FunciÃ³n para determinar la secciÃ³n activa basÃ¡ndose en la URL
   const getActiveSectionFromPath = () => {
     const path = location.pathname;
     
@@ -659,13 +655,13 @@ const Layout = ({ children, activeSection }) => {
     return 'dashboard'; // Por defecto
   };
   
-  // Determinar la sección activa
+  // Determinar la secciÃ³n activa
   const currentActiveSection = activeSection || getActiveSectionFromPath();
 
   const loadInitialData = useCallback(async () => {
     try {
       setLoading(true);
-      // Solo cargar businesses, el usuario ya está disponible en AuthContext
+      // Solo cargar businesses, el usuario ya estÃ¡ disponible en AuthContext
       const businessesData = await businessAPI.getBusinesses();
       
       setBusinesses(businessesData);
@@ -697,7 +693,7 @@ const Layout = ({ children, activeSection }) => {
     } finally {
       setLoading(false);
     }
-  }, [loadBranches]);
+  }, [loadBranches, loadBranchSettings]);
 
   useEffect(() => {
     loadInitialData();
@@ -781,7 +777,7 @@ const Layout = ({ children, activeSection }) => {
       <div className="min-h-screen bg-gray-50 flex overflow-x-hidden">
         {/* Sidebar responsive */}
         <div>
-    {/* Overlay para móvil */}
+    {/* Overlay para mÃ³vil */}
     <div
       className={`fixed inset-0 bg-black bg-opacity-30 z-40 transition-opacity md:hidden ${sidebarOpen ? 'block' : 'hidden'}`}
       onClick={() => setSidebarOpen(false)}
@@ -802,7 +798,7 @@ const Layout = ({ children, activeSection }) => {
       <button
         className="absolute top-4 right-4 md:hidden p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
         onClick={() => setSidebarOpen(false)}
-        aria-label="Cerrar menú"
+        aria-label="Cerrar menÃº"
       >
         <svg className="h-6 w-6 text-blue-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -833,4 +829,6 @@ const Layout = ({ children, activeSection }) => {
 };
 
 export default Layout; 
+
+
 

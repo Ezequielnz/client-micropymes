@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo, useState } from 'react';
+ï»¿import React, { useCallback, useContext, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Plus, RefreshCw, Check, X, Trash2 } from 'lucide-react';
 
@@ -27,7 +27,8 @@ const formatDate = (iso) => {
   }
   try {
     return new Date(iso).toLocaleString();
-  } catch (error) {
+  } catch {
+
     return iso;
   }
 };
@@ -55,7 +56,7 @@ const StockTransfersInner = () => {
   });
   const [newItem, setNewItem] = useState({ productId: '', quantity: 1 });
   const [message, setMessage] = useState(null);
-  const [filters, setFilters] = useState({
+  const [filters] = useState({
     status: 'all',
     origin: '',
     destination: '',
@@ -103,24 +104,6 @@ const StockTransfersInner = () => {
   }, [branchOptions]);
 
   const isCentralized = branchSettings?.inventario_modo === 'centralizado';
-
-  const statusFilterOptions = useMemo(
-    () => Object.entries(STATUS_META).map(([value, meta]) => ({ value, label: meta.label })),
-    [],
-  );
-
-  const limitOptions = useMemo(() => [25, 50, 100, 200].map((value) => String(value)), []);
-
-  const handleFilterChange = useCallback((field, value) => {
-    setFilters((prev) => ({ ...prev, [field]: value }));
-  }, []);
-
-  const resetFilters = useCallback(() => {
-    setFilters({ status: 'all', origin: '', destination: '', limit: String(DEFAULT_LIMIT) });
-  }, []);
-
-  const hasActiveFilters =
-    filters.status !== 'all' || filters.origin || filters.destination || normalizedLimit !== DEFAULT_LIMIT;
 
   const {
     data: transfers = [],
@@ -266,7 +249,7 @@ const StockTransfersInner = () => {
       }
       const formatted = availability.toLocaleString('es-AR');
       const scopeLabel = isCentralized ? 'Stock total' : 'Stock origen';
-      return `${baseLabel} – ${scopeLabel}: ${formatted}`;
+      return `${baseLabel} â€“ ${scopeLabel}: ${formatted}`;
     },
     [getProductAvailability, isCentralized],
   );
@@ -403,7 +386,7 @@ const StockTransfersInner = () => {
   const goNext = () => {
     if (wizardStep === 0) {
       if (!form.origin || !form.destination || form.origin === form.destination) {
-        setMessage({ type: 'error', text: 'Selecciona sucursales válidas.' });
+        setMessage({ type: 'error', text: 'Selecciona sucursales vÃ¡lidas.' });
         return;
       }
     }
@@ -422,7 +405,7 @@ const StockTransfersInner = () => {
 
   const handleCreate = async () => {
     if (!form.origin || !form.destination || form.origin === form.destination) {
-      setMessage({ type: 'error', text: 'Selecciona sucursales válidas.' });
+      setMessage({ type: 'error', text: 'Selecciona sucursales vÃ¡lidas.' });
       return;
     }
     if (!form.items.length) {
@@ -501,7 +484,7 @@ const StockTransfersInner = () => {
     if (!transfers.length) {
       return (
         <div className="rounded border border-slate-200 bg-white p-6 text-center text-slate-600">
-          Aún no registraste transferencias en este negocio.
+          AÃºn no registraste transferencias en este negocio.
         </div>
       );
     }
@@ -980,4 +963,10 @@ const StockTransfers = () => {
 };
 
 export default StockTransfers;
+
+
+
+
+
+
 

@@ -1,10 +1,10 @@
-import React, { useState, useEffect, Suspense, lazy, useCallback, useMemo } from 'react';
+﻿import React, { useState, useEffect, Suspense, lazy, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { businessAPI } from '../utils/api';
 import { useDashboardData } from '../hooks/useDashboardData';
+import { useBusinessesQuery } from '../hooks/useBusinesses';
 import Layout from '../components/Layout';
 import '../styles/responsive-overrides.css';
-import { useBusinessContext, type Business } from '../contexts/BusinessContext';
+import { useBusinessContext } from '../contexts/BusinessContext';
 import { PageLoader } from '../components/LoadingSpinner';
 import {
   Building2,
@@ -23,9 +23,6 @@ const MonitoringDashboard = lazy(() => import('../components/dashboard/Monitorin
 
 // Internal component that uses BusinessContext
 const HomeContent: React.FC = () => {
-  const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<any>(null);
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [sendStatus, setSendStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
   const navigate = useNavigate();
@@ -33,7 +30,14 @@ const HomeContent: React.FC = () => {
   // Get current business from context
   const { currentBusiness } = useBusinessContext();
 
-  // ✅ OPTIMIZED: Usar el hook personalizado para datos del dashboard con React Query
+  const {
+    data: businesses = [],
+    isLoading: businessesLoading,
+    error: businessesQueryError,
+    refetch: refetchBusinesses,
+  } = useBusinessesQuery(true);
+
+  // âœ… OPTIMIZED: Usar el hook personalizado para datos del dashboard con React Query
   const {
     loading: dataLoading,
     error: dataError,
@@ -46,7 +50,7 @@ const HomeContent: React.FC = () => {
     customers
   } = useDashboardData(currentBusiness, selectedPeriod);
 
-  // ✅ OPTIMIZED: Memoized format functions to prevent recreation on every render
+  // âœ… OPTIMIZED: Memoized format functions to prevent recreation on every render
   const formatCurrency = useCallback((amount: number) => {
     return new Intl.NumberFormat('es-AR', {
       style: 'currency',
@@ -63,14 +67,18 @@ const HomeContent: React.FC = () => {
     });
   }, []);
 
-  // ✅ OPTIMIZED: Memoized computed states
+  // âœ… OPTIMIZED: Memoized computed states
   const shouldShowError = useMemo(() => {
-    return error && error.response?.status !== 401 && error.response?.status !== 403;
-  }, [error]);
+    if (!businessesQueryError) {
+      return false;
+    }
+    const status = (businessesQueryError as any)?.response?.status;
+    return status !== 401 && status !== 403;
+  }, [businessesQueryError]);
 
   const isLoading = useMemo(() => {
-    return loading;
-  }, [loading]);
+    return businessesLoading;
+  }, [businessesLoading]);
 
   const hasBusinesses = useMemo(() => {
     return businesses.length > 0;
@@ -80,55 +88,45 @@ const HomeContent: React.FC = () => {
     return !!currentBusiness;
   }, [currentBusiness]);
 
-  // ✅ OPTIMIZED: Memoized loadInitialData function
-  const loadInitialData = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const response = await businessAPI.getBusinesses();
-      setBusinesses((response as Business[]) || []);
-      
-    } catch (error: any) {
-      console.error('Error fetching businesses:', error);
-      setError(error);
-      
-      if (error?.response?.status === 403) {
-        navigate('/pending-approval');
-      } else if (error?.response?.status === 401) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.clear();
-        navigate('/login');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [navigate]);
-
-  // Efecto para cargar datos iniciales (solo verificar token y obtener negocios)
+  // Verificar token al montar
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
+    }
+  }, [navigate]);
+
+  // Manejar estados de error específicos de autenticación/aprobación
+  useEffect(() => {
+    if (!businessesQueryError) {
       return;
     }
-    loadInitialData();
-  }, [loadInitialData, navigate]);
+    const status = (businessesQueryError as any)?.response?.status;
+    if (status === 403) {
+      navigate('/pending-approval');
+    } else if (status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.clear();
+      navigate('/login');
+    }
+  }, [businessesQueryError, navigate]);
 
-  // ✅ OPTIMIZED: Memoized handlePeriodChange function
+
+
+  // âœ… OPTIMIZED: Memoized handlePeriodChange function
   const handlePeriodChange = useCallback((period: string) => {
     setSelectedPeriod(period);
   }, []);
 
-  // ✅ OPTIMIZED: Memoized navigation handlers
+  // âœ… OPTIMIZED: Memoized navigation handlers
   const handleCreateBusiness = useCallback(() => {
     navigate('/business-users');
   }, [navigate]);
 
   const handleReload = useCallback(() => {
-    window.location.reload();
-  }, []);
+    refetchBusinesses();
+  }, [refetchBusinesses]);
 
   const handleGoToLogin = useCallback(() => {
     navigate('/login');
@@ -145,16 +143,16 @@ const HomeContent: React.FC = () => {
     }
   }, []);
 
-  // ✅ OPTIMIZED: Memoized period buttons data
+  // âœ… OPTIMIZED: Memoized period buttons data
   const periodButtons = useMemo(() => [
     { key: 'today', label: 'Hoy' },
     { key: 'week', label: 'Semana' },
     { key: 'month', label: 'Mes' }
   ], []);
 
-  // ✅ OPTIMIZED: Memoized current date string
+  // âœ… OPTIMIZED: Memoized current date string
   const currentDateString = useMemo(() => {
-    // Solo día, mes y día de la semana (sin año)
+    // Solo dÃ­a, mes y dÃ­a de la semana (sin aÃ±o)
     return new Date().toLocaleDateString('es-AR', { 
       weekday: 'long', 
       month: 'long', 
@@ -162,18 +160,23 @@ const HomeContent: React.FC = () => {
     });
   }, []);
 
-  // ✅ OPTIMIZED: Memoized last update time string
+  // âœ… OPTIMIZED: Memoized last update time string
   const lastUpdateString = useMemo(() => {
     return lastUpdate ? lastUpdate.toLocaleTimeString('es-AR') : '';
   }, [lastUpdate]);
 
   // Handle error state
   if (shouldShowError) {
+    const queryErrorMessage =
+      (businessesQueryError as any)?.response?.data?.detail ||
+      businessesQueryError?.message ||
+      'Error al verificar el estado de aprobación';
+
     return (
       <div className="flex-1 bg-gray-50 min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
           <div className="text-red-500 text-lg font-medium mb-4">
-            Error: {error.response?.data?.detail || error.message || 'Error al verificar el estado de aprobación'}
+            Error: {queryErrorMessage}
           </div>
           <div className="space-y-3">
             <button 
@@ -193,7 +196,6 @@ const HomeContent: React.FC = () => {
       </div>
     );
   }
-
   // Loading state
   if (isLoading) {
     return (
@@ -206,7 +208,7 @@ const HomeContent: React.FC = () => {
   // Dashboard content
   return (
     <div className="flex-1 bg-gray-50 min-h-screen">
-      {/* Page Header - Optimizado para móvil */}
+      {/* Page Header - Optimizado para mÃ³vil */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="max-w-full md:max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 md:h-16">
@@ -214,7 +216,7 @@ const HomeContent: React.FC = () => {
               <h1 className="text-lg md:text-xl font-semibold text-gray-900">Dashboard</h1>
               <p className="text-xs md:text-sm text-gray-600 truncate w-full max-w-[180px] sm:max-w-xs md:max-w-full">
                 {currentBusiness?.nombre || 'tu negocio'} {/* Nombre del negocio siempre visible */}
-                <span className="hidden sm:inline"> | {currentDateString}</span> {/* Fecha oculta en móvil muy pequeño */}
+                <span className="hidden sm:inline"> | {currentDateString}</span> {/* Fecha oculta en mÃ³vil muy pequeÃ±o */}
               </p>
             </div>
             {/* Refresh button - Visible solo en tablet/desktop */}
@@ -238,13 +240,13 @@ const HomeContent: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Content - Optimizado para móvil */}
+      {/* Main Content - Optimizado para mÃ³vil */}
       <div className="max-w-full md:max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-8 overflow-hidden">
         {!hasBusinesses ? (
           // No businesses state
           <div className="text-center py-12">
             <Building2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">¡Bienvenido a MicroPymes!</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Â¡Bienvenido a MicroPymes!</h3>
             <p className="text-gray-500 mb-6">Para comenzar, crea tu primer negocio</p>
             <button
               onClick={handleCreateBusiness}
@@ -259,7 +261,7 @@ const HomeContent: React.FC = () => {
           <div className="text-center py-12">
             <Building2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Selecciona un negocio</h3>
-            <p className="text-gray-500 mb-6">Elige un negocio del menú superior para ver su dashboard</p>
+            <p className="text-gray-500 mb-6">Elige un negocio del menÃº superior para ver su dashboard</p>
           </div>
         ) : (
           // Dashboard with selected business
@@ -287,7 +289,7 @@ const HomeContent: React.FC = () => {
                   <div className="flex items-start sm:items-center gap-2 flex-1">
                     <Bell className="h-5 w-5 text-blue-600 mt-0.5 sm:mt-0 flex-shrink-0" />
                     <p className="text-sm sm:text-base text-blue-900">
-                      En 10 días te quedarás sin stock de tu producto: <span className="font-semibold">Silla Eames</span>. ¿Quiéres que haga un pedido a tu proveedor?
+                      En 10 dÃ­as te quedarÃ¡s sin stock de tu producto: <span className="font-semibold">Silla Eames</span>. Â¿QuiÃ©res que haga un pedido a tu proveedor?
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -309,9 +311,9 @@ const HomeContent: React.FC = () => {
               </div>
             </div>
 
-            {/* Period Controls - Optimizado para móvil */}
+            {/* Period Controls - Optimizado para mÃ³vil */}
             <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-              <span className="text-xs sm:text-sm font-medium text-gray-700">Período:</span>
+              <span className="text-xs sm:text-sm font-medium text-gray-700">PerÃ­odo:</span>
               <div className="flex items-center gap-1 sm:gap-2 flex-1 max-w-[220px] sm:max-w-none">
                 {periodButtons.map((period) => (
                   <button
@@ -355,7 +357,7 @@ const HomeContent: React.FC = () => {
               <QuickActions currentBusiness={currentBusiness} />
             </Suspense>
 
-            {/* Top Products and Recent Sales - Optimizado para móvil */}
+            {/* Top Products and Recent Sales - Optimizado para mÃ³vil */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <Suspense fallback={<div className="h-96 bg-gray-100 animate-pulse rounded-lg"></div>}>
                 <TopProducts
@@ -397,3 +399,10 @@ const Home: React.FC = () => {
 };
 
 export default Home;
+
+
+
+
+
+
+
