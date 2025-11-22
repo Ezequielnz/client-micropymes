@@ -101,8 +101,8 @@ const Sidebar = ({
     { id: 'clients', label: 'Clientes', icon: Users, onClick: () => safeNavigate('/customers') },
     { id: 'finances', label: 'Finanzas', icon: BarChart3, onClick: () => safeNavigate('/finanzas') },
     { id: 'tasks', label: 'Tareas', icon: Clock, onClick: () => safeNavigate('/tasks') },
-    { id: 'billing', label: 'FacturaciÃ³n (prÃ³ximamente)', icon: FileText, disabled: true },
-    { id: 'settings', label: 'ConfiguraciÃ³n', icon: Settings, onClick: () => safeNavigate('/settings/branch-preferences') },
+    { id: 'billing', label: 'Facturación (próximamente)', icon: FileText, disabled: true },
+    { id: 'settings', label: 'Configuración', icon: Settings, onClick: () => safeNavigate('/settings/branch-preferences') },
   ];
 
   return (
@@ -113,7 +113,7 @@ const Sidebar = ({
   </div>
   <div>
     <h1 className="text-2xl font-bold text-blue-700">OperixML</h1>
-    <p className="text-sm text-gray-600 mt-1">Sistema de GestiÃ³n</p>
+    <p className="text-sm text-gray-600 mt-1">Sistema de Gestión</p>
   </div>
 </div>
 
@@ -169,7 +169,7 @@ const Sidebar = ({
                     <ChevronRight className="h-4 w-4 text-gray-500" />
                   )}
                   {isDisabled && (
-                    <span className="ml-auto text-xs text-gray-400">PrÃ³ximamente</span>
+                    <span className="ml-auto text-xs text-gray-400">Próximamente</span>
                   )}
                 </button>
                 
@@ -263,9 +263,6 @@ const Sidebar = ({
                 isActive ? "text-blue-600" : isDisabled ? "text-gray-400" : "text-gray-500"
               }`} />
               <span className="font-medium">{item.label}</span>
-              {isDisabled && (
-                <span className="ml-auto text-xs text-gray-400">PrÃ³ximamente</span>
-              )}
               {!currentBusiness?.id && ['products', 'clients', 'finances', 'tasks'].includes(item.id) && (
                 <span className="ml-auto text-xs text-orange-500">Sin negocio</span>
               )}
@@ -285,7 +282,7 @@ const Sidebar = ({
           style={{ backgroundColor: '#ffffff' }}
         >
           <LogOut className="h-5 w-5 text-gray-500" />
-          <span className="font-medium">Cerrar SesiÃ³n</span>
+          <span className="font-medium">Cerrar Sesión</span>
         </button>
       </nav>
       
@@ -798,7 +795,7 @@ const Layout = ({ children, activeSection }) => {
       <button
         className="absolute top-4 right-4 md:hidden p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
         onClick={() => setSidebarOpen(false)}
-        aria-label="Cerrar menÃº"
+        aria-label="Cerrar menú"
       >
         <svg className="h-6 w-6 text-blue-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

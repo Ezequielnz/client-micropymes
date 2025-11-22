@@ -1309,7 +1309,7 @@ function MyBusinesses() {
                                   <button
                                     onClick={() => {
                                       closeMenu();
-                                      alert('PrÃ³ximamente: Editar negocio');
+                                      alert('Próximamente: Editar negocio');
                                     }}
                                     className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-150 border-none outline-none"
                                     style={{ color: '#374151', backgroundColor: 'white' }}
@@ -1385,7 +1385,7 @@ function MyBusinesses() {
                         <SimpleButton 
                           variant="outline"
                           size="sm"
-                          onClick={() => alert('PrÃ³ximamente: ConfiguraciÃ³n del negocio')}
+                          onClick={() => alert('Próximamente: Configuración del negocio')}
                           className="w-full text-gray-700 hover:bg-gray-50"
                         >
                           <Settings className="h-4 w-4 mr-2" />

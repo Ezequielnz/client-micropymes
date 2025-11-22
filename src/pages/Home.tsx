@@ -9,9 +9,7 @@ import { PageLoader } from '../components/LoadingSpinner';
 import {
   Building2,
   Plus,
-  RefreshCw,
-  Bell,
-  Send
+  RefreshCw
 } from 'lucide-react';
 
 // Lazy load dashboard components for better performance
@@ -24,7 +22,6 @@ const MonitoringDashboard = lazy(() => import('../components/dashboard/Monitorin
 // Internal component that uses BusinessContext
 const HomeContent: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
-  const [sendStatus, setSendStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
   const navigate = useNavigate();
 
   // Get current business from context
@@ -132,17 +129,6 @@ const HomeContent: React.FC = () => {
     navigate('/login');
   }, [navigate]);
 
-  const handleSendOrder = useCallback(async () => {
-    try {
-      setSendStatus('sending');
-      await new Promise((resolve) => setTimeout(resolve, 1200));
-      setSendStatus('sent');
-    } catch (e) {
-      console.error('Error al enviar pedido:', e);
-      setSendStatus('idle');
-    }
-  }, []);
-
   // âœ… OPTIMIZED: Memoized period buttons data
   const periodButtons = useMemo(() => [
     { key: 'today', label: 'Hoy' },
@@ -246,7 +232,7 @@ const HomeContent: React.FC = () => {
           // No businesses state
           <div className="text-center py-12">
             <Building2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Â¡Bienvenido a MicroPymes!</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">¡Bienvenido/a a OperixML!</h3>
             <p className="text-gray-500 mb-6">Para comenzar, crea tu primer negocio</p>
             <button
               onClick={handleCreateBusiness}
@@ -261,7 +247,7 @@ const HomeContent: React.FC = () => {
           <div className="text-center py-12">
             <Building2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Selecciona un negocio</h3>
-            <p className="text-gray-500 mb-6">Elige un negocio del menÃº superior para ver su dashboard</p>
+            <p className="text-gray-500 mb-6">Elige un negocio del menú superior para ver su dashboard</p>
           </div>
         ) : (
           // Dashboard with selected business
@@ -281,35 +267,6 @@ const HomeContent: React.FC = () => {
                 </div>
               </div>
             )}
-
-            {/* Notificaciones - stock bajo */}
-            <div className="w-full">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                  <div className="flex items-start sm:items-center gap-2 flex-1">
-                    <Bell className="h-5 w-5 text-blue-600 mt-0.5 sm:mt-0 flex-shrink-0" />
-                    <p className="text-sm sm:text-base text-blue-900">
-                      En 10 dÃ­as te quedarÃ¡s sin stock de tu producto: <span className="font-semibold">Silla Eames</span>. Â¿QuiÃ©res que haga un pedido a tu proveedor?
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleSendOrder}
-                      disabled={sendStatus === 'sending' || sendStatus === 'sent'}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60"
-                    >
-                      <Send className={`h-4 w-4 ${sendStatus === 'sending' ? 'animate-pulse' : ''}`} />
-                      {sendStatus === 'sent' ? 'Enviado' : sendStatus === 'sending' ? 'Enviando...' : 'Enviar'}
-                    </button>
-                  </div>
-                </div>
-                {sendStatus === 'sent' && (
-                  <p className="mt-2 text-xs sm:text-sm text-green-700">
-                    Pedido enviado al proveedor. Te avisaremos cuando lo confirme.
-                  </p>
-                )}
-              </div>
-            </div>
 
             {/* Period Controls - Optimizado para mÃ³vil */}
             <div className="flex flex-wrap items-center gap-1 sm:gap-2">
