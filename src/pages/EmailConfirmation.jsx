@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { authAPI } from '../utils/api';
-import { 
-  Mail, 
-  CheckCircle, 
-  AlertCircle, 
+import {
+  Mail,
+  CheckCircle,
+  AlertCircle,
   RefreshCw,
   ArrowLeft,
   Clock
@@ -20,7 +20,7 @@ import {
 function EmailConfirmation() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  
+
   const [email, setEmail] = useState(searchParams.get('email') || '');
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
@@ -37,7 +37,7 @@ function EmailConfirmation() {
         setCountdown(countdown - 1);
       }, 1000);
     }
-    
+
     return () => {
       if (timer) clearTimeout(timer);
     };
@@ -52,13 +52,13 @@ function EmailConfirmation() {
 
   const checkConfirmationStatus = useCallback(async () => {
     if (!email) return;
-    
+
     setLoading(true);
     setError('');
-    
+
     try {
       const data = await authAPI.checkEmailConfirmation(email);
-      
+
       if (data.is_confirmed) {
         setIsConfirmed(true);
         setMessage('Tu email ya está confirmado. Puedes iniciar sesión.');
@@ -241,11 +241,28 @@ function EmailConfirmation() {
             </div>
 
             {/* Help Text */}
-            <div className="text-center space-y-2">
-              <p className="text-sm text-gray-600">
-                ¿No encuentras el email? Revisa tu carpeta de spam o correo no deseado.
-              </p>
-              
+            <div className="text-center space-y-4">
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800 font-medium">
+                  ¿No encuentras el email?
+                </p>
+                <p className="text-sm text-yellow-700 mt-1">
+                  Revisa tu carpeta de <strong>Spam</strong> o <strong>Correo No Deseado</strong>.
+                  <br />
+                  A veces los filtros de correo son muy estrictos.
+                </p>
+              </div>
+
+              <a
+                href="https://mail.google.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center w-full px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 shadow-sm"
+              >
+                <Mail className="mr-2 h-4 w-4" />
+                Abrir Gmail
+              </a>
+
               <div className="pt-4 border-t border-gray-200">
                 <Link
                   to="/login"
