@@ -4,14 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { authAPI } from '../utils/api';
-import {
-  Mail,
-  CheckCircle,
-  AlertCircle,
-  RefreshCw,
-  ArrowLeft,
-  Clock
-} from 'lucide-react';
 
 /**
  * EmailConfirmation component. Handles email confirmation flow and provides
@@ -72,6 +64,7 @@ function EmailConfirmation() {
       setLoading(false);
     }
   }, [email]);
+
   const handleResendConfirmation = async () => {
     if (!email) {
       setError('Por favor ingresa tu email');
@@ -113,8 +106,8 @@ function EmailConfirmation() {
         {/* Header */}
         <div className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-              <Mail className="w-8 h-8 text-blue-600" />
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-3xl">
+              ✉️
             </div>
           </div>
           <h2 className="text-3xl font-bold text-gray-900">
@@ -138,7 +131,7 @@ function EmailConfirmation() {
             {/* Success Alert */}
             {isConfirmed && (
               <Alert className="border-green-200 bg-green-50">
-                <CheckCircle className="h-4 w-4 text-green-600" />
+                <span className="h-4 w-4 mr-2">✅</span>
                 <AlertDescription>
                   <div className="text-green-800">
                     <p className="font-semibold">¡Email confirmado!</p>
@@ -151,7 +144,7 @@ function EmailConfirmation() {
             {/* Info Alert */}
             {message && !isConfirmed && (
               <Alert className="border-blue-200 bg-blue-50">
-                <AlertCircle className="h-4 w-4 text-blue-600" />
+                <span className="h-4 w-4 mr-2">ℹ️</span>
                 <AlertDescription>
                   <div className="text-blue-800">
                     {message}
@@ -163,7 +156,7 @@ function EmailConfirmation() {
             {/* Error Alert */}
             {error && (
               <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
+                <span className="h-4 w-4 mr-2">⚠️</span>
                 <AlertDescription>
                   {error}
                 </AlertDescription>
@@ -176,7 +169,7 @@ function EmailConfirmation() {
                 Tu email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <span className="absolute left-3 top-3 h-4 w-4 text-gray-400">📧</span>
                 <input
                   type="email"
                   id="email"
@@ -199,7 +192,7 @@ function EmailConfirmation() {
                   >
                     {loading ? (
                       <>
-                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        <span className="mr-2 animate-spin">🔄</span>
                         Verificando...
                       </>
                     ) : (
@@ -215,7 +208,7 @@ function EmailConfirmation() {
                   >
                     {resendLoading ? (
                       <>
-                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        <span className="mr-2 animate-spin">🔄</span>
                         Reenviando...
                       </>
                     ) : countdown > 0 ? (
@@ -259,7 +252,7 @@ function EmailConfirmation() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center w-full px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 shadow-sm"
               >
-                <Mail className="mr-2 h-4 w-4" />
+                <span className="mr-2">M</span>
                 Abrir Gmail
               </a>
 
@@ -268,7 +261,7 @@ function EmailConfirmation() {
                   to="/login"
                   className="inline-flex items-center text-sm text-blue-600 hover:text-blue-500"
                 >
-                  <ArrowLeft className="mr-1 h-4 w-4" />
+                  <span className="mr-1">←</span>
                   Volver a iniciar sesión
                 </Link>
               </div>
@@ -290,4 +283,4 @@ function EmailConfirmation() {
   );
 }
 
-export default EmailConfirmation; 
+export default EmailConfirmation;
