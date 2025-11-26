@@ -7,11 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { authAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
-import { 
-  ArrowRight, 
-  Mail, 
-  Lock, 
-  User, 
+import {
+  ArrowRight,
+  Mail,
+  Lock,
+  User,
   AlertCircle,
   Menu,
   X,
@@ -42,12 +42,12 @@ function Register() {
     apellido: '',
     rol: 'usuario'
   });
-  
+
   /** @type {[string, function]} error - State for storing error messages as string only */
   const [error, setError] = useState('');
   /** @type {[boolean, function]} loading - State to indicate if a registration request is in progress. */
   const [loading, setLoading] = useState(false);
-  
+
   const navigate = useNavigate();
 
   // Removed business search functionality - users will be invited by business owners
@@ -93,13 +93,13 @@ function Register() {
         try {
           // 1. Guardar el token temporalmente para obtener los datos del usuario
           localStorage.setItem('token', data.access_token);
-          
+
           // 2. Obtener los datos del usuario usando el token
           const userData = await authAPI.getCurrentUser();
-          
+
           // 3. Llamar a la función login del AuthContext para actualizar el estado
           login(userData, data.access_token);
-          
+
           navigate('/');
         } catch (userErr) {
           console.error('Error obteniendo datos del usuario:', userErr);
@@ -108,14 +108,17 @@ function Register() {
           setError('Error al obtener datos del usuario después del registro');
         }
       } else {
-        navigate(`/email-confirmation?email=${encodeURIComponent(formData.email)}`);
+        // Use email from response if available, otherwise fallback to formData
+        const emailToSend = data.email || formData.email;
+        console.log('Redirecting to confirmation with email:', emailToSend);
+        navigate(`/email-confirmation?email=${encodeURIComponent(emailToSend)}`);
       }
     } catch (err) {
       console.error('Error completo:', err);
-      
+
       // Limpiar el token si hay error
       localStorage.removeItem('token');
-      
+
       let errorMessage = 'Error al registrar usuario';
       if (err.response?.data?.detail) {
         if (typeof err.response.data.detail === 'string') {
@@ -146,7 +149,7 @@ function Register() {
                 <span className="text-xl font-semibold text-gray-900">OperixML</span>
               </Link>
             </div>
-            
+
             {/* Desktop Navigation */}
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-8">
@@ -200,7 +203,7 @@ function Register() {
       <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 relative overflow-hidden py-12 sm:py-16 md:py-20 lg:py-24">
         {/* Background decoration */}
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%239CA3AF%22 fill-opacity=%220.03%22 fill-rule=%22nonzero%22%3E%3Cpath d=%22m36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div>
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-md mx-auto">
             <div className="text-center mb-8">
@@ -334,8 +337,8 @@ function Register() {
                     </div>
                   </div>
 
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     disabled={loading}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
                     size="lg"
@@ -354,8 +357,8 @@ function Register() {
                 <div className="text-center">
                   <p className="text-sm text-gray-600">
                     ¿Ya tienes una cuenta?{' '}
-                    <Link 
-                      to="/login" 
+                    <Link
+                      to="/login"
                       className="font-medium text-blue-600 hover:text-blue-700 transition-colors"
                     >
                       Inicia sesión aquí
