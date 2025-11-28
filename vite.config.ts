@@ -16,36 +16,19 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // Vendor chunks más granulares
+          // Vendor chunks
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
               return 'react-vendor';
             }
-            if (id.includes('react-router')) {
-              return 'router';
+            if (id.includes('@radix-ui') || id.includes('lucide-react')) {
+              return 'ui-vendor';
             }
-            if (id.includes('@radix-ui')) {
-              return 'radix-ui';
-            }
-            if (id.includes('lucide-react')) {
-              return 'lucide';
-            }
-            if (id.includes('axios')) {
-              return 'http';
-            }
-            if (id.includes('tailwind') || id.includes('clsx') || id.includes('class-variance-authority')) {
-              return 'styles';
+            if (id.includes('axios') || id.includes('@tanstack')) {
+              return 'data-vendor';
             }
             // Otras dependencias
             return 'vendor';
-          }
-          
-          // Chunks de aplicación
-          if (id.includes('/pages/')) {
-            return 'pages';
-          }
-          if (id.includes('/components/')) {
-            return 'components';
           }
         },
       },
@@ -66,4 +49,4 @@ export default defineConfig({
     port: 4173,
     host: true,
   },
-}); 
+});

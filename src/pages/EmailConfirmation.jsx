@@ -4,6 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { authAPI } from '../utils/api';
+import {
+  Mail,
+  CheckCircle2,
+  AlertCircle,
+  RefreshCw,
+  ArrowLeft,
+  ExternalLink,
+  Clock
+} from 'lucide-react';
 
 /**
  * EmailConfirmation component. Handles email confirmation flow and provides
@@ -35,13 +44,6 @@ function EmailConfirmation() {
     };
   }, [countdown]);
 
-  // Check confirmation status on component mount if email is provided
-  useEffect(() => {
-    if (email) {
-      checkConfirmationStatus();
-    }
-  }, [email, checkConfirmationStatus]);
-
   const checkConfirmationStatus = useCallback(async () => {
     if (!email) return;
 
@@ -64,6 +66,13 @@ function EmailConfirmation() {
       setLoading(false);
     }
   }, [email]);
+
+  // Check confirmation status on component mount if email is provided
+  useEffect(() => {
+    if (email) {
+      checkConfirmationStatus();
+    }
+  }, [email, checkConfirmationStatus]);
 
   const handleResendConfirmation = async () => {
     if (!email) {
@@ -101,37 +110,36 @@ function EmailConfirmation() {
   };
 
   return (
-    <div className="page-container flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        {/* Header */}
-        <div className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-3xl">
-              ✉️
-            </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="flex justify-center mb-6">
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+            <Mail className="w-8 h-8 text-blue-600" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">
-            Confirma tu email
-          </h2>
-          <p className="mt-2 text-gray-600">
-            Te hemos enviado un email de confirmación
-          </p>
         </div>
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Confirma tu email
+        </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          Te hemos enviado un enlace de confirmación a tu correo
+        </p>
+      </div>
 
-        <Card className="border border-gray-200 shadow-sm">
-          <CardHeader className="space-y-1">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <Card className="border border-gray-200 shadow-lg bg-white">
+          <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-xl font-semibold text-center text-gray-900">
-              Verificación de email
+              Verificación de cuenta
             </CardTitle>
             <CardDescription className="text-center text-gray-600">
-              Revisa tu correo electrónico y haz clic en el enlace de confirmación
+              Revisa tu bandeja de entrada y haz clic en el enlace
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Success Alert */}
             {isConfirmed && (
               <Alert className="border-green-200 bg-green-50">
-                <span className="h-4 w-4 mr-2">✅</span>
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
                 <AlertDescription>
                   <div className="text-green-800">
                     <p className="font-semibold">¡Email confirmado!</p>
@@ -144,7 +152,7 @@ function EmailConfirmation() {
             {/* Info Alert */}
             {message && !isConfirmed && (
               <Alert className="border-blue-200 bg-blue-50">
-                <span className="h-4 w-4 mr-2">ℹ️</span>
+                <AlertCircle className="h-4 w-4 text-blue-600" />
                 <AlertDescription>
                   <div className="text-blue-800">
                     {message}
@@ -156,7 +164,7 @@ function EmailConfirmation() {
             {/* Error Alert */}
             {error && (
               <Alert variant="destructive">
-                <span className="h-4 w-4 mr-2">⚠️</span>
+                <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
                   {error}
                 </AlertDescription>
@@ -165,34 +173,36 @@ function EmailConfirmation() {
 
             {/* Email Input */}
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="text-sm font-medium text-gray-700 block">
                 Tu email
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-3 h-4 w-4 text-gray-400">📧</span>
+              <div className="relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-4 w-4 text-gray-400" />
+                </div>
                 <input
                   type="email"
                   id="email"
                   value={email}
                   onChange={handleEmailChange}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 border"
                   placeholder="tu@email.com"
                 />
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="space-y-3">
+            <div className="space-y-3 pt-2">
               {!isConfirmed && (
                 <>
                   <Button
                     onClick={checkConfirmationStatus}
                     disabled={loading || !email}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
                   >
                     {loading ? (
                       <>
-                        <span className="mr-2 animate-spin">🔄</span>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                         Verificando...
                       </>
                     ) : (
@@ -204,16 +214,16 @@ function EmailConfirmation() {
                     onClick={handleResendConfirmation}
                     disabled={resendLoading || !email || countdown > 0}
                     variant="outline"
-                    className="w-full"
+                    className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
                   >
                     {resendLoading ? (
                       <>
-                        <span className="mr-2 animate-spin">🔄</span>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                         Reenviando...
                       </>
                     ) : countdown > 0 ? (
                       <>
-                        <span className="mr-2">⏳</span>
+                        <Clock className="mr-2 h-4 w-4" />
                         Reenviar en {countdown}s
                       </>
                     ) : (
@@ -226,7 +236,7 @@ function EmailConfirmation() {
               {isConfirmed && (
                 <Button
                   onClick={() => navigate('/login')}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white shadow-sm"
                 >
                   Ir a iniciar sesión
                 </Button>
@@ -234,15 +244,13 @@ function EmailConfirmation() {
             </div>
 
             {/* Help Text */}
-            <div className="text-center space-y-4">
+            <div className="text-center space-y-4 pt-2">
               <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-sm text-yellow-800 font-medium">
                   ¿No encuentras el email?
                 </p>
                 <p className="text-sm text-yellow-700 mt-1">
                   Revisa tu carpeta de <strong>Spam</strong> o <strong>Correo No Deseado</strong>.
-                  <br />
-                  A veces los filtros de correo son muy estrictos.
                 </p>
               </div>
 
@@ -250,18 +258,18 @@ function EmailConfirmation() {
                 href="https://mail.google.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center w-full px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 shadow-sm"
+                className="inline-flex items-center justify-center w-full px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 shadow-sm transition-colors"
               >
-                <span className="mr-2">M</span>
+                <ExternalLink className="mr-2 h-4 w-4" />
                 Abrir Gmail
               </a>
 
               <div className="pt-4 border-t border-gray-200">
                 <Link
                   to="/login"
-                  className="inline-flex items-center text-sm text-blue-600 hover:text-blue-500"
+                  className="inline-flex items-center text-sm text-blue-600 hover:text-blue-500 font-medium"
                 >
-                  <span className="mr-1">←</span>
+                  <ArrowLeft className="mr-1 h-4 w-4" />
                   Volver a iniciar sesión
                 </Link>
               </div>
@@ -270,10 +278,10 @@ function EmailConfirmation() {
         </Card>
 
         {/* Additional Help */}
-        <div className="text-center">
+        <div className="text-center mt-6">
           <p className="text-xs text-gray-500">
             ¿Problemas con la confirmación?{' '}
-            <a href="mailto:soporte@bizflowpro.com" className="text-blue-600 hover:text-blue-500">
+            <a href="mailto:soporte@operixml.com" className="text-blue-600 hover:text-blue-500 font-medium">
               Contacta soporte
             </a>
           </p>

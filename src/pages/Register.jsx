@@ -15,26 +15,19 @@ import {
   AlertCircle,
   Menu,
   X,
-  Sparkles
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 
 /**
  * Register component. Handles new user registration by collecting user details,
  * submitting them to the registration API, and providing feedback to the user.
- * It also handles the redirection logic post-registration, which might involve
- * immediate login or prompting for email confirmation.
+ * It also handles the redirection logic post-registration.
  */
 function Register() {
   const { login } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  /**
-   * @type {[object, function]} formData - State for storing user registration input.
-   * @property {string} email - The user's email address.
-   * @property {string} password - The user's chosen password.
-   * @property {string} nombre - The user's first name.
-   * @property {string} apellido - The user's last name.
-   * @property {string} rol - The user's role, defaults to 'usuario'.
-   */
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -43,20 +36,11 @@ function Register() {
     rol: 'usuario'
   });
 
-  /** @type {[string, function]} error - State for storing error messages as string only */
   const [error, setError] = useState('');
-  /** @type {[boolean, function]} loading - State to indicate if a registration request is in progress. */
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
-  // Removed business search functionality - users will be invited by business owners
-
-  /**
-   * Handles changes in form input fields.
-   * Updates the `formData` state with the new value for the changed field.
-   * @param {React.ChangeEvent<HTMLInputElement>} e - The input change event.
-   */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -65,22 +49,11 @@ function Register() {
     }));
   };
 
-  /**
-   * Handles the registration form submission.
-   * Prevents default form submission, sets loading state, and calls `authAPI.register`.
-   * If registration is successful and an access token is returned, it stores the token
-   * and navigates to the home page.
-   * If no token is returned (common for flows requiring email confirmation), it redirects
-   * to the email confirmation page.
-   * On failure, it extracts an error message and updates the `error` state.
-   * @param {React.FormEvent<HTMLFormElement>} e - The form submission event.
-   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    // Construir payload - ahora solo se permite crear nuevos negocios
     const payload = {
       ...formData,
     };
@@ -89,34 +62,32 @@ function Register() {
       console.log('Enviando datos de registro:', payload);
       const data = await authAPI.register(payload);
       console.log('Respuesta del servidor:', data);
+
       if (data.access_token) {
         try {
-          // 1. Guardar el token temporalmente para obtener los datos del usuario
+          // 1. Guardar el token temporalmente
           localStorage.setItem('token', data.access_token);
 
-          // 2. Obtener los datos del usuario usando el token
+          // 2. Obtener los datos del usuario
           const userData = await authAPI.getCurrentUser();
 
-          // 3. Llamar a la función login del AuthContext para actualizar el estado
+          // 3. Actualizar estado de autenticación
           login(userData, data.access_token);
 
           navigate('/');
         } catch (userErr) {
           console.error('Error obteniendo datos del usuario:', userErr);
-          // Si falla obtener los datos del usuario, limpiar el token y mostrar error
           localStorage.removeItem('token');
           setError('Error al obtener datos del usuario después del registro');
         }
       } else {
-        // Use email from response if available, otherwise fallback to formData
+        // Flujo de confirmación de email
         const emailToSend = data.email || formData.email;
         console.log('Redirecting to confirmation with email:', emailToSend);
         navigate(`/email-confirmation?email=${encodeURIComponent(emailToSend)}`);
       }
     } catch (err) {
       console.error('Error completo:', err);
-
-      // Limpiar el token si hay error
       localStorage.removeItem('token');
 
       let errorMessage = 'Error al registrar usuario';
@@ -344,7 +315,10 @@ function Register() {
                     size="lg"
                   >
                     {loading ? (
-                      'Creando cuenta...'
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creando cuenta...
+                      </>
                     ) : (
                       <>
                         Crear Cuenta Gratis
