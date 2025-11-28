@@ -7,11 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { authAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
-import { 
-  ArrowRight, 
-  Mail, 
-  Lock, 
-  AlertCircle, 
+import {
+  ArrowRight,
+  Mail,
+  Lock,
+  AlertCircle,
   CheckCircle,
   Menu,
   X
@@ -40,11 +40,55 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  /**
-   * Handles changes in form input fields.
-   * Updates the `formData` state with the new value for the changed field.
-   * @param {React.ChangeEvent<HTMLInputElement>} e - The input change event.
-   */
+  // Handle email confirmation token
+  React.useEffect(() => {
+    const handleConfirmation = async () => {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const type = hashParams.get('type');
+
+      if (accessToken && type === 'signup') {
+        setLoading(true);
+        try {
+          // 1. Store token temporarily
+          localStorage.setItem('token', accessToken);
+
+          // 2. Verify token and get user data
+          const userData = await authAPI.getCurrentUser();
+
+          // 3. Login user
+          login(userData, accessToken);
+
+          // 4. Show success message
+          setError(
+            <div className="space-y-2">
+              <p className="font-medium text-green-600 flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                ¡Cuenta confirmada exitosamente!
+              </p>
+              <p className="text-sm text-gray-600">
+                Redirigiendo al inicio...
+              </p>
+            </div>
+          );
+
+          // 5. Redirect after delay
+          setTimeout(() => {
+            navigate('/home');
+          }, 2000);
+
+        } catch (err) {
+          console.error('Error confirming email:', err);
+          localStorage.removeItem('token');
+          setError('El enlace de confirmación es inválido o ha expirado.');
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    handleConfirmation();
+  }, [navigate, login]);
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -68,13 +112,13 @@ function Login() {
     try {
       // 1. Obtener el token del endpoint de login
       const loginData = await authAPI.login(formData.email, formData.password);
-      
+
       // 2. Guardar el token temporalmente para obtener los datos del usuario
       localStorage.setItem('token', loginData.access_token);
-      
+
       // 3. Obtener los datos del usuario usando el token
       const userData = await authAPI.getCurrentUser();
-      
+
       // 4. Llamar a la función login del AuthContext para actualizar el estado
       login(userData, loginData.access_token);
 
@@ -82,10 +126,10 @@ function Login() {
       navigate('/home');
     } catch (err) {
       console.error('Error completo:', err);
-      
+
       // Limpiar el token si hay error
       localStorage.removeItem('token');
-      
+
       // Manejar diferentes tipos de errores
       if (err.response?.status === 403 && err.response?.data?.detail?.error_type === 'email_not_confirmed') {
         // Error específico de email no confirmado
@@ -97,8 +141,8 @@ function Login() {
               Tu cuenta necesita ser verificada antes de poder iniciar sesión.
             </p>
             <div className="flex flex-col gap-2">
-              <Button 
-                type="button" 
+              <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => navigate(`/email-confirmation?email=${encodeURIComponent(email)}`)}
@@ -107,8 +151,8 @@ function Login() {
                 Ir a página de confirmación
               </Button>
               {import.meta.env.DEV && (
-                <Button 
-                  type="button" 
+                <Button
+                  type="button"
                   variant="outline"
                   size="sm"
                   onClick={async () => {
@@ -153,7 +197,7 @@ function Login() {
                 <span className="text-xl font-semibold text-gray-900">OperixML</span>
               </Link>
             </div>
-            
+
             {/* Desktop Navigation */}
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-8">
@@ -207,7 +251,7 @@ function Login() {
       <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 relative overflow-hidden py-12 sm:py-16 md:py-20 lg:py-24">
         {/* Background decoration */}
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%239CA3AF%22 fill-opacity=%220.03%22 fill-rule=%22nonzero%22%3E%3Cpath d=%22m36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div>
-        
+
         <div className="max-w-7xl mx-auto px-6 sm:px-8 md:px-12 lg:px-16 relative">
           <div className="max-w-md mx-auto">
             <div className="text-center mb-8">
@@ -277,8 +321,8 @@ function Login() {
                     </div>
                   </div>
 
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     disabled={loading}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
                     size="lg"
@@ -297,8 +341,8 @@ function Login() {
                 <div className="text-center">
                   <p className="text-sm text-gray-600">
                     ¿No tienes una cuenta?{' '}
-                    <Link 
-                      to="/register" 
+                    <Link
+                      to="/register"
                       className="font-medium text-blue-600 hover:text-blue-700 transition-colors"
                     >
                       Regístrate aquí
