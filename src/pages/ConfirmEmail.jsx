@@ -55,11 +55,16 @@ function ConfirmEmail() {
           await authAPI.getCurrentUser();
 
           // 3. Si llegamos aquí, el token es válido
-          setMessage('Tu cuenta ha sido confirmada exitosamente. Ya puedes iniciar sesión.');
+          setMessage('Tu cuenta ha sido confirmada exitosamente. Redirigiendo al inicio de sesión...');
           setStatus('success');
 
           // Limpiamos el token del storage para no dejar sesiones abiertas accidentalmente
           localStorage.removeItem('token');
+
+          // Redirigir al login después de 3 segundos
+          setTimeout(() => {
+            navigate('/login');
+          }, 3000);
 
         } catch (error) {
           console.error('Error verificando token:', error);
@@ -75,7 +80,7 @@ function ConfirmEmail() {
       setMessage('No se encontró token de acceso. Por favor verifica el enlace en tu correo.');
       setStatus('error');
     }
-  }, []);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -173,7 +178,7 @@ function ConfirmEmail() {
                 </CardTitle>
                 <CardDescription className="text-center text-gray-600">
                   {status === 'loading' && 'Por favor espera mientras verificamos tu email'}
-                  {status === 'success' && 'Tu cuenta ha sido activada exitosamente'}
+                  {status === 'success' && 'Tu cuenta ha sido activada exitosamente. Redirigiendo...'}
                   {status === 'error' && 'Hubo un problema al confirmar tu email'}
                 </CardDescription>
               </CardHeader>
@@ -211,11 +216,11 @@ function ConfirmEmail() {
                 {status === 'success' && (
                   <div className="text-center space-y-4">
                     <p className="text-sm text-gray-600">
-                      Ahora puedes acceder a tu cuenta.
+                      Serás redirigido automáticamente en unos segundos...
                     </p>
                     <Link to="/login">
                       <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                        Iniciar Sesión
+                        Ir al Login ahora
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     </Link>
