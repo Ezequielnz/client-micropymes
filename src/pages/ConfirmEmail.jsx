@@ -5,9 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { authAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
-import { 
-  CheckCircle, 
-  AlertCircle, 
+import {
+  CheckCircle,
+  AlertCircle,
   Loader2,
   Menu,
   X,
@@ -17,26 +17,24 @@ import {
 /**
  * ConfirmEmail component. Handles the email confirmation process.
  * It attempts to extract an access token from the URL hash parameters.
- * If a token is found, it's stored in localStorage, and the user is redirected
- * to the home page, effectively logging them in. If no token is found,
- * it displays an error message and redirects to the login page.
- * This component does not make a direct API call to a confirmation endpoint;
- * the token itself is the confirmation artifact provided by the backend (e.g., Supabase).
+ * If a token is found, it verifies it against the backend.
+ * Upon success, it displays a success message and prompts the user to log in manually.
  */
 function ConfirmEmail() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  /** @type {[string, function]} message - State for displaying messages to the user (e.g., "Verificando...", "Email confirmado..."). */
+  /** @type {[string, function]} message - State for displaying messages to the user. */
   const [message, setMessage] = useState('Verificando...');
   /** @type {[string, function]} status - State for tracking the confirmation status ('loading', 'success', 'error'). */
   const [status, setStatus] = useState('loading');
   const navigate = useNavigate();
-  const { login } = useAuth();
+  // We don't need login from useAuth anymore for auto-login, but keeping the hook if needed for other context is fine.
+  // Actually, let's remove the unused destructuring if we don't use it to avoid linter warnings, 
+  // but if useAuth is needed for some reason (like checking if already logged in), we can keep it.
+  // For now, I'll remove 'login' from destructuring since we don't use it.
+  const { } = useAuth();
 
   /**
    * useEffect hook to handle the email confirmation logic when the component mounts.
-   * It parses the URL hash to find an 'access_token'.
-   * If found, it saves the token to localStorage and navigates to the home page.
-   * Otherwise, it indicates that no token was found and navigates to the login page.
    */
   useEffect(() => {
     // Extraer el token de acceso de la URL o hash
@@ -44,51 +42,40 @@ function ConfirmEmail() {
       window.location.hash.substring(1) // quita el # del principio
     );
     const accessToken = hashParams.get('access_token');
-    
+
     if (accessToken) {
       // Si tenemos un token, lo guardamos y obtenemos los datos del usuario
       const handleTokenConfirmation = async () => {
         try {
-          // 1. Guardar el token temporalmente
+          // 1. Guardar el token temporalmente para verificación
           localStorage.setItem('token', accessToken);
-          
-          // 2. Obtener los datos del usuario
-          const userData = await authAPI.getCurrentUser();
-          
-          // 3. Llamar a la función login del AuthContext
-          login(userData, accessToken);
-          
-          setMessage('Email confirmado exitosamente. Redirigiendo...');
+
+          // 2. Verificar el token obteniendo datos del usuario
+          // NOTA: No hacemos login automático, solo verificamos que el token sea válido
+          await authAPI.getCurrentUser();
+
+          // 3. Si llegamos aquí, el token es válido
+          setMessage('Tu cuenta ha sido confirmada exitosamente. Ya puedes iniciar sesión.');
           setStatus('success');
-          
-          // 4. Redireccionar a la página principal después de un breve retraso
-          setTimeout(() => {
-            navigate('/');
-          }, 2000);
-        } catch (error) {
-          console.error('Error obteniendo datos del usuario:', error);
+
+          // Limpiamos el token del storage para no dejar sesiones abiertas accidentalmente
           localStorage.removeItem('token');
-          setMessage('Error al confirmar email. Intenta iniciar sesión manualmente.');
+
+        } catch (error) {
+          console.error('Error verificando token:', error);
+          localStorage.removeItem('token');
+          setMessage('El enlace de confirmación es inválido o ha expirado.');
           setStatus('error');
-          
-          setTimeout(() => {
-            navigate('/login');
-          }, 3000);
         }
       };
-      
+
       handleTokenConfirmation();
     } else {
       // Si no hay token, puede que haya habido un error
-      setMessage('No se encontró token de acceso. Intenta iniciar sesión manualmente.');
+      setMessage('No se encontró token de acceso. Por favor verifica el enlace en tu correo.');
       setStatus('error');
-      
-      // Redireccionar a login después de un breve retraso
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
     }
-  }, [navigate, login]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">
@@ -104,7 +91,7 @@ function ConfirmEmail() {
                 </h1>
               </Link>
             </div>
-            
+
             {/* Desktop Navigation */}
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-8">
@@ -224,11 +211,11 @@ function ConfirmEmail() {
                 {status === 'success' && (
                   <div className="text-center space-y-4">
                     <p className="text-sm text-gray-600">
-                      Serás redirigido automáticamente en unos segundos...
+                      Ahora puedes acceder a tu cuenta.
                     </p>
-                    <Link to="/">
+                    <Link to="/login">
                       <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                        Ir al Dashboard
+                        Iniciar Sesión
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     </Link>
@@ -278,4 +265,4 @@ function ConfirmEmail() {
   );
 }
 
-export default ConfirmEmail; 
+export default ConfirmEmail;
