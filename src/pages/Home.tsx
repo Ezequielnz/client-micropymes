@@ -139,10 +139,10 @@ const HomeContent: React.FC = () => {
   // âœ… OPTIMIZED: Memoized current date string
   const currentDateString = useMemo(() => {
     // Solo dÃ­a, mes y dÃ­a de la semana (sin aÃ±o)
-    return new Date().toLocaleDateString('es-AR', { 
-      weekday: 'long', 
-      month: 'long', 
-      day: 'numeric' 
+    return new Date().toLocaleDateString('es-AR', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric'
     });
   }, []);
 
@@ -165,13 +165,13 @@ const HomeContent: React.FC = () => {
             Error: {queryErrorMessage}
           </div>
           <div className="space-y-3">
-            <button 
+            <button
               onClick={handleReload}
               className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Recargar página
             </button>
-            <button 
+            <button
               onClick={handleGoToLogin}
               className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
             >
@@ -270,18 +270,17 @@ const HomeContent: React.FC = () => {
 
             {/* Period Controls - Optimizado para mÃ³vil */}
             <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-              <span className="text-xs sm:text-sm font-medium text-gray-700">PerÃ­odo:</span>
+              <span className="text-xs sm:text-sm font-medium text-gray-700">Período:</span>
               <div className="flex items-center gap-1 sm:gap-2 flex-1 max-w-[220px] sm:max-w-none">
                 {periodButtons.map((period) => (
                   <button
                     key={period.key}
                     onClick={() => handlePeriodChange(period.key)}
                     disabled={dataLoading}
-                    className={`px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-md sm:rounded-lg text-xs sm:text-sm font-medium transition-colors disabled:opacity-50 flex-1 ${
-                      selectedPeriod === period.key 
-                        ? 'bg-blue-600 text-white' 
+                    className={`px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-md sm:rounded-lg text-xs sm:text-sm font-medium transition-colors disabled:opacity-50 flex-1 ${selectedPeriod === period.key
+                        ? 'bg-blue-600 text-white'
                         : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     {period.label}
                   </button>
@@ -323,7 +322,7 @@ const HomeContent: React.FC = () => {
                   formatCurrency={formatCurrency}
                 />
               </Suspense>
-              
+
               <Suspense fallback={<div className="h-96 bg-gray-100 animate-pulse rounded-lg"></div>}>
                 <RecentSales
                   recentSales={recentSales}

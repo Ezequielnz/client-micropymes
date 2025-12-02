@@ -11,9 +11,7 @@ const Header = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">O</span>
-            </div>
+            <img src="/operix_logo.png" alt="OperixML Logo" className="w-8 h-8 object-contain" />
             <span className="text-xl font-semibold text-gray-900">OperixML</span>
           </div>
 
@@ -66,7 +64,7 @@ const Header = () => {
               </a>
               <a href="#funcionalidades" className="text-gray-600 hover:text-gray-900 transition-colors">
                 Funcionalidades
-          </a>
+              </a>
               <a href="#precios" className="text-gray-600 hover:text-gray-900 transition-colors">
                 Precios
               </a>
