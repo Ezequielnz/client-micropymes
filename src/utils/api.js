@@ -86,7 +86,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const { response } = error;
-    
+
     // Handle network errors
     if (!response) {
       console.error('Network Error:', error.message);
@@ -100,24 +100,24 @@ api.interceptors.response.use(
         localStorage.removeItem('token');
         window.location.href = '/login';
         break;
-      
+
       case 403:
         console.error('Permission denied:', response.data?.detail);
         break;
-      
+
       case 404:
         console.error('Resource not found:', response.data?.detail);
         break;
-      
+
       case 500:
         console.error('Server error:', response.data?.detail);
         break;
-      
+
       default:
         console.error('API Error:', response.data?.detail || 'Unknown error');
         break;
     }
-    
+
     // Always return the original error to maintain compatibility
     return Promise.reject(error);
   }
@@ -141,16 +141,16 @@ export const authAPI = {
     const formData = new URLSearchParams();
     formData.append('username', email);
     formData.append('password', password);
-    
+
     const response = await api.post('/auth/login', formData, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
     });
-    
+
     return response.data;
   },
-  
+
   /**
    * Registers a new user with the provided user data.
    * @param {object} userData - An object containing user registration details.
@@ -168,7 +168,7 @@ export const authAPI = {
     const response = await api.post('/auth/signup', userData);
     return response.data;
   },
-  
+
   /**
    * Fetches the currently authenticated user's data.
    * Relies on the JWT interceptor to include the authentication token in the request.
@@ -229,6 +229,17 @@ export const authAPI = {
    * @param {string} email - Email to check
    * @returns {Promise<{is_confirmed: boolean}>}
    */
+  /**
+   * Verifies the email using the token hash (PKCE flow).
+   * @param {string} tokenHash - The token hash from the URL.
+   * @param {string} type - The type of verification (usually 'email').
+   * @returns {Promise<object>} A promise that resolves to the verification result.
+   */
+  verifyEmail: async (tokenHash, type = 'email') => {
+    const response = await api.post('/auth/verify-email', { token_hash: tokenHash, type });
+    return response.data;
+  },
+
   checkEmailConfirmation: async (email) => {
     const response = await api.get(`/auth/check-confirmation/${encodeURIComponent(email)}`, {
       headers: {
@@ -454,7 +465,7 @@ export const productAPI = {
   /**
    * New import workflow endpoints
    */
-  
+
   /**
    * Uploads and processes an Excel file for product import.
    * @param {string} businessId - The ID of the business.

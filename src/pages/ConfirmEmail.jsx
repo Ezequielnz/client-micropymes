@@ -38,50 +38,45 @@ function ConfirmEmail() {
    * useEffect hook to handle the email confirmation logic when the component mounts.
    */
   useEffect(() => {
-    // Extraer el token de acceso de la URL o hash
-    const hashParams = new URLSearchParams(
-      window.location.hash.substring(1) // quita el # del principio
-    );
+    // 1. Check for token_hash (PKCE flow from Supabase email template)
+    const tokenHash = searchParams.get('token_hash');
+    const type = searchParams.get('type') || 'email';
+
+    // 2. Check for access_token (Legacy/Hash flow)
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = hashParams.get('access_token');
 
-    if (accessToken) {
-      // Si tenemos un token, lo guardamos y obtenemos los datos del usuario
-      const handleTokenConfirmation = async () => {
-        try {
-          // 1. Guardar el token temporalmente para verificación
-          localStorage.setItem('token', accessToken);
-
-          // 2. Verificar el token obteniendo datos del usuario
-          // NOTA: No hacemos login automático, solo verificamos que el token sea válido
-          await authAPI.getCurrentUser();
-
-          // 3. Si llegamos aquí, el token es válido
+    const handleVerification = async () => {
+      try {
+        if (tokenHash) {
+          // Verify using token_hash
+          await authAPI.verifyEmail(tokenHash, type);
           setMessage('Tu cuenta ha sido confirmada exitosamente. Redirigiendo al inicio de sesión...');
           setStatus('success');
-
-          // Limpiamos el token del storage para no dejar sesiones abiertas accidentalmente
+          setTimeout(() => navigate('/login'), 3000);
+        } else if (accessToken) {
+          // Verify using access_token
+          localStorage.setItem('token', accessToken);
+          await authAPI.getCurrentUser();
+          setMessage('Tu cuenta ha sido confirmada exitosamente. Redirigiendo al inicio de sesión...');
+          setStatus('success');
           localStorage.removeItem('token');
-
-          // Redirigir al login después de 3 segundos
-          setTimeout(() => {
-            navigate('/login');
-          }, 3000);
-
-        } catch (error) {
-          console.error('Error verificando token:', error);
-          localStorage.removeItem('token');
-          setMessage('El enlace de confirmación es inválido o ha expirado.');
+          setTimeout(() => navigate('/login'), 3000);
+        } else {
+          // No token found
+          setMessage('No se encontró token de acceso. Por favor verifica el enlace en tu correo.');
           setStatus('error');
         }
-      };
+      } catch (error) {
+        console.error('Error verificando token:', error);
+        localStorage.removeItem('token');
+        setMessage(error.response?.data?.detail || 'El enlace de confirmación es inválido o ha expirado.');
+        setStatus('error');
+      }
+    };
 
-      handleTokenConfirmation();
-    } else {
-      // Si no hay token, puede que haya habido un error
-      setMessage('No se encontró token de acceso. Por favor verifica el enlace en tu correo.');
-      setStatus('error');
-    }
-  }, [navigate]);
+    handleVerification();
+  }, [navigate, searchParams]);
 
   return (
     <div className="min-h-screen bg-white">
