@@ -6,7 +6,7 @@ import Layout from './components/Layout';
 import BusinessUsers from './pages/BusinessUsers';
 import Categories from './pages/Categories';
 import ConfirmEmail from './pages/ConfirmEmail';
-import ConfirmPage from './pages/ConfirmPage';
+
 import CreateBusiness from './pages/CreateBusiness';
 import Customers from './pages/Customers';
 import EmailConfirmation from './pages/EmailConfirmation';
@@ -38,7 +38,7 @@ const App: React.FC = () => (
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/confirm-email" element={<ConfirmEmail />} />
-        <Route path="/confirm" element={<ConfirmPage />} />
+        <Route path="/confirm" element={<ConfirmEmail />} />
         <Route path="/email-confirmation" element={<EmailConfirmation />} />
 
         {/* Protected Routes */}

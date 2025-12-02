@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -32,6 +32,7 @@ function ConfirmEmail() {
   // but if useAuth is needed for some reason (like checking if already logged in), we can keep it.
   // For now, I'll remove 'login' from destructuring since we don't use it.
   const { } = useAuth();
+  const [searchParams] = useSearchParams();
 
   /**
    * useEffect hook to handle the email confirmation logic when the component mounts.
