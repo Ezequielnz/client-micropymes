@@ -114,9 +114,7 @@ function Register() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <Link to="/" className="flex-shrink-0 flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">O</span>
-                </div>
+                <img src="/operix_logo.png" alt="OperixML Logo" className="w-8 h-8 object-contain" />
                 <span className="text-xl font-semibold text-gray-900">OperixML</span>
               </Link>
             </div>
@@ -181,7 +179,7 @@ function Register() {
               <div className="flex justify-center mb-4">
                 <div className="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
                   <Sparkles className="w-4 h-4 mr-2" />
-                  Gratis por 14 días
+                  Gratis por 30 días
                 </div>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -362,10 +360,8 @@ function Register() {
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <div className="flex items-center justify-center mb-4">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3">
-                <span className="text-white font-bold text-sm">O</span>
-              </div>
+            <div className="flex items-center justify-center mb-4 space-x-2">
+              <img src="/operix_logo.png" alt="OperixML Logo" className="w-8 h-8 object-contain" />
               <h3 className="text-2xl font-bold">OperixML</h3>
             </div>
             <p className="text-gray-400 max-w-md mx-auto">

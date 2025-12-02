@@ -1,5 +1,4 @@
 
-
 const Footer = () => {
   return (
     <footer id="contacto" className="bg-gray-900 text-gray-300 py-16">
@@ -8,13 +7,11 @@ const Footer = () => {
           {/* Logo and Description */}
           <div className="md:col-span-2">
             <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
-                <h3 className="text-white font-semibold mb-4">O</h3>
-              </div>
-              <h3 className="text-white font-semibold mb-4">OperixML</h3>
+              <img src="/operix_logo.png" alt="OperixML Logo" className="w-8 h-8 object-contain" />
+              <h3 className="text-white font-semibold text-xl">OperixML</h3>
             </div>
             <p className="text-gray-400 mb-6 max-w-md">
-              El ERP modular diseñado específicamente para PyMEs argentinas. 
+              El ERP modular diseñado específicamente para PyMEs argentinas.
               Simple, potente y hecho para que te enfoques en hacer crecer tu negocio.
             </p>
             <div className="space-y-2">

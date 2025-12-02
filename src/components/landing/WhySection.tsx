@@ -23,7 +23,7 @@ const WhySection = () => {
               <AlertCircle className="text-red-500" size={24} />
               <h3 className="text-xl font-semibold text-gray-900 mb-4">El problema que conocés</h3>
             </div>
-            
+
             <div className="space-y-4">
               {[
                 "ERPs obsoletos que necesitan 20 clics para hacer algo simple",
@@ -46,7 +46,7 @@ const WhySection = () => {
               <CheckCircle className="text-green-500 !stroke-green-500" size={24} />
               <h3 className="text-xl font-semibold text-gray-900 mb-4">La solución que merecés</h3>
             </div>
-            
+
             <div className="space-y-4">
               {[
                 "Interfaz moderna e intuitiva que da gusto usar todos los días",
@@ -70,9 +70,9 @@ const WhySection = () => {
             ¿Cansado de ERPs lentos, feos o imposibles de usar?
           </p>
           <button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all transform hover:scale-105 flex items-center space-x-2 mx-auto shadow-lg hover:shadow-xl">
-  <span>OperixML está hecho para vos</span>
-  <ArrowRight size={20} />
-</button>
+            <span>OperixML está hecho para vos</span>
+            <ArrowRight size={20} />
+          </button>
         </div>
       </div>
     </section>

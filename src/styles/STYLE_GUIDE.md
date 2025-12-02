@@ -1,4 +1,4 @@
-# 🎨 Guía de Estilos - MicroPymes
+# 🎨 Guía de Estilos - OperixML
 
 ## 📋 Sistema Híbrido: Tailwind + Clases Personalizadas
 

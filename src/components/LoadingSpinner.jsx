@@ -5,10 +5,10 @@ import { Loader2, Activity, Zap } from 'lucide-react';
  * Componente de loading reutilizable con paleta de colores ERP profesional
  * Incluye diferentes variantes y tamaños para adaptarse a diferentes contextos
  */
-const LoadingSpinner = ({ 
-  size = 'default', 
-  variant = 'primary', 
-  message = 'Cargando...', 
+const LoadingSpinner = ({
+  size = 'default',
+  variant = 'primary',
+  message = 'Cargando...',
   showMessage = true,
   className = '',
   fullScreen = false,
@@ -83,13 +83,13 @@ const LoadingSpinner = ({
     <div className={`flex flex-col items-center justify-center ${sizeConfig.container} ${className}`}>
       <div className="relative">
         {/* Spinner principal */}
-        <IconComponent 
+        <IconComponent
           className={`${sizeConfig.spinner} ${variantConfig.spinner} animate-spin`}
         />
-        
+
         {/* Círculo de fondo decorativo para tamaños grandes */}
         {(size === 'lg' || size === 'xl') && (
-          <div 
+          <div
             className={`absolute inset-0 rounded-full border-2 ${variantConfig.border} opacity-20`}
             style={{
               animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
@@ -97,25 +97,25 @@ const LoadingSpinner = ({
           />
         )}
       </div>
-      
+
       {/* Mensaje de carga */}
       {showMessage && (
         <div className="text-center">
           <p className={`${sizeConfig.text} ${variantConfig.text} font-medium`}>
             {message}
           </p>
-          
+
           {/* Puntos animados */}
           <div className="flex justify-center mt-2 space-x-1">
-            <div 
+            <div
               className={`w-1 h-1 ${variantConfig.spinner} rounded-full animate-bounce`}
               style={{ animationDelay: '0ms' }}
             />
-            <div 
+            <div
               className={`w-1 h-1 ${variantConfig.spinner} rounded-full animate-bounce`}
               style={{ animationDelay: '150ms' }}
             />
-            <div 
+            <div
               className={`w-1 h-1 ${variantConfig.spinner} rounded-full animate-bounce`}
               style={{ animationDelay: '300ms' }}
             />
@@ -143,10 +143,10 @@ const LoadingSpinner = ({
 /**
  * Componente de loading para páginas completas
  */
-export const PageLoader = ({ 
-  message = 'Cargando pagina...', 
+export const PageLoader = ({
+  message = 'Cargando pagina...',
   variant = 'primary',
-  showLogo = true 
+  showLogo = true
 }) => {
   const accentByVariant = {
     primary: 'text-erp-primary',
@@ -162,9 +162,8 @@ export const PageLoader = ({
       <div className="flex flex-col items-center justify-center w-full">
         {showLogo && (
           <div className="flex flex-col items-center">
-            <div className="loader-operixml-logo mb-4 flex items-center justify-center rounded-full bg-erp-primary px-3 py-2">
-              <span className="font-bold text-2xl text-white">O</span>
-              <Zap className="h-6 w-6 text-white ml-1" />
+            <div className="loader-operixml-logo mb-4 flex items-center justify-center">
+              <img src="/operix_logo.png" alt="OperixML Logo" className="w-16 h-16 object-contain" />
             </div>
             <h1 className="text-2xl font-bold text-erp-neutral-900">
               OperixML
@@ -183,16 +182,16 @@ export const PageLoader = ({
 /**
  * Componente de loading para secciones específicas
  */
-export const SectionLoader = ({ 
-  message = 'Cargando...', 
+export const SectionLoader = ({
+  message = 'Cargando...',
   variant = 'primary',
   size = 'default',
   className = ''
 }) => (
   <div className={`flex items-center justify-center py-12 ${className}`}>
-    <LoadingSpinner 
-      size={size} 
-      variant={variant} 
+    <LoadingSpinner
+      size={size}
+      variant={variant}
       message={message}
       showMessage={true}
     />
@@ -202,14 +201,14 @@ export const SectionLoader = ({
 /**
  * Componente de loading para botones
  */
-export const ButtonLoader = ({ 
-  size = 'sm', 
+export const ButtonLoader = ({
+  size = 'sm',
   variant = 'primary',
-  className = '' 
+  className = ''
 }) => (
-  <LoadingSpinner 
-    size={size} 
-    variant={variant} 
+  <LoadingSpinner
+    size={size}
+    variant={variant}
     showMessage={false}
     className={className}
     icon="spinner"
@@ -219,15 +218,15 @@ export const ButtonLoader = ({
 /**
  * Componente de loading para cards
  */
-export const CardLoader = ({ 
-  message = 'Cargando contenido...', 
+export const CardLoader = ({
+  message = 'Cargando contenido...',
   variant = 'secondary',
   className = ''
 }) => (
   <div className={`bg-white border border-erp-neutral-200 rounded-lg p-8 ${className}`}>
-    <LoadingSpinner 
-      size="default" 
-      variant={variant} 
+    <LoadingSpinner
+      size="default"
+      variant={variant}
       message={message}
       showMessage={true}
     />

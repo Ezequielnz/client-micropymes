@@ -63,7 +63,7 @@ const Sidebar = ({
     }
     navigate(path);
   };
-  
+
   const sidebarItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, onClick: () => navigate('/home') },
     { id: 'businesses', label: 'Negocios', icon: Building2, onClick: () => navigate('/business-users') },
@@ -108,21 +108,19 @@ const Sidebar = ({
   return (
     <div className="fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col z-40" style={{ backgroundColor: '#ffffff' }}>
       <div className="p-6 border-b border-gray-200 flex items-center gap-3" style={{ backgroundColor: '#f8fafc' }}>
-  <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
-    <span className="text-white font-bold text-2xl">O</span>
-  </div>
-  <div>
-    <h1 className="text-2xl font-bold text-blue-700">OperixML</h1>
-    <p className="text-sm text-gray-600 mt-1">Sistema de Gestión</p>
-  </div>
-</div>
+        <img src="/operix_logo.png" alt="OperixML Logo" className="w-10 h-10 object-contain" />
+        <div>
+          <h1 className="text-2xl font-bold text-blue-700">OperixML</h1>
+          <p className="text-sm text-gray-600 mt-1">Sistema de Gestión</p>
+        </div>
+      </div>
 
       <nav className="flex-1 p-4 space-y-2" style={{ backgroundColor: '#ffffff' }}>
         {sidebarItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeSection === item.id || (item.subItems && item.subItems.some(subItem => activeSection === subItem.id));
           const isDisabled = item.disabled;
-          
+
           if (item.hasDropdown) {
             return (
               <div key={item.id} className="space-y-1">
@@ -138,13 +136,12 @@ const Sidebar = ({
                     }
                   }}
                   disabled={isDisabled}
-                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition-all duration-200 ${
-                    isActive
-                      ? "text-blue-700 shadow-sm"
-                      : isDisabled
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition-all duration-200 ${isActive
+                    ? "text-blue-700 shadow-sm"
+                    : isDisabled
                       ? "text-gray-400 cursor-not-allowed"
                       : "text-gray-700 hover:text-gray-900"
-                  }`}
+                    }`}
                   style={{
                     backgroundColor: isActive ? '#dbeafe' : isDisabled ? 'transparent' : 'transparent'
                   }}
@@ -159,9 +156,8 @@ const Sidebar = ({
                     }
                   }}
                 >
-                  <Icon className={`h-5 w-5 transition-colors ${
-                    isActive ? "text-blue-600" : isDisabled ? "text-gray-400" : "text-gray-500"
-                  }`} />
+                  <Icon className={`h-5 w-5 transition-colors ${isActive ? "text-blue-600" : isDisabled ? "text-gray-400" : "text-gray-500"
+                    }`} />
                   <span className="font-medium flex-1">{item.label}</span>
                   {((showSalesDropdown && item.id === 'sales') || (showInventoryDropdown && item.id === 'inventory') || (showPurchasesDropdown && item.id === 'purchasesMenu')) ? (
                     <ChevronDown className="h-4 w-4 text-gray-500" />
@@ -172,13 +168,13 @@ const Sidebar = ({
                     <span className="ml-auto text-xs text-gray-400">Próximamente</span>
                   )}
                 </button>
-                
+
                 {(((showSalesDropdown && item.id === 'sales') || (showInventoryDropdown && item.id === 'inventory') || (showPurchasesDropdown && item.id === 'purchasesMenu')) && item.subItems) && (
                   <div className="ml-8 space-y-1">
                     {item.subItems.map((subItem) => {
                       const SubIcon = subItem.icon;
                       const isSubActive = activeSection === subItem.id;
-                      
+
                       return (
                         <button
                           key={subItem.id}
@@ -189,11 +185,10 @@ const Sidebar = ({
                               setActiveSection(subItem.id);
                             }
                           }}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all duration-200 ${
-                            isSubActive
-                              ? "text-blue-700 shadow-sm"
-                              : "text-gray-600 hover:text-gray-900"
-                          }`}
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all duration-200 ${isSubActive
+                            ? "text-blue-700 shadow-sm"
+                            : "text-gray-600 hover:text-gray-900"
+                            }`}
                           style={{
                             backgroundColor: isSubActive ? '#dbeafe' : 'transparent'
                           }}
@@ -209,9 +204,8 @@ const Sidebar = ({
                           }}
                           title={!currentBusiness?.id ? 'Selecciona un negocio para acceder' : ''}
                         >
-                          <SubIcon className={`h-4 w-4 transition-colors ${
-                            isSubActive ? "text-blue-600" : "text-gray-500"
-                          }`} />
+                          <SubIcon className={`h-4 w-4 transition-colors ${isSubActive ? "text-blue-600" : "text-gray-500"
+                            }`} />
                           <span className="font-medium text-sm">{subItem.label}</span>
                           {!currentBusiness?.id && (
                             <span className="ml-auto text-xs text-orange-500">Sin negocio</span>
@@ -224,7 +218,7 @@ const Sidebar = ({
               </div>
             );
           }
-          
+
           return (
             <button
               key={item.id}
@@ -237,13 +231,12 @@ const Sidebar = ({
                 }
               }}
               disabled={isDisabled}
-              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition-all duration-200 ${
-                isActive
-                  ? "text-blue-700 shadow-sm"
-                  : isDisabled
+              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition-all duration-200 ${isActive
+                ? "text-blue-700 shadow-sm"
+                : isDisabled
                   ? "text-gray-400 cursor-not-allowed"
                   : "text-gray-700 hover:text-gray-900"
-              }`}
+                }`}
               style={{
                 backgroundColor: isActive ? '#dbeafe' : isDisabled ? 'transparent' : 'transparent'
               }}
@@ -259,9 +252,8 @@ const Sidebar = ({
               }}
               title={!currentBusiness?.id && ['products', 'clients', 'finances', 'tasks'].includes(item.id) ? 'Selecciona un negocio para acceder' : ''}
             >
-              <Icon className={`h-5 w-5 transition-colors ${
-                isActive ? "text-blue-600" : isDisabled ? "text-gray-400" : "text-gray-500"
-              }`} />
+              <Icon className={`h-5 w-5 transition-colors ${isActive ? "text-blue-600" : isDisabled ? "text-gray-400" : "text-gray-500"
+                }`} />
               <span className="font-medium">{item.label}</span>
               {!currentBusiness?.id && ['products', 'clients', 'finances', 'tasks'].includes(item.id) && (
                 <span className="ml-auto text-xs text-orange-500">Sin negocio</span>
@@ -269,7 +261,7 @@ const Sidebar = ({
             </button>
           );
         })}
-        
+
         {/* Boton de cerrar sesion inmediatamente despues de los items del sidebar */}
         <button
           onClick={() => {
@@ -285,11 +277,11 @@ const Sidebar = ({
           <span className="font-medium">Cerrar Sesión</span>
         </button>
       </nav>
-      
+
       {/* Footer */}
       <div className="p-4 border-t border-gray-200 mt-auto" style={{ backgroundColor: '#f8fafc' }}>
         <div className="text-xs text-gray-500 text-center">
-          2025 MicroPymes v2.1
+          2025 OperixML v2.1
         </div>
       </div>
     </div>
@@ -310,7 +302,7 @@ const Header = ({
 }) => {
   const [showBusinessDropdown, setShowBusinessDropdown] = useState(false);
   const [showBranchDropdown, setShowBranchDropdown] = useState(false);
-  
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (showBusinessDropdown && !event.target.closest('.business-dropdown')) {
@@ -362,9 +354,8 @@ const Header = ({
                       onBusinessChange(business);
                       setShowBusinessDropdown(false);
                     }}
-                    className={`w-full flex items-center gap-2 px-4 py-2 text-left transition-colors ${
-                      isActive ? 'bg-blue-50 text-blue-700' : 'bg-white text-gray-900 hover:bg-gray-50'
-                    }`}
+                    className={`w-full flex items-center gap-2 px-4 py-2 text-left transition-colors ${isActive ? 'bg-blue-50 text-blue-700' : 'bg-white text-gray-900 hover:bg-gray-50'
+                      }`}
                   >
                     <span className="font-medium truncate">{business.nombre}</span>
                   </button>
@@ -434,9 +425,8 @@ const Header = ({
                       onBranchChange(branch);
                       setShowBranchDropdown(false);
                     }}
-                    className={`w-full flex items-center justify-between gap-2 px-4 py-2 text-left transition-colors ${
-                      isActive ? 'bg-blue-50 text-blue-700' : 'bg-white text-gray-900 hover:bg-gray-50'
-                    }`}
+                    className={`w-full flex items-center justify-between gap-2 px-4 py-2 text-left transition-colors ${isActive ? 'bg-blue-50 text-blue-700' : 'bg-white text-gray-900 hover:bg-gray-50'
+                      }`}
                   >
                     <span className="font-medium truncate">{branch.nombre}</span>
                     <BranchBadge branch={branch} />
@@ -630,11 +620,11 @@ const Layout = ({ children, activeSection }) => {
     },
     [currentBusiness?.id, loadBranchSettings]
   );
-  
+
   // FunciÃ³n para determinar la secciÃ³n activa basÃ¡ndose en la URL
   const getActiveSectionFromPath = () => {
     const path = location.pathname;
-    
+
     if (path.includes('/finanzas')) return 'finances';
     if (path.includes('/products-and-services')) return 'products';
     if (path.includes('/categories')) return 'categories';
@@ -648,10 +638,10 @@ const Layout = ({ children, activeSection }) => {
     if (path.includes('/business-users')) return 'businesses';
     if (path.includes('/settings')) return 'settings';
     if (path.includes('/home')) return 'dashboard';
-    
+
     return 'dashboard'; // Por defecto
   };
-  
+
   // Determinar la secciÃ³n activa
   const currentActiveSection = activeSection || getActiveSectionFromPath();
 
@@ -660,9 +650,9 @@ const Layout = ({ children, activeSection }) => {
       setLoading(true);
       // Solo cargar businesses, el usuario ya estÃ¡ disponible en AuthContext
       const businessesData = await businessAPI.getBusinesses();
-      
+
       setBusinesses(businessesData);
-      
+
       // Seleccionar el primer negocio por defecto
       if (businessesData && businessesData.length > 0) {
         const storedBusinessId = localStorage.getItem(ACTIVE_BUSINESS_STORAGE_KEY);
@@ -742,8 +732,8 @@ const Layout = ({ children, activeSection }) => {
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">Error: {error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             Recargar
@@ -774,58 +764,58 @@ const Layout = ({ children, activeSection }) => {
       <div className="min-h-screen bg-gray-50 flex overflow-x-hidden">
         {/* Sidebar responsive */}
         <div>
-    {/* Overlay para mÃ³vil */}
-    <div
-      className={`fixed inset-0 bg-black bg-opacity-30 z-40 transition-opacity md:hidden ${sidebarOpen ? 'block' : 'hidden'}`}
-      onClick={() => setSidebarOpen(false)}
-      aria-hidden="true"
-    ></div>
-    <div
-      className={`fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col z-50 transform transition-transform duration-300 md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:static md:translate-x-0`}
-    >
-      <Sidebar 
-        activeSection={currentActiveSection}
-        setActiveSection={() => {}}
-        currentBusiness={currentBusiness}
-        currentBranch={currentBranch}
-        branches={branches}
-        branchesLoading={branchesLoading}
-      />
-      {/* Boton cerrar en movil */}
-      <button
-        className="absolute top-4 right-4 md:hidden p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-        onClick={() => setSidebarOpen(false)}
-        aria-label="Cerrar menú"
-      >
-        <svg className="h-6 w-6 text-blue-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-  </div>
-  {/* Contenido principal */}
-  <div className="flex-1 min-w-0 overflow-x-hidden">
-    <Header
-      currentBusiness={currentBusiness}
-      businesses={businesses}
-      currentBranch={currentBranch}
-      branches={branches}
-      branchesLoading={branchesLoading}
-      branchError={branchError}
-      onBusinessChange={handleBusinessChange}
-      onBranchChange={handleBranchChange}
-      setSidebarOpen={setSidebarOpen}
-    />
-    <main className="flex-1 min-w-0">
-      {children}
-    </main>
-  </div>
-</div>
+          {/* Overlay para mÃ³vil */}
+          <div
+            className={`fixed inset-0 bg-black bg-opacity-30 z-40 transition-opacity md:hidden ${sidebarOpen ? 'block' : 'hidden'}`}
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+          ></div>
+          <div
+            className={`fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col z-50 transform transition-transform duration-300 md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:static md:translate-x-0`}
+          >
+            <Sidebar
+              activeSection={currentActiveSection}
+              setActiveSection={() => { }}
+              currentBusiness={currentBusiness}
+              currentBranch={currentBranch}
+              branches={branches}
+              branchesLoading={branchesLoading}
+            />
+            {/* Boton cerrar en movil */}
+            <button
+              className="absolute top-4 right-4 md:hidden p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Cerrar menú"
+            >
+              <svg className="h-6 w-6 text-blue-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        {/* Contenido principal */}
+        <div className="flex-1 min-w-0 overflow-x-hidden">
+          <Header
+            currentBusiness={currentBusiness}
+            businesses={businesses}
+            currentBranch={currentBranch}
+            branches={branches}
+            branchesLoading={branchesLoading}
+            branchError={branchError}
+            onBusinessChange={handleBusinessChange}
+            onBranchChange={handleBranchChange}
+            setSidebarOpen={setSidebarOpen}
+          />
+          <main className="flex-1 min-w-0">
+            {children}
+          </main>
+        </div>
+      </div>
     </BusinessContext.Provider>
   );
 };
 
-export default Layout; 
+export default Layout;
 
 
 

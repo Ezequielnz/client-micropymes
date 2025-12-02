@@ -40,7 +40,7 @@ const Header = () => {
             </Link>
             <Link to="/register">
               <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-all transform hover:scale-105 flex items-center space-x-1 shadow-lg hover:shadow-xl">
-                <span>Empezá gratis por 14 días</span>
+                <span>Empezá gratis por 30 días</span>
                 <ChevronRight size={16} />
               </button>
             </Link>

@@ -17,7 +17,7 @@ const DashboardStats = lazy(() => import('../components/dashboard/DashboardStats
 const QuickActions = lazy(() => import('../components/dashboard/QuickActions'));
 const TopProducts = lazy(() => import('../components/dashboard/TopProducts'));
 const RecentSales = lazy(() => import('../components/dashboard/RecentSales'));
-const MonitoringDashboard = lazy(() => import('../components/dashboard/MonitoringDashboard'));
+// const MonitoringDashboard = lazy(() => import('../components/dashboard/MonitoringDashboard'));
 
 // Internal component that uses BusinessContext
 const HomeContent: React.FC = () => {
@@ -278,8 +278,8 @@ const HomeContent: React.FC = () => {
                     onClick={() => handlePeriodChange(period.key)}
                     disabled={dataLoading}
                     className={`px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-md sm:rounded-lg text-xs sm:text-sm font-medium transition-colors disabled:opacity-50 flex-1 ${selectedPeriod === period.key
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                       }`}
                   >
                     {period.label}
@@ -333,11 +333,12 @@ const HomeContent: React.FC = () => {
             </div>
 
             {/* AI/ML Monitoring Dashboard - Phase 5 */}
-            {currentBusiness?.id && (
+            {/* AI/ML Monitoring Dashboard - Phase 5 - Hidden by user request (still in dev) */}
+            {/* {currentBusiness?.id && (
               <Suspense fallback={<div className="h-96 bg-gray-100 animate-pulse rounded-lg"></div>}>
                 <MonitoringDashboard tenantId={currentBusiness.id} />
               </Suspense>
-            )}
+            )} */}
           </div>
         )}
       </div>
