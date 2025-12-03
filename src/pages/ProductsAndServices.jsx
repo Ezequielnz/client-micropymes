@@ -33,7 +33,7 @@ const OptimizedTable = React.memo(({
   }
 
   // Calculate column count for empty state
-  const columnCount = activeTab === 'products' ? (canEdit || canDelete ? 7 : 6) : (canEdit || canDelete ? 6 : 5);
+  const columnCount = activeTab === 'products' ? (canEdit || canDelete ? 9 : 8) : (canEdit || canDelete ? 6 : 5);
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
@@ -101,6 +101,9 @@ const OptimizedTable = React.memo(({
           <thead>
             <tr className="bg-gray-50">
               <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">
+                Código
+              </th>
+              <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">
                 Nombre
               </th>
               <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">
@@ -122,9 +125,14 @@ const OptimizedTable = React.memo(({
                 Categoría
               </th>
               {activeTab === 'products' && (
-                <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">
-                  Stock
-                </th>
+                <>
+                  <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">
+                    Stock
+                  </th>
+                  <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">
+                    Unidad
+                  </th>
+                </>
               )}
               {(canEdit || canDelete) && (
                 <th className="px-4 py-3 text-center border-b border-gray-200 text-gray-700 font-medium text-sm">
@@ -146,6 +154,9 @@ const OptimizedTable = React.memo(({
             ) : (
               currentData.map((item) => (
                 <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  {activeTab === 'products' && (
+                    <td className="px-4 py-3 text-gray-900 text-sm">{item.code}</td>
+                  )}
                   <td className="px-4 py-3 text-gray-900 text-sm">{item.name}</td>
                   <td className="px-4 py-3 text-gray-600 text-sm max-w-xs truncate">{item.description}</td>
                   <td className="px-4 py-3 text-gray-900 text-sm font-medium">${item.price?.toFixed(2) || '0.00'}</td>
@@ -158,7 +169,10 @@ const OptimizedTable = React.memo(({
                     {getCategoryName(item.category)}
                   </td>
                   {activeTab === 'products' && (
-                    <td className="px-4 py-3 text-gray-600 text-sm">{item.stock} {item.unit}</td>
+                    <>
+                      <td className="px-4 py-3 text-gray-600 text-sm">{item.stock}</td>
+                      <td className="px-4 py-3 text-gray-600 text-sm">{item.unit}</td>
+                    </>
                   )}
                   {(canEdit || canDelete) && (
                     <td className="px-4 py-3 text-center">
@@ -218,8 +232,10 @@ const ProductsAndServices = () => {
     purchasePrice: '',
     category: '',
     stock: '',
-    unit: ''
+    unit: '',
+    code: ''
   });
+  const [modalError, setModalError] = useState(null);
   const [categoryFormData, setCategoryFormData] = useState({
     nombre: '',
     descripcion: ''
@@ -368,7 +384,8 @@ const ProductsAndServices = () => {
       purchasePrice: item.precio_compra,
       category: item.categoria_id,
       stock: item.stock_actual,
-      unit: item.codigo || ''
+      unit: item.unidades || '',
+      code: item.codigo || ''
     }));
   }, [products]);
 
@@ -474,10 +491,12 @@ const ProductsAndServices = () => {
     };
 
     try {
+      setModalError(null); // Clear previous errors
       if (activeTab === 'products') {
         payload.precio_venta = parseFloat(formData.price) || 0;
         payload.stock_actual = parseInt(formData.stock) || 0;
-        payload.codigo = formData.unit || '';
+        payload.codigo = formData.code || '';
+        payload.unidades = formData.unit || '';
         if (formData.purchasePrice !== '') {
           payload.precio_compra = parseFloat(formData.purchasePrice);
         }
@@ -498,7 +517,9 @@ const ProductsAndServices = () => {
       }
     } catch (error) {
       console.error('Error saving:', error);
-      // Error handling could be improved with toast notifications
+      // Extract error message from backend response
+      const errorMessage = error.response?.data?.detail || error.message || 'Error al guardar. Por favor intenta de nuevo.';
+      setModalError(errorMessage);
     }
   }, [formData, businessId, activeTab, editingItem, createProductMutation, updateProductMutation, createServiceMutation, updateServiceMutation]);
 
@@ -525,7 +546,8 @@ const ProductsAndServices = () => {
       purchasePrice: item.precio_compra !== undefined && item.precio_compra !== null ? item.precio_compra.toString() : '',
       category: item.category || item.categoria_id || '',
       stock: item.stock?.toString() || item.stock_actual?.toString() || '',
-      unit: item.unit || item.codigo || ''
+      unit: item.unit || item.unidades || '',
+      code: item.code || item.codigo || ''
     });
     setShowModal(true);
   }, []);
@@ -533,6 +555,7 @@ const ProductsAndServices = () => {
   const handleCloseModal = useCallback(() => {
     setShowModal(false);
     setEditingItem(null);
+    setModalError(null);
     setFormData({
       name: '',
       description: '',
@@ -540,7 +563,8 @@ const ProductsAndServices = () => {
       purchasePrice: '',
       category: '',
       stock: '',
-      unit: ''
+      unit: '',
+      code: ''
     });
   }, []);
 
@@ -737,7 +761,42 @@ const ProductsAndServices = () => {
               {editingItem ? 'Editar' : 'Agregar'} {activeTab === 'products' ? 'Producto' : 'Servicio'}
             </h2>
 
+            {modalError && (
+              <div style={{
+                backgroundColor: '#fee2e2',
+                border: '1px solid #ef4444',
+                color: '#b91c1c',
+                padding: '10px',
+                borderRadius: '4px',
+                marginBottom: '15px',
+                fontSize: '14px'
+              }}>
+                {modalError}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit}>
+              {activeTab === 'products' && (
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
+                    Código
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.code}
+                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      color: '#333'
+                    }}
+                  />
+                </div>
+              )}
+
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
                   Nombre *

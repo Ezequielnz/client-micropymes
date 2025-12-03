@@ -53,6 +53,7 @@ const CatalogUpload = ({ businessId, onClose, onSuccess }) => {
                 ...p,
                 id: index,
                 stock: 0, // Default stock
+                unidades: '', // Default units
                 selected: true
             }));
 
@@ -90,7 +91,8 @@ const CatalogUpload = ({ businessId, onClose, onSuccess }) => {
                 nombre: p.descripcion, // Use description as name
                 descripcion: p.descripcion,
                 precio: parseFloat(p.precio_detectado),
-                stock: parseInt(p.stock) || 0
+                stock: parseInt(p.stock) || 0,
+                unidades: p.unidades || ''
             }));
 
             const importData = {
@@ -114,7 +116,7 @@ const CatalogUpload = ({ businessId, onClose, onSuccess }) => {
 
     if (step === 'upload') {
         return (
-            <div className="p-6 bg-white rounded-lg shadow-xl max-w-2xl mx-auto">
+            <div className="p-6 bg-white rounded-lg shadow-xl max-w-4xl mx-auto">
                 <h2 className="text-2xl font-bold mb-4 text-gray-800">Cargar Catálogo PDF</h2>
                 <p className="mb-6 text-gray-600">
                     Sube tu lista de precios en PDF. El sistema detectará automáticamente los códigos y precios.
@@ -212,6 +214,7 @@ const CatalogUpload = ({ businessId, onClose, onSuccess }) => {
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio Detectado</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock (Opcional)</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unidad</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                             </tr>
                         </thead>
@@ -253,6 +256,15 @@ const CatalogUpload = ({ businessId, onClose, onSuccess }) => {
                                             value={product.stock}
                                             onChange={(e) => handleProductChange(product.id, 'stock', e.target.value)}
                                             className="border-gray-300 rounded-md text-sm w-20 focus:ring-blue-500 focus:border-blue-500 text-black"
+                                        />
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <input
+                                            type="text"
+                                            value={product.unidades || ''}
+                                            onChange={(e) => handleProductChange(product.id, 'unidades', e.target.value)}
+                                            className="border-gray-300 rounded-md text-sm w-20 focus:ring-blue-500 focus:border-blue-500 text-black"
+                                            placeholder="Unidad"
                                         />
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
