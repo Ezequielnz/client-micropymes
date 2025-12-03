@@ -555,6 +555,36 @@ export const productAPI = {
     });
     return response.data;
   },
+
+  /**
+   * Uploads a PDF catalog for parsing.
+   * @param {string} businessId - The ID of the business.
+   * @param {File} file - The PDF file to upload.
+   * @returns {Promise<Array<object>>} A promise that resolves to the list of parsed products.
+   */
+  uploadCatalog: async (businessId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post(`/businesses/${businessId}/products/upload-catalog`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  /**
+   * Bulk upserts confirmed products from catalog import.
+   * @param {string} businessId - The ID of the business.
+   * @param {object} importData - The data to import.
+   * @param {Array<object>} importData.productos - List of confirmed products.
+   * @param {string} importData.tipo_precio - 'costo' or 'venta'.
+   * @returns {Promise<object>} A promise that resolves to the result message.
+   */
+  bulkUpsertProducts: async (businessId, importData) => {
+    const response = await api.post(`/businesses/${businessId}/products/bulk-upsert`, importData);
+    return response.data;
+  },
 };
 
 /**
