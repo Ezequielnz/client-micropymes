@@ -1,4 +1,3 @@
-
 import { Check, ArrowRight, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,76 +12,36 @@ const Pricing = () => {
             Precios transparentes y justos
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Sin sorpresas, sin costos ocultos. Pagás solo por lo que usás, cuando lo uses.
+            Sin sorpresas, sin costos ocultos. Un único plan con todo lo que necesitás.
           </p>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid sm:grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mb-16">
-
-          {/* Starter Plan */}
-          <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl border border-gray-200 hover:border-gray-300 transition-all">
-            <div className="text-center mb-8">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Esencial</h3>
-              <p className="text-gray-600 mb-4">Para empezar y probar</p>
-              <div className="mb-4">
-                <span className="text-4xl font-bold text-gray-900">$XX.XXX</span>
-                <span className="text-gray-600">/mes</span>
-              </div>
-              <p className="text-sm text-gray-500">Hasta 5 usuarios</p>
-            </div>
-
-            <ul className="space-y-3 mb-8">
-              {[
-                "Módulos básicos (Ventas + Inventario)",
-                "Soporte por email",
-                "Reportes estándar",
-                "Almacenamiento 10GB",
-                "Configuración guiada"
-              ].map((feature, index) => (
-                <li key={index} className="flex items-center space-x-3">
-                  <Check size={16} className="text-green-500 !stroke-green-500 flex-shrink-0" />
-                  <span className="text-gray-700">{feature}</span>
-                </li>
-              ))}
-            </ul>
-
-            <button
-              className="w-full bg-white border border-blue-600 hover:border-blue-700 text-blue-600 hover:text-blue-700 py-3 rounded-xl font-semibold transition-all hover:bg-blue-50"
-              onClick={() => navigate('/register')}
-            >
-              Empezar gratis
-            </button>
-          </div>
-
-          {/* Professional Plan */}
-          <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl border-2 border-blue-200 hover:border-blue-300 transition-all relative">
+        {/* Pricing Card */}
+        <div className="flex justify-center mb-16">
+          <div className="w-full max-w-lg bg-white p-4 sm:p-6 lg:p-8 rounded-2xl border-2 border-blue-200 hover:border-blue-300 transition-all relative shadow-lg">
             <div className="absolute -top-4 left-0 right-0 flex justify-center">
               <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-full text-sm font-medium flex items-center space-x-1">
                 <Star size={14} />
-                <span>Más popular</span>
+                <span>Todo incluido</span>
               </div>
             </div>
 
             <div className="text-center mb-8">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Profesional</h3>
-              <p className="text-gray-600 mb-4">Para PyMEs en crecimiento</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Plan Completo</h3>
+              <p className="text-gray-600 mb-4">La solución integral para tu negocio</p>
               <div className="mb-4">
-                <span className="text-4xl font-bold text-gray-900">$XX.XXX</span>
+                <span className="text-4xl font-bold text-gray-900">$15.000</span>
                 <span className="text-gray-600">/mes</span>
               </div>
-              <p className="text-sm text-gray-500">Hasta 20 usuarios</p>
             </div>
 
             <ul className="space-y-3 mb-8">
               {[
                 "Todos los módulos incluidos",
-                "Soporte prioritario",
-                "Reportes avanzados + dashboards",
-                "Almacenamiento 100GB",
-                "Automatizaciones personalizadas",
-                "Integración con sistemas externos",
-                "Capacitación del equipo incluida"
+                "Soporte Directo por WhatsApp",
+                "Reportes inteligentes para toma de decisiones",
+                "Historial de ventas ilimitado",
+                "Puesta en marcha asistida"
               ].map((feature, index) => (
                 <li key={index} className="flex items-center space-x-3">
                   <Check size={16} className="text-green-500 !stroke-green-500 flex-shrink-0" />
@@ -98,45 +57,12 @@ const Pricing = () => {
               Empezar gratis
             </button>
           </div>
-
-          {/* Enterprise Plan */}
-          <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl border border-gray-200 hover:border-gray-300 transition-all">
-            <div className="text-center mb-8">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Empresarial</h3>
-              <p className="text-gray-600 mb-4">Para equipos grandes</p>
-              <div className="mb-4">
-                <span className="text-3xl font-bold text-gray-900">A medida</span>
-              </div>
-              <p className="text-sm text-gray-500">Usuarios ilimitados</p>
-            </div>
-
-            <ul className="space-y-3 mb-8">
-              {[
-                "Instalación on-premise disponible",
-                "Soporte dedicado 24/7",
-                "Reportes y dashboards personalizados",
-                "Almacenamiento ilimitado",
-                "Desarrollos específicos",
-                "Integración completa con ERP legado",
-                "Consultoría estratégica incluida"
-              ].map((feature, index) => (
-                <li key={index} className="flex items-center space-x-3">
-                  <Check size={16} className="text-green-500 !stroke-green-500 flex-shrink-0" />
-                  <span className="text-gray-700">{feature}</span>
-                </li>
-              ))}
-            </ul>
-
-            <a href="mailto:contacto@operixml.com" className="w-full inline-block text-center bg-white border border-blue-600 hover:border-blue-700 text-blue-600 hover:text-blue-700 py-3 rounded-xl font-semibold transition-all hover:bg-blue-50">
-              Contactar ventas
-            </a>
-          </div>
         </div>
 
         {/* Bottom CTA */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 lg:p-12 rounded-2xl border border-blue-100 text-center">
           <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">
-            Probalo gratis. Elegí el plan cuando estés listo.
+            Probalo gratis. Sin compromiso.
           </h3>
           <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
             Los 14 días de prueba incluyen acceso completo a todas las funciones.
