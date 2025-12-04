@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { businessAPI } from '../utils/api';
 import { BusinessContext } from '../contexts/BusinessContext';
+import { useAuth } from '../contexts/AuthContext';
+import OnboardingTour from './Onboarding/OnboardingTour';
 
 const BranchBadge = ({ branch }) => {
   if (!branch?.is_main) {
@@ -476,6 +478,13 @@ const Header = ({
 
 // Layout Component Principal
 const Layout = ({ children, activeSection }) => {
+  const { user, completeOnboarding } = useAuth();
+
+  useEffect(() => {
+    console.log('Layout Debug - User:', user);
+    console.log('Layout Debug - Onboarding Completed:', user?.onboarding_completed);
+  }, [user]);
+
   const location = useLocation();
   const queryClient = useQueryClient();
   const [currentBusiness, setCurrentBusiness] = useState(null);
@@ -810,6 +819,11 @@ const Layout = ({ children, activeSection }) => {
           <main className="flex-1 min-w-0">
             {children}
           </main>
+          <OnboardingTour
+            isOpen={!!user && user.onboarding_completed === false}
+            onClose={completeOnboarding}
+            onComplete={completeOnboarding}
+          />
         </div>
       </div>
     </BusinessContext.Provider>

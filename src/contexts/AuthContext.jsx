@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const token = localStorage.getItem('token');
         const userData = localStorage.getItem('user');
-        
+
         if (token && userData) {
           const parsedUser = JSON.parse(userData);
           setUser({
@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
       ...userData,
       access_token: token
     };
-    
+
     setUser(userWithToken);
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
@@ -58,10 +58,32 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
   };
 
+  const completeOnboarding = async () => {
+    try {
+      const updatedUser = { ...user, onboarding_completed: true };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v1/auth/complete-onboarding`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+    } catch (error) {
+      console.error('Error completing onboarding:', error);
+    }
+  };
+
   const value = {
     user,
     login,
     logout,
+    completeOnboarding,
     loading,
     isAuthenticated: !!user
   };
@@ -73,5 +95,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export default AuthContext; 
-
+export default AuthContext;
