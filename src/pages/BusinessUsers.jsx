@@ -35,7 +35,7 @@ import {
 // Componentes UI simples
 const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', disabled = false, ...props }) => {
   const baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
-  
+
   const variants = {
     default: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
     outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500',
@@ -43,15 +43,15 @@ const Button = ({ children, onClick, variant = 'default', size = 'default', clas
     success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500',
     ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-blue-500'
   };
-  
+
   const sizes = {
     sm: 'h-8 px-3 text-sm',
     default: 'h-10 px-4 py-2',
     lg: 'h-12 px-6 text-lg'
   };
-  
+
   const classes = `${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`;
-  
+
   return (
     <button className={classes} onClick={onClick} disabled={disabled} {...props}>
       {children}
@@ -438,9 +438,8 @@ const BranchSettingsPanel = ({ branches, settings, saving, error, onSave }) => {
             Permitir transferencias entre sucursales
           </label>
           <label
-            className={`flex items-center gap-2 text-sm ${
-              formState.permite_transferencias ? 'text-gray-700' : 'text-gray-400'
-            }`}
+            className={`flex items-center gap-2 text-sm ${formState.permite_transferencias ? 'text-gray-700' : 'text-gray-400'
+              }`}
           >
             <input
               type="checkbox"
@@ -751,11 +750,10 @@ const BranchManager = ({ business, canManage }) => {
       <button
         type="button"
         onClick={handleOpenManager}
-        className={`w-full flex items-center justify-between text-left text-sm rounded-lg px-4 py-2 transition-colors border ${
-          isModalOpen
-            ? 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'
-            : 'bg-slate-50 text-gray-700 border-slate-200 hover:bg-blue-50 hover:text-blue-600'
-        }`}
+        className={`w-full flex items-center justify-between text-left text-sm rounded-lg px-4 py-2 transition-colors border ${isModalOpen
+          ? 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'
+          : 'bg-slate-50 text-gray-700 border-slate-200 hover:bg-blue-50 hover:text-blue-600'
+          }`}
       >
         <span className="flex items-center gap-2 font-medium">
           <MapPin className="h-4 w-4 text-blue-500" />
@@ -798,192 +796,192 @@ const BranchManager = ({ business, canManage }) => {
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-          {feedbackMessage && (
-            <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-md flex items-center gap-2">
-              <CheckCircle className="h-4 w-4" />
-              <span>{feedbackMessage}</span>
-            </div>
-          )}
-
-          {branchesError && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-md">
-              {branchesError}
-            </div>
-          )}
-
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <h4 className="text-sm font-semibold text-gray-900">Sucursales</h4>
-              <p className="text-xs text-gray-500">
-                Visualiza y administra las ubicaciones habilitadas para este negocio.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRefresh}
-                disabled={branchesLoading || settingsLoading}
-                className="bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 hover:text-blue-700 disabled:bg-blue-50 disabled:text-blue-300"
-              >
-                {branchesLoading || settingsLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Actualizando...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Actualizar
-                  </>
-                )}
-              </Button>
-              {canManage && (
-                <Button size="sm" onClick={handleOpenCreate}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nueva sucursal
-                </Button>
+              {feedbackMessage && (
+                <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-md flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4" />
+                  <span>{feedbackMessage}</span>
+                </div>
               )}
-            </div>
-          </div>
 
-          {branchesLoading && (
-            <div className="flex items-center gap-2 text-blue-600 text-sm">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Cargando sucursales...</span>
-            </div>
-          )}
-
-          {!branchesLoading && !hasBranches && (
-            <div className="border border-dashed border-gray-300 rounded-lg px-4 py-6 text-center bg-white">
-              <div className="flex items-center justify-center gap-2 text-gray-500 mb-3">
-                <MapPin className="h-5 w-5" />
-                <span>No se registraron sucursales para este negocio.</span>
-              </div>
-              {canManage && (
-                <Button onClick={handleOpenCreate}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Crear primera sucursal
-                </Button>
+              {branchesError && (
+                <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-md">
+                  {branchesError}
+                </div>
               )}
-            </div>
-          )}
 
-          {!branchesLoading && hasBranches && (
-            <div className="space-y-3">
-              {branches.map((branch) => {
-                const branchId = String(branch.id);
-                const isUpdating = updatingBranchId === branchId;
-                return (
-                  <div
-                    key={branchId}
-                    className="bg-white border border-gray-200 rounded-lg px-4 py-3 flex flex-col gap-3"
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900">Sucursales</h4>
+                  <p className="text-xs text-gray-500">
+                    Visualiza y administra las ubicaciones habilitadas para este negocio.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRefresh}
+                    disabled={branchesLoading || settingsLoading}
+                    className="bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 hover:text-blue-700 disabled:bg-blue-50 disabled:text-blue-300"
                   >
-                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-3">
-                          <h5 className="text-base font-semibold text-gray-900">{branch.nombre}</h5>
-                          {branch.is_main && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded-full">
-                              <Star className="h-3 w-3" />
-                              Principal
-                            </span>
-                          )}
-                          {!branch.activo && (
-                            <span className="inline-flex items-center text-[11px] font-medium text-red-700 bg-red-50 px-2 py-1 rounded-full">
-                              Inactiva
-                            </span>
-                          )}
-                        </div>
-                        <div className="mt-2 space-y-1 text-sm text-gray-600">
-                          {branch.codigo && (
-                            <div className="flex items-center gap-2">
-                              <Hash className="h-4 w-4 text-gray-400" />
-                              <span>{branch.codigo}</span>
+                    {branchesLoading || settingsLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Actualizando...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Actualizar
+                      </>
+                    )}
+                  </Button>
+                  {canManage && (
+                    <Button size="sm" disabled className="opacity-70 cursor-not-allowed">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Nueva sucursal (Próximamente)
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {branchesLoading && (
+                <div className="flex items-center gap-2 text-blue-600 text-sm">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Cargando sucursales...</span>
+                </div>
+              )}
+
+              {!branchesLoading && !hasBranches && (
+                <div className="border border-dashed border-gray-300 rounded-lg px-4 py-6 text-center bg-white">
+                  <div className="flex items-center justify-center gap-2 text-gray-500 mb-3">
+                    <MapPin className="h-5 w-5" />
+                    <span>No se registraron sucursales para este negocio.</span>
+                  </div>
+                  {canManage && (
+                    <Button disabled className="opacity-70 cursor-not-allowed">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Crear primera sucursal (Próximamente)
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {!branchesLoading && hasBranches && (
+                <div className="space-y-3">
+                  {branches.map((branch) => {
+                    const branchId = String(branch.id);
+                    const isUpdating = updatingBranchId === branchId;
+                    return (
+                      <div
+                        key={branchId}
+                        className="bg-white border border-gray-200 rounded-lg px-4 py-3 flex flex-col gap-3"
+                      >
+                        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+                          <div>
+                            <div className="flex items-center gap-3">
+                              <h5 className="text-base font-semibold text-gray-900">{branch.nombre}</h5>
+                              {branch.is_main && (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded-full">
+                                  <Star className="h-3 w-3" />
+                                  Principal
+                                </span>
+                              )}
+                              {!branch.activo && (
+                                <span className="inline-flex items-center text-[11px] font-medium text-red-700 bg-red-50 px-2 py-1 rounded-full">
+                                  Inactiva
+                                </span>
+                              )}
                             </div>
-                          )}
-                          {branch.direccion && (
-                            <div className="flex items-center gap-2">
-                              <MapPin className="h-4 w-4 text-gray-400" />
-                              <span>{branch.direccion}</span>
+                            <div className="mt-2 space-y-1 text-sm text-gray-600">
+                              {branch.codigo && (
+                                <div className="flex items-center gap-2">
+                                  <Hash className="h-4 w-4 text-gray-400" />
+                                  <span>{branch.codigo}</span>
+                                </div>
+                              )}
+                              {branch.direccion && (
+                                <div className="flex items-center gap-2">
+                                  <MapPin className="h-4 w-4 text-gray-400" />
+                                  <span>{branch.direccion}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          {canManage && (
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEditBranch(branch)}
+                              >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Editar
+                              </Button>
+                              <Button
+                                variant={branch.activo ? 'outline' : 'success'}
+                                size="sm"
+                                onClick={() => handleToggleActive(branch)}
+                                disabled={isUpdating}
+                              >
+                                {isUpdating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                                <span>{branch.activo ? 'Desactivar' : 'Activar'}</span>
+                              </Button>
+                              {!branch.is_main && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleSetMain(branch)}
+                                  disabled={isUpdating}
+                                  className="bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 hover:text-blue-700 disabled:bg-blue-50 disabled:text-blue-300"
+                                >
+                                  {isUpdating ? (
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  ) : (
+                                    <Star className="h-4 w-4 mr-2" />
+                                  )}
+                                  Hacer principal
+                                </Button>
+                              )}
                             </div>
                           )}
                         </div>
                       </div>
-                      {canManage && (
-                        <div className="flex flex-wrap items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditBranch(branch)}
-                          >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Editar
-                          </Button>
-                          <Button
-                            variant={branch.activo ? 'outline' : 'success'}
-                            size="sm"
-                            onClick={() => handleToggleActive(branch)}
-                            disabled={isUpdating}
-                          >
-                            {isUpdating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                            <span>{branch.activo ? 'Desactivar' : 'Activar'}</span>
-                          </Button>
-                          {!branch.is_main && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleSetMain(branch)}
-                              disabled={isUpdating}
-                              className="bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 hover:text-blue-700 disabled:bg-blue-50 disabled:text-blue-300"
-                            >
-                              {isUpdating ? (
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              ) : (
-                                <Star className="h-4 w-4 mr-2" />
-                              )}
-                              Hacer principal
-                            </Button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                    );
+                  })}
+                </div>
+              )}
 
-          {canManage && (
-            <div className="space-y-3">
-              <div>
-                <h4 className="text-sm font-semibold text-gray-900">Preferencias del negocio</h4>
-                <p className="text-xs text-gray-500">
-                  Ajusta cÃ³mo operan las sucursales en inventario, servicios y transferencias.
-                </p>
-              </div>
-              {settingsLoading && (
-                <div className="flex items-center gap-2 text-blue-600 text-sm">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Cargando configuraciÃ³n...</span>
+              {canManage && (
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-900">Preferencias del negocio</h4>
+                    <p className="text-xs text-gray-500">
+                      Ajusta cÃ³mo operan las sucursales en inventario, servicios y transferencias.
+                    </p>
+                  </div>
+                  {settingsLoading && (
+                    <div className="flex items-center gap-2 text-blue-600 text-sm">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Cargando configuraciÃ³n...</span>
+                    </div>
+                  )}
+                  {!settingsLoading && settings && (
+                    <BranchSettingsPanel
+                      branches={branches}
+                      settings={settings}
+                      saving={savingSettings}
+                      error={settingsError}
+                      onSave={handleSaveSettings}
+                    />
+                  )}
+                  {!settingsLoading && !settings && (
+                    <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-md">
+                      {settingsError || 'No se pudo cargar la configuraciÃ³n actual de este negocio.'}
+                    </div>
+                  )}
                 </div>
               )}
-              {!settingsLoading && settings && (
-                <BranchSettingsPanel
-                  branches={branches}
-                  settings={settings}
-                  saving={savingSettings}
-                  error={settingsError}
-                  onSave={handleSaveSettings}
-                />
-              )}
-              {!settingsLoading && !settings && (
-                <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-md">
-                  {settingsError || 'No se pudo cargar la configuraciÃ³n actual de este negocio.'}
-                </div>
-              )}
-            </div>
-          )}
             </div>
           </div>
         </div>
@@ -1055,7 +1053,7 @@ function BusinessUsers() {
 
   const handleCreateBusiness = async (e) => {
     e.preventDefault();
-    
+
     if (!newBusiness.nombre.trim() || !newBusiness.tipo) {
       alert('Por favor completa todos los campos obligatorios');
       return;
@@ -1075,7 +1073,7 @@ function BusinessUsers() {
     if (!confirm(`Â¿EstÃ¡s seguro de que quieres eliminar el negocio "${businessName}"? Esta acciÃ³n no se puede deshacer.`)) {
       return;
     }
-    
+
     try {
       await deleteBusinessMutation.mutateAsync(businessId);
     } catch (err) {
@@ -1106,8 +1104,8 @@ function BusinessUsers() {
   const errorMessage = !currentUser
     ? 'Usuario no autenticado'
     : businessesQueryError
-    ? extractErrorMessage(businessesQueryError, 'Error al cargar los datos')
-    : null;
+      ? extractErrorMessage(businessesQueryError, 'Error al cargar los datos')
+      : null;
 
   if (isLoading) {
     return (
@@ -1170,7 +1168,7 @@ function BusinessUsers() {
 
         {/* Main Content */}
         <div className="max-w-full md:max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-8">
-        
+
           {/* Formulario de creaciÃ³n */}
           {showCreateForm && (
             <Card className="mb-8">
@@ -1193,7 +1191,7 @@ function BusinessUsers() {
                         required
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Tipo de Negocio *
@@ -1211,20 +1209,20 @@ function BusinessUsers() {
                       </select>
                     </div>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      DescripciÃ³n
+                      Descripción
                     </label>
                     <textarea
                       value={newBusiness.descripcion}
                       onChange={(e) => setNewBusiness(prev => ({ ...prev, descripcion: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                       rows="3"
-                      placeholder="DescripciÃ³n opcional del negocio"
+                      placeholder="Descripción opcional del negocio"
                     />
                   </div>
-                  
+
                   <div className="flex gap-2 pt-4">
                     <Button type="submit" disabled={creating}>
                       {creating ? (
@@ -1279,7 +1277,7 @@ function BusinessUsers() {
                             <p className="text-sm text-gray-500">{business.tipo}</p>
                           </div>
                         </div>
-                        
+
                         <div className="flex gap-1">
                           <button
                             onClick={() => handleOpenSettings(business)}
@@ -1290,31 +1288,31 @@ function BusinessUsers() {
                             <Settings className="h-4 w-4" />
                           </button>
                           {business.rol === 'admin' && (
-                          <button
-                            onClick={() => handleDeleteBusiness(business.id, business.nombre)}
-                            className="p-2 rounded-md bg-white border border-gray-200 text-red-600 hover:bg-red-50 hover:border-red-200 transition-colors disabled:opacity-50 disabled:pointer-events-none"
-                            title="Eliminar negocio"
-                            aria-label={`Eliminar ${business.nombre}`}
-                            disabled={deleting}
-                          >
+                            <button
+                              onClick={() => handleDeleteBusiness(business.id, business.nombre)}
+                              className="p-2 rounded-md bg-white border border-gray-200 text-red-600 hover:bg-red-50 hover:border-red-200 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                              title="Eliminar negocio"
+                              aria-label={`Eliminar ${business.nombre}`}
+                              disabled={deleting}
+                            >
                               <Trash2 className="h-4 w-4" />
                             </button>
                           )}
                         </div>
                       </div>
-                      
+
                       {business.descripcion && (
                         <p className="text-sm text-gray-600 mb-4 line-clamp-2">
                           {business.descripcion}
                         </p>
                       )}
-                      
+
                       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                         <div className="flex items-center gap-2 text-sm text-gray-500">
                           <CheckCircle className="h-4 w-4 text-green-500" />
                           Activo
                         </div>
-                        
+
                         <div className="text-xs text-gray-400">
                           ID: {business.id}
                         </div>

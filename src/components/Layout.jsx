@@ -83,7 +83,7 @@ const Sidebar = ({
       icon: ShoppingCart,
       hasDropdown: true,
       subItems: [
-        { id: 'purchases', label: 'Ã“rdenes de compra', icon: ShoppingCart, onClick: () => safeNavigate('/compras') },
+        { id: 'purchases', label: 'Ordenes de compra', icon: ShoppingCart, onClick: () => safeNavigate('/compras') },
         { id: 'suppliers', label: 'Proveedores', icon: Truck, onClick: () => safeNavigate('/proveedores') }
       ]
     },
@@ -94,15 +94,16 @@ const Sidebar = ({
       hasDropdown: true,
       subItems: [
         { id: 'products', label: 'Productos y servicios', icon: Package, onClick: () => safeNavigate('/products-and-services') },
-        { id: 'categories', label: 'CategorÃ­as', icon: BarChart3, onClick: () => safeNavigate('/categories') }
+        { id: 'categories', label: 'Categorías', icon: BarChart3, onClick: () => safeNavigate('/categories') },
+        { id: 'stock-transfers', label: 'Transferencias (próximamente)', icon: ArrowLeftRight, disabled: true }
       ]
     },
-    { id: 'stock-transfers', label: 'Transferencias', icon: ArrowLeftRight, onClick: () => safeNavigate('/stock-transfers') },
+
     { id: 'clients', label: 'Clientes', icon: Users, onClick: () => safeNavigate('/customers') },
     { id: 'finances', label: 'Finanzas', icon: BarChart3, onClick: () => safeNavigate('/finanzas') },
     { id: 'tasks', label: 'Tareas', icon: Clock, onClick: () => safeNavigate('/tasks') },
     { id: 'billing', label: 'Facturación (próximamente)', icon: FileText, disabled: true },
-    { id: 'settings', label: 'Configuración', icon: Settings, onClick: () => safeNavigate('/settings/branch-preferences') },
+    { id: 'settings', label: 'Configuración', icon: Settings, onClick: () => safeNavigate('/profile') },
   ];
 
   return (

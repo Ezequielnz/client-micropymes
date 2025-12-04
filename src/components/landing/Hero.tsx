@@ -8,7 +8,7 @@ const Hero = () => {
     <section id="inicio" className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 relative overflow-hidden py-12 sm:py-16 md:py-20 lg:py-24 scroll-mt-24">
       {/* Background decoration */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%239CA3AF%22 fill-opacity=%220.03%22 fill-rule=%22nonzero%22%3E%3Cpath d=%22m36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div>
-      
+
       <div className="max-w-7xl mx-auto px-6 sm:px-8 md:px-12 lg:px-16 relative">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 xl:gap-24 items-center">
           {/* Left side - Content */}
@@ -29,26 +29,26 @@ const Hero = () => {
 
             {/* Subtitle */}
             <p className="text-xl text-gray-600 max-w-3xl mb-8 text-left">
-              Los ERPs ya no tienen que ser lentos ni complicados. 
+              Los ERPs ya no tienen que ser lentos ni complicados.
               OperixML integra módulos inteligentes y un uso intuitivo para que trabajes mejor y tu negocio avance más rápido.
             </p>
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-4 justify-center lg:justify-start mb-8 w-full">
-  <button
-    className="flex bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all transform hover:scale-105 items-center justify-center space-x-2 shadow-lg hover:shadow-xl whitespace-nowrap"
-    onClick={() => navigate('/register')}
-  >
-    <span className="whitespace-nowrap">Empezá gratis por 14 días</span>
-    <ChevronRight size={20} />
-  </button>
-  <button
-    className="flex border border-gray-300 hover:border-gray-400 text-gray-700 px-8 py-4 rounded-xl font-semibold text-lg transition-all items-center justify-center space-x-2 hover:bg-gray-50 !bg-white whitespace-nowrap"
-  >
-    <Play size={20} />
-    <span className="whitespace-nowrap">Ver demo (2 min)</span>
-  </button>
-</div>
+              <button
+                className="flex bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all transform hover:scale-105 items-center justify-center space-x-2 shadow-lg hover:shadow-xl whitespace-nowrap"
+                onClick={() => navigate('/register')}
+              >
+                <span className="whitespace-nowrap">Empezá gratis por 30 días</span>
+                <ChevronRight size={20} />
+              </button>
+              <button
+                className="flex border border-gray-300 hover:border-gray-400 text-gray-700 px-8 py-4 rounded-xl font-semibold text-lg transition-all items-center justify-center space-x-2 hover:bg-gray-50 !bg-white whitespace-nowrap"
+              >
+                <Play size={20} />
+                <span className="whitespace-nowrap">Ver demo (2 min)</span>
+              </button>
+            </div>
 
             {/* Trust indicators */}
             <div className="text-sm text-gray-500 flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">

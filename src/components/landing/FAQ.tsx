@@ -7,7 +7,7 @@ const FAQ = () => {
   const faqs = [
     {
       question: "¿Necesito tarjeta de crédito para la prueba gratuita?",
-      answer: "No, para nada. Podés probar OperixML durante 14 días completamente gratis sin necesidad de ingresar ninguna tarjeta de crédito. Solo necesitás tu email para registrarte."
+      answer: "No, para nada. Podés probar OperixML durante 30 días completamente gratis sin necesidad de ingresar ninguna tarjeta de crédito. Solo necesitás tu email para registrarte."
     },
     {
       question: "¿Puedo cancelar en cualquier momento?",
@@ -18,7 +18,7 @@ const FAQ = () => {
       answer: "Para nada. OperixML está diseñado para ser intuitivo desde el primer día. Incluimos configuración guiada, importación de datos asistida y todo el soporte que necesités. La mayoría de nuestros clientes están operativos en menos de una semana."
     },
     {
-      question: "¿Qué pasa después de los 14 días de prueba?",
+      question: "¿Qué pasa después de los 30 días de prueba?",
       answer: "Cuando termine tu prueba, vas a recibir una notificación para elegir un plan. Si no elegís ninguno, tu cuenta se mantiene activa en modo solo lectura por 30 días más, para que puedas descargar tu información si lo necesitás."
     }
   ];
@@ -39,7 +39,7 @@ const FAQ = () => {
         {/* FAQ Items */}
         <div className="space-y-4">
           {faqs.map((faq, index) => (
-            <div 
+            <div
               key={index}
               className="bg-white rounded-xl border border-gray-200 overflow-hidden"
             >
@@ -56,7 +56,7 @@ const FAQ = () => {
                   <ChevronDown size={20} className="text-gray-500 flex-shrink-0" />
                 )}
               </button>
-              
+
               {openIndex === index && (
                 <div className="px-6 pb-6">
                   <p className="text-gray-600 leading-relaxed">

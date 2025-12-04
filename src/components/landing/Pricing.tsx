@@ -19,6 +19,7 @@ const Pricing = () => {
 
         {/* Pricing Cards */}
         <div className="grid sm:grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mb-16">
+
           {/* Starter Plan */}
           <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl border border-gray-200 hover:border-gray-300 transition-all">
             <div className="text-center mb-8">
@@ -30,7 +31,7 @@ const Pricing = () => {
               </div>
               <p className="text-sm text-gray-500">Hasta 5 usuarios</p>
             </div>
-            
+
             <ul className="space-y-3 mb-8">
               {[
                 "Módulos básicos (Ventas + Inventario)",
@@ -45,8 +46,8 @@ const Pricing = () => {
                 </li>
               ))}
             </ul>
-            
-            <button 
+
+            <button
               className="w-full bg-white border border-blue-600 hover:border-blue-700 text-blue-600 hover:text-blue-700 py-3 rounded-xl font-semibold transition-all hover:bg-blue-50"
               onClick={() => navigate('/register')}
             >
@@ -62,7 +63,7 @@ const Pricing = () => {
                 <span>Más popular</span>
               </div>
             </div>
-            
+
             <div className="text-center mb-8">
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Profesional</h3>
               <p className="text-gray-600 mb-4">Para PyMEs en crecimiento</p>
@@ -72,7 +73,7 @@ const Pricing = () => {
               </div>
               <p className="text-sm text-gray-500">Hasta 20 usuarios</p>
             </div>
-            
+
             <ul className="space-y-3 mb-8">
               {[
                 "Todos los módulos incluidos",
@@ -89,8 +90,8 @@ const Pricing = () => {
                 </li>
               ))}
             </ul>
-            
-            <button 
+
+            <button
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
               onClick={() => navigate('/register')}
             >
@@ -108,7 +109,7 @@ const Pricing = () => {
               </div>
               <p className="text-sm text-gray-500">Usuarios ilimitados</p>
             </div>
-            
+
             <ul className="space-y-3 mb-8">
               {[
                 "Instalación on-premise disponible",
@@ -125,7 +126,7 @@ const Pricing = () => {
                 </li>
               ))}
             </ul>
-            
+
             <a href="mailto:contacto@operixml.com" className="w-full inline-block text-center bg-white border border-blue-600 hover:border-blue-700 text-blue-600 hover:text-blue-700 py-3 rounded-xl font-semibold transition-all hover:bg-blue-50">
               Contactar ventas
             </a>
@@ -138,7 +139,7 @@ const Pricing = () => {
             Probalo gratis. Elegí el plan cuando estés listo.
           </h3>
           <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-            Los 14 días de prueba incluyen acceso completo a todas las funciones. 
+            Los 14 días de prueba incluyen acceso completo a todas las funciones.
             No necesitás tarjeta de crédito y podés cancelar en cualquier momento.
           </p>
           <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all transform hover:scale-105 flex items-center space-x-2 mx-auto shadow-lg hover:shadow-xl" onClick={() => navigate('/register')}>

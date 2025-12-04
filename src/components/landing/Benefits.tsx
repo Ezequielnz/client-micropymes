@@ -1,10 +1,10 @@
 
 import { Link } from 'react-router-dom';
-import { 
-  Clock, 
-  Shield, 
-  TrendingUp, 
-  Target, 
+import {
+  Clock,
+  Shield,
+  TrendingUp,
+  Target,
   Heart,
   CheckCircle
 } from 'lucide-react';
@@ -61,7 +61,7 @@ const Benefits = () => {
           {benefits.map((benefit, index) => {
             const Icon = benefit.icon;
             return (
-              <div 
+              <div
                 key={index}
                 className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300"
               >
@@ -111,7 +111,7 @@ const Benefits = () => {
             </div>
             <div className="text-center lg:text-right">
               <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-6 lg:p-8 rounded-2xl text-center lg:text-right">
-                <div className="text-4xl font-bold text-blue-600 mb-2">14 días</div>
+                <div className="text-4xl font-bold text-blue-600 mb-2">30 días</div>
                 <p className="text-gray-700 font-medium mb-4">
                   es todo lo que necesitás para ver la diferencia
                 </p>

@@ -1,4 +1,4 @@
-# Guía de Implementación: Carga Masiva de Productos desde PDF
+    # Guía de Implementación: Carga Masiva de Productos desde PDF
 
 Esta guía detalla el proceso técnico para integrar la funcionalidad de carga de catálogos PDF en tu sistema. Basado en el análisis del archivo `LISTA DE PRECIOS MAYORISTA 15-10-2025.pdf`, hemos diseñado una solución a medida.
 

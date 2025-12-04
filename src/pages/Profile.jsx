@@ -6,7 +6,7 @@ import PageHeader from '../components/PageHeader';
 
 const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', disabled = false, ...props }) => {
   const baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
-  
+
   const variants = {
     default: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
     outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500',
@@ -14,15 +14,15 @@ const Button = ({ children, onClick, variant = 'default', size = 'default', clas
     destructive: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
     success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500'
   };
-  
+
   const sizes = {
     sm: 'h-8 px-3 text-sm',
     default: 'h-10 px-4 py-2',
     lg: 'h-12 px-6 text-lg'
   };
-  
+
   const classes = `${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`;
-  
+
   return (
     <button className={classes} onClick={onClick} disabled={disabled} {...props}>
       {children}
@@ -61,7 +61,7 @@ const Alert = ({ children, variant = 'default', className = '' }) => {
     error: 'border-red-200 bg-red-50 text-red-800',
     warning: 'border-yellow-200 bg-yellow-50 text-yellow-800'
   };
-  
+
   return (
     <div className={`border rounded-lg p-4 ${variants[variant]} ${className}`}>
       {children}
@@ -77,20 +77,20 @@ function Profile() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const [profileForm, setProfileForm] = useState({
     nombre: '',
     apellido: '',
     email: '',
     telefono: ''
   });
-  
+
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
-  
+
   useEffect(() => {
     const loadUserData = async () => {
       try {
@@ -123,20 +123,20 @@ function Profile() {
     try {
       // Usar la función real del API
       const updatedUser = await authAPI.updateProfile(profileForm);
-      
-      setMessage({ 
-        type: 'success', 
-        text: 'Perfil actualizado correctamente' 
+
+      setMessage({
+        type: 'success',
+        text: 'Perfil actualizado correctamente'
       });
-      
+
       // Actualizar el usuario en AuthContext
       login({ ...user, ...updatedUser }, user.access_token);
-      
+
     } catch (error) {
       console.error('Error updating profile:', error);
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.detail || 'Error al actualizar el perfil. Por favor, inténtalo de nuevo.' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.detail || 'Error al actualizar el perfil. Por favor, inténtalo de nuevo.'
       });
     } finally {
       setUpdating(false);
@@ -150,9 +150,9 @@ function Profile() {
 
     // Validar que las contraseñas coincidan
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setMessage({ 
-        type: 'error', 
-        text: 'Las contraseñas no coinciden' 
+      setMessage({
+        type: 'error',
+        text: 'Las contraseñas no coinciden'
       });
       setUpdating(false);
       return;
@@ -160,9 +160,9 @@ function Profile() {
 
     // Validar que la nueva contraseña tenga al menos 6 caracteres
     if (passwordForm.newPassword.length < 6) {
-      setMessage({ 
-        type: 'error', 
-        text: 'La nueva contraseña debe tener al menos 6 caracteres' 
+      setMessage({
+        type: 'error',
+        text: 'La nueva contraseña debe tener al menos 6 caracteres'
       });
       setUpdating(false);
       return;
@@ -174,24 +174,24 @@ function Profile() {
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword
       });
-      
-      setMessage({ 
-        type: 'success', 
-        text: 'Contraseña actualizada correctamente' 
+
+      setMessage({
+        type: 'success',
+        text: 'Contraseña actualizada correctamente'
       });
-      
+
       // Limpiar el formulario
       setPasswordForm({
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
       });
-      
+
     } catch (error) {
       console.error('Error updating password:', error);
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.detail || 'Error al actualizar la contraseña. Por favor, inténtalo de nuevo.' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.detail || 'Error al actualizar la contraseña. Por favor, inténtalo de nuevo.'
       });
     } finally {
       setUpdating(false);
@@ -201,8 +201,8 @@ function Profile() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <PageHeader 
-          title="Perfil de Usuario" 
+        <PageHeader
+          title="Perfil de Usuario"
           icon={User}
           showBackButton={true}
           showHomeButton={true}
@@ -218,26 +218,25 @@ function Profile() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <PageHeader 
-        title="Perfil de Usuario" 
+      <PageHeader
+        title="Perfil de Usuario"
         subtitle="Gestiona tu información personal y configuración de cuenta"
         icon={User}
         showBackButton={true}
         showHomeButton={true}
       />
-      
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Mensaje de estado */}
         {message.text && (
-          <Alert 
-            variant={message.type} 
-            className={`mb-6 flex items-center space-x-2 ${
-              message.type === 'success' ? 'border-green-200 bg-green-50 text-green-800' :
-              message.type === 'error' ? 'border-red-200 bg-red-50 text-red-800' : ''
-            }`}
+          <Alert
+            variant={message.type}
+            className={`mb-6 flex items-center space-x-2 ${message.type === 'success' ? 'border-green-200 bg-green-50 text-green-800' :
+                message.type === 'error' ? 'border-red-200 bg-red-50 text-red-800' : ''
+              }`}
           >
-            {message.type === 'success' ? 
-              <CheckCircle className="h-5 w-5" /> : 
+            {message.type === 'success' ?
+              <CheckCircle className="h-5 w-5" /> :
               <AlertCircle className="h-5 w-5" />
             }
             <span>{message.text}</span>
@@ -264,7 +263,7 @@ function Profile() {
                     id="nombre"
                     value={profileForm.nombre}
                     onChange={(e) => setProfileForm(prev => ({ ...prev, nombre: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
                 </div>
@@ -278,7 +277,7 @@ function Profile() {
                     id="apellido"
                     value={profileForm.apellido}
                     onChange={(e) => setProfileForm(prev => ({ ...prev, apellido: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
@@ -291,7 +290,7 @@ function Profile() {
                     id="email"
                     value={profileForm.email}
                     onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
                 </div>
@@ -305,7 +304,7 @@ function Profile() {
                     id="telefono"
                     value={profileForm.telefono}
                     onChange={(e) => setProfileForm(prev => ({ ...prev, telefono: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
@@ -350,7 +349,7 @@ function Profile() {
                       id="currentPassword"
                       value={passwordForm.currentPassword}
                       onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 pr-10 text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     />
                     <button
@@ -377,7 +376,7 @@ function Profile() {
                       id="newPassword"
                       value={passwordForm.newPassword}
                       onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 pr-10 text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                       minLength={6}
                     />
@@ -408,7 +407,7 @@ function Profile() {
                       id="confirmPassword"
                       value={passwordForm.confirmPassword}
                       onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 pr-10 text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     />
                     <button
@@ -466,39 +465,39 @@ function Profile() {
                   {user?.id || 'No disponible'}
                 </p>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Fecha de Registro
                 </label>
                 <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded border">
-                  {user?.created_at ? 
+                  {user?.created_at ?
                     new Date(user.created_at).toLocaleDateString('es-ES', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'
-                    }) : 
+                    }) :
                     'No disponible'
                   }
                 </p>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Última Actualización
                 </label>
                 <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded border">
-                  {user?.updated_at ? 
+                  {user?.updated_at ?
                     new Date(user.updated_at).toLocaleDateString('es-ES', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'
-                    }) : 
+                    }) :
                     'No disponible'
                   }
                 </p>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Estado de la Cuenta
