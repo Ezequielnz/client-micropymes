@@ -241,6 +241,21 @@ const ProductsAndServices = () => {
     descripcion: ''
   });
 
+  // ✅ Search State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeSearchQuery, setActiveSearchQuery] = useState('');
+
+  // ✅ Search Handlers
+  const handleSearch = useCallback(() => {
+    setActiveSearchQuery(searchQuery);
+  }, [searchQuery]);
+
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  }, [handleSearch]);
+
   // ✅ OPTIMIZED: Memoized permissions for products
   const canEditProducts = useMemo(() => canEdit('productos'), [canEdit]);
   const canDeleteProducts = useMemo(() => canDelete('productos'), [canDelete]);
@@ -399,10 +414,24 @@ const ProductsAndServices = () => {
     }));
   }, [services]);
 
-  // ✅ OPTIMIZED: Smart current data selection
+  // ✅ OPTIMIZED: Smart current data selection with Search Filtering
   const currentData = useMemo(() => {
-    return activeTab === 'products' ? processedProducts : processedServices;
-  }, [activeTab, processedProducts, processedServices]);
+    let data = activeTab === 'products' ? processedProducts : processedServices;
+
+    if (activeSearchQuery.trim()) {
+      const query = activeSearchQuery.toLowerCase().trim();
+      data = data.filter(item => {
+        const nameMatch = (item.name || '').toLowerCase().includes(query);
+        const descMatch = (item.description || '').toLowerCase().includes(query);
+        // For products, also check code
+        const codeMatch = activeTab === 'products' && (item.code || '').toLowerCase().includes(query);
+
+        return nameMatch || descMatch || codeMatch;
+      });
+    }
+
+    return data;
+  }, [activeTab, processedProducts, processedServices, activeSearchQuery]);
 
   // ✅ OPTIMIZED: Computed loading state
   const isLoading = useMemo(() => {
@@ -679,6 +708,65 @@ const ProductsAndServices = () => {
         </div>
       </div>
 
+
+      {/* Search Bar - Optimized to only trigger on Enter/Button */}
+      <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
+        <input
+          type="text"
+          placeholder={activeTab === 'products' ? "Buscar producto por código, nombre o descripción..." : "Buscar servicio por nombre o descripción..."}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
+          style={{
+            flex: 1,
+            padding: '10px',
+            border: '1px solid #ddd',
+            borderRadius: '5px',
+            fontSize: '16px',
+            outline: 'none',
+            boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)'
+          }}
+        />
+        <button
+          onClick={handleSearch}
+          style={{
+            padding: '10px 25px',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontSize: '16px',
+            fontWeight: '500',
+            transition: 'background-color 0.2s'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#0056b3'}
+          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#007bff'}
+        >
+          Buscar
+        </button>
+        {activeSearchQuery && (
+          <button
+            onClick={() => {
+              setSearchQuery('');
+              setActiveSearchQuery('');
+            }}
+            style={{
+              padding: '10px 15px',
+              backgroundColor: '#e2e6ea',
+              color: '#333',
+              border: '1px solid #d3d9df',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              fontSize: '16px'
+            }}
+            title="Limpiar búsqueda"
+          >
+            ✕
+          </button>
+        )}
+      </div>
+
       {/* Add Button */}
       <div style={{ marginBottom: '20px' }}>
         {canEditProducts && (
@@ -735,56 +823,78 @@ const ProductsAndServices = () => {
       />
 
       {/* Modal - keeping original structure but with optimized handlers */}
-      {showModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
+      {
+        showModal && (
           <div style={{
-            backgroundColor: 'white',
-            padding: '20px',
-            borderRadius: '8px',
-            width: '90%',
-            maxWidth: '500px',
-            maxHeight: '90vh',
-            overflow: 'auto'
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
           }}>
-            <h2 style={{ marginBottom: '20px', color: '#333' }}>
-              {editingItem ? 'Editar' : 'Agregar'} {activeTab === 'products' ? 'Producto' : 'Servicio'}
-            </h2>
+            <div style={{
+              backgroundColor: 'white',
+              padding: '20px',
+              borderRadius: '8px',
+              width: '90%',
+              maxWidth: '500px',
+              maxHeight: '90vh',
+              overflow: 'auto'
+            }}>
+              <h2 style={{ marginBottom: '20px', color: '#333' }}>
+                {editingItem ? 'Editar' : 'Agregar'} {activeTab === 'products' ? 'Producto' : 'Servicio'}
+              </h2>
 
-            {modalError && (
-              <div style={{
-                backgroundColor: '#fee2e2',
-                border: '1px solid #ef4444',
-                color: '#b91c1c',
-                padding: '10px',
-                borderRadius: '4px',
-                marginBottom: '15px',
-                fontSize: '14px'
-              }}>
-                {modalError}
-              </div>
-            )}
+              {modalError && (
+                <div style={{
+                  backgroundColor: '#fee2e2',
+                  border: '1px solid #ef4444',
+                  color: '#b91c1c',
+                  padding: '10px',
+                  borderRadius: '4px',
+                  marginBottom: '15px',
+                  fontSize: '14px'
+                }}>
+                  {modalError}
+                </div>
+              )}
 
-            <form onSubmit={handleSubmit}>
-              {activeTab === 'products' && (
+              <form onSubmit={handleSubmit}>
+                {activeTab === 'products' && (
+                  <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
+                      Código
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.code}
+                      onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        color: '#333'
+                      }}
+                    />
+                  </div>
+                )}
+
                 <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
-                    Código
+                    Nombre *
                   </label>
                   <input
                     type="text"
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
                     style={{
                       width: '100%',
                       padding: '8px',
@@ -795,79 +905,37 @@ const ProductsAndServices = () => {
                     }}
                   />
                 </div>
-              )}
 
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
-                  Nombre *
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    color: '#333'
-                  }}
-                />
-              </div>
-
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
-                  Descripción
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows="3"
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    resize: 'vertical',
-                    color: '#333'
-                  }}
-                />
-              </div>
-
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
-                  Precio *
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    color: '#333'
-                  }}
-                />
-              </div>
-
-              {activeTab === 'products' && (
                 <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
-                    Precio de compra
+                    Descripción
+                  </label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows="3"
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      resize: 'vertical',
+                      color: '#333'
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
+                    Precio *
                   </label>
                   <input
                     type="number"
                     step="0.01"
-                    value={formData.purchasePrice}
-                    onChange={(e) => setFormData({ ...formData, purchasePrice: e.target.value })}
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    required
                     style={{
                       width: '100%',
                       padding: '8px',
@@ -878,269 +946,295 @@ const ProductsAndServices = () => {
                     }}
                   />
                 </div>
-              )}
 
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
-                  Categoría
-                </label>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'stretch' }}>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                {activeTab === 'products' && (
+                  <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
+                      Precio de compra
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formData.purchasePrice}
+                      onChange={(e) => setFormData({ ...formData, purchasePrice: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        color: '#333'
+                      }}
+                    />
+                  </div>
+                )}
+
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
+                    Categoría
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'stretch' }}>
+                    <select
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      style={{
+                        flex: 1,
+                        padding: '8px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        color: '#333'
+                      }}
+                    >
+                      <option value="">Seleccionar categoría</option>
+                      {categories.map((categoria) => (
+                        <option key={categoria.id} value={categoria.id}>
+                          {categoria.nombre}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => setShowCategoryModal(true)}
+                      disabled={isMutating}
+                      style={{
+                        backgroundColor: '#28a745',
+                        color: 'white',
+                        padding: '8px 12px',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: isMutating ? 'not-allowed' : 'pointer',
+                        fontSize: '16px',
+                        fontWeight: 'bold',
+                        minWidth: '40px',
+                        opacity: isMutating ? 0.6 : 1
+                      }}
+                      title="Agregar nueva categoría"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {activeTab === 'products' && (
+                  <>
+                    <div style={{ marginBottom: '15px' }}>
+                      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
+                        Stock
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.stock}
+                        onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          border: '1px solid #ddd',
+                          borderRadius: '4px',
+                          fontSize: '14px',
+                          color: '#333'
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ marginBottom: '15px' }}>
+                      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
+                        Unidad
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.unit}
+                        onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                        placeholder="ej: kg, unidades, litros"
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          border: '1px solid #ddd',
+                          borderRadius: '4px',
+                          fontSize: '14px',
+                          color: '#333'
+                        }}
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    onClick={handleCloseModal}
+                    disabled={isMutating}
                     style={{
-                      flex: 1,
+                      backgroundColor: '#6c757d',
+                      color: 'white',
+                      padding: '10px 20px',
+                      border: 'none',
+                      borderRadius: '5px',
+                      cursor: isMutating ? 'not-allowed' : 'pointer',
+                      opacity: isMutating ? 0.6 : 1
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isMutating}
+                    style={{
+                      backgroundColor: '#007bff',
+                      color: 'white',
+                      padding: '10px 20px',
+                      border: 'none',
+                      borderRadius: '5px',
+                      cursor: isMutating ? 'not-allowed' : 'pointer',
+                      opacity: isMutating ? 0.6 : 1
+                    }}
+                  >
+                    {isMutating ? 'Guardando...' : (editingItem ? 'Actualizar' : 'Guardar')}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )
+      }
+
+      {/* Category Modal */}
+      {
+        showCategoryModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              backgroundColor: 'white',
+              padding: '20px',
+              borderRadius: '8px',
+              width: '90%',
+              maxWidth: '400px',
+              maxHeight: '90vh',
+              overflow: 'auto'
+            }}>
+              <h2 style={{ marginBottom: '20px', color: '#333' }}>
+                Agregar Categoría
+              </h2>
+
+              <form onSubmit={handleCreateCategory}>
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
+                    Nombre *
+                  </label>
+                  <input
+                    type="text"
+                    value={categoryFormData.nombre}
+                    onChange={(e) => setCategoryFormData({ ...categoryFormData, nombre: e.target.value })}
+                    required
+                    style={{
+                      width: '100%',
                       padding: '8px',
                       border: '1px solid #ddd',
                       borderRadius: '4px',
                       fontSize: '14px',
                       color: '#333'
                     }}
-                  >
-                    <option value="">Seleccionar categoría</option>
-                    {categories.map((categoria) => (
-                      <option key={categoria.id} value={categoria.id}>
-                        {categoria.nombre}
-                      </option>
-                    ))}
-                  </select>
+                  />
+                </div>
+
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
+                    Descripción
+                  </label>
+                  <textarea
+                    value={categoryFormData.descripcion}
+                    onChange={(e) => setCategoryFormData({ ...categoryFormData, descripcion: e.target.value })}
+                    rows="3"
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      resize: 'vertical',
+                      color: '#333'
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                   <button
                     type="button"
-                    onClick={() => setShowCategoryModal(true)}
-                    disabled={isMutating}
+                    onClick={handleCloseCategoryModal}
+                    disabled={createCategoryMutation.isPending}
                     style={{
-                      backgroundColor: '#28a745',
+                      backgroundColor: '#6c757d',
                       color: 'white',
-                      padding: '8px 12px',
+                      padding: '10px 20px',
                       border: 'none',
-                      borderRadius: '4px',
-                      cursor: isMutating ? 'not-allowed' : 'pointer',
-                      fontSize: '16px',
-                      fontWeight: 'bold',
-                      minWidth: '40px',
-                      opacity: isMutating ? 0.6 : 1
+                      borderRadius: '5px',
+                      cursor: createCategoryMutation.isPending ? 'not-allowed' : 'pointer',
+                      opacity: createCategoryMutation.isPending ? 0.6 : 1
                     }}
-                    title="Agregar nueva categoría"
                   >
-                    +
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={createCategoryMutation.isPending}
+                    style={{
+                      backgroundColor: '#007bff',
+                      color: 'white',
+                      padding: '10px 20px',
+                      border: 'none',
+                      borderRadius: '5px',
+                      cursor: createCategoryMutation.isPending ? 'not-allowed' : 'pointer',
+                      opacity: createCategoryMutation.isPending ? 0.6 : 1
+                    }}
+                  >
+                    {createCategoryMutation.isPending ? 'Guardando...' : 'Guardar'}
                   </button>
                 </div>
-              </div>
-
-              {activeTab === 'products' && (
-                <>
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
-                      Stock
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.stock}
-                      onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '8px',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        fontSize: '14px',
-                        color: '#333'
-                      }}
-                    />
-                  </div>
-
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
-                      Unidad
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.unit}
-                      onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                      placeholder="ej: kg, unidades, litros"
-                      style={{
-                        width: '100%',
-                        padding: '8px',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        fontSize: '14px',
-                        color: '#333'
-                      }}
-                    />
-                  </div>
-                </>
-              )}
-
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  disabled={isMutating}
-                  style={{
-                    backgroundColor: '#6c757d',
-                    color: 'white',
-                    padding: '10px 20px',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: isMutating ? 'not-allowed' : 'pointer',
-                    opacity: isMutating ? 0.6 : 1
-                  }}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={isMutating}
-                  style={{
-                    backgroundColor: '#007bff',
-                    color: 'white',
-                    padding: '10px 20px',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: isMutating ? 'not-allowed' : 'pointer',
-                    opacity: isMutating ? 0.6 : 1
-                  }}
-                >
-                  {isMutating ? 'Guardando...' : (editingItem ? 'Actualizar' : 'Guardar')}
-                </button>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
-
-      {/* Category Modal */}
-      {showCategoryModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '20px',
-            borderRadius: '8px',
-            width: '90%',
-            maxWidth: '400px',
-            maxHeight: '90vh',
-            overflow: 'auto'
-          }}>
-            <h2 style={{ marginBottom: '20px', color: '#333' }}>
-              Agregar Categoría
-            </h2>
-
-            <form onSubmit={handleCreateCategory}>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
-                  Nombre *
-                </label>
-                <input
-                  type="text"
-                  value={categoryFormData.nombre}
-                  onChange={(e) => setCategoryFormData({ ...categoryFormData, nombre: e.target.value })}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    color: '#333'
-                  }}
-                />
-              </div>
-
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
-                  Descripción
-                </label>
-                <textarea
-                  value={categoryFormData.descripcion}
-                  onChange={(e) => setCategoryFormData({ ...categoryFormData, descripcion: e.target.value })}
-                  rows="3"
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    resize: 'vertical',
-                    color: '#333'
-                  }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                <button
-                  type="button"
-                  onClick={handleCloseCategoryModal}
-                  disabled={createCategoryMutation.isPending}
-                  style={{
-                    backgroundColor: '#6c757d',
-                    color: 'white',
-                    padding: '10px 20px',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: createCategoryMutation.isPending ? 'not-allowed' : 'pointer',
-                    opacity: createCategoryMutation.isPending ? 0.6 : 1
-                  }}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={createCategoryMutation.isPending}
-                  style={{
-                    backgroundColor: '#007bff',
-                    color: 'white',
-                    padding: '10px 20px',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: createCategoryMutation.isPending ? 'not-allowed' : 'pointer',
-                    opacity: createCategoryMutation.isPending ? 0.6 : 1
-                  }}
-                >
-                  {createCategoryMutation.isPending ? 'Guardando...' : 'Guardar'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Upload Modal */}
-      {showUploadModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto">
-            <CatalogUpload
-              businessId={businessId}
-              onClose={() => setShowUploadModal(false)}
-              onSuccess={() => {
-                queryClient.invalidateQueries(['products', businessId, branchId]);
-                setShowUploadModal(false);
-              }}
-            />
+      {
+        showUploadModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto">
+              <CatalogUpload
+                businessId={businessId}
+                onClose={() => setShowUploadModal(false)}
+                onSuccess={() => {
+                  queryClient.invalidateQueries(['products', businessId, branchId]);
+                  setShowUploadModal(false);
+                }}
+              />
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 
