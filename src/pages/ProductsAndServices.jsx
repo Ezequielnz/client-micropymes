@@ -710,7 +710,17 @@ const ProductsAndServices = () => {
 
 
       {/* Search Bar - Optimized to only trigger on Enter/Button */}
-      <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
+      {/* Search Bar - Optimized to only trigger on Enter/Button */}
+      {console.log("Rendering Search Bar", { searchQuery, activeSearchQuery })}
+      <div style={{
+        marginBottom: '20px',
+        display: 'flex',
+        gap: '10px',
+        backgroundColor: '#f8f9fa',
+        padding: '15px',
+        borderRadius: '8px',
+        border: '1px solid #e9ecef'
+      }}>
         <input
           type="text"
           placeholder={activeTab === 'products' ? "Buscar producto por código, nombre o descripción..." : "Buscar servicio por nombre o descripción..."}
@@ -724,7 +734,8 @@ const ProductsAndServices = () => {
             borderRadius: '5px',
             fontSize: '16px',
             outline: 'none',
-            boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)'
+            boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)',
+            backgroundColor: 'white'
           }}
         />
         <button
