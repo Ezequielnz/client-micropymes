@@ -28,7 +28,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 60000, // 60 seconds timeout (increased temporarily)
+  timeout: 180000, // 180 seconds timeout to allow for slow AI operations
 });
 
 const ACTIVE_BUSINESS_STORAGE_KEY = 'activeBusinessId';
