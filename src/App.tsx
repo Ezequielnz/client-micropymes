@@ -28,6 +28,7 @@ import Tasks from './pages/Tasks';
 
 import StockTransfers from './pages/StockTransfers';
 import BranchPreferences from './pages/BranchPreferences';
+import PaymentMethods from './pages/PaymentMethods';
 
 const App: React.FC = () => (
   <ErrorBoundary>
@@ -61,6 +62,7 @@ const App: React.FC = () => (
           <Route path="/finanzas" element={<Finanzas />} />
           <Route path="/stock-transfers" element={<StockTransfers />} />
           <Route path="/settings/branch-preferences" element={<BranchPreferences />} />
+          <Route path="/settings/payment-methods" element={<PaymentMethods />} />
 
           <Route
             path="/compras"

@@ -7,6 +7,7 @@ import Layout from '../components/Layout';
 import '../styles/responsive-overrides.css';
 import { useBusinessContext } from '../contexts/BusinessContext';
 import CatalogUpload from '../components/CatalogUpload';
+import MassivePriceUpdateModal from '../components/MassivePriceUpdateModal';
 
 // Memoized component to avoid inline component recreation
 const OptimizedTable = React.memo(({
@@ -17,7 +18,10 @@ const OptimizedTable = React.memo(({
   onDelete,
   loading,
   canEdit,
-  canDelete
+  canDelete,
+  selectedIds = [],
+  onToggleSelect,
+  onSelectAll
 }) => {
   const getCategoryName = useCallback((categoryId) => {
     const category = categories.find(cat => cat.id === categoryId);
@@ -100,6 +104,15 @@ const OptimizedTable = React.memo(({
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-gray-50">
+              <th className="px-4 py-3 text-left border-b border-gray-200">
+                <input
+                  type="checkbox"
+                  checked={currentData.length > 0 && selectedIds.length === currentData.length}
+                  onChange={(e) => onSelectAll(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  disabled={currentData.length === 0}
+                />
+              </th>
               <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">
                 Código
               </th>
@@ -154,6 +167,16 @@ const OptimizedTable = React.memo(({
             ) : (
               currentData.map((item) => (
                 <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  {activeTab === 'products' && (
+                    <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(item.id)}
+                        onChange={() => onToggleSelect(item.id)}
+                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                      />
+                    </td>
+                  )}
                   {activeTab === 'products' && (
                     <td className="px-4 py-3 text-gray-900 text-sm">{item.code}</td>
                   )}
@@ -222,8 +245,10 @@ const ProductsAndServices = () => {
 
   const [activeTab, setActiveTab] = useState('products');
   const [showModal, setShowModal] = useState(false);
+  const [showMassiveUpdateModal, setShowMassiveUpdateModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -616,6 +641,23 @@ const ProductsAndServices = () => {
     setCategoryFormData({ nombre: '', descripcion: '' });
   }, []);
 
+  // Selection Handlers
+  const handleToggleSelect = useCallback((id) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  }, []);
+
+  const handleSelectAll = useCallback((checked) => {
+    if (checked) {
+      // Select all currently visible products
+      const allIds = currentData.map(item => item.id);
+      setSelectedIds(allIds);
+    } else {
+      setSelectedIds([]);
+    }
+  }, [currentData]);
+
   // Determine if any mutation is loading
   const isMutating = createProductMutation.isPending ||
     updateProductMutation.isPending ||
@@ -778,8 +820,8 @@ const ProductsAndServices = () => {
         )}
       </div>
 
-      {/* Add Button */}
-      <div style={{ marginBottom: '20px' }}>
+      {/* Add Button & Bulk Update */}
+      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         {canEditProducts && (
           <div className="flex gap-2">
             <button

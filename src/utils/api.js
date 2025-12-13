@@ -1795,3 +1795,52 @@ export default api;
 
 
 
+/**
+ * @namespace paymentMethodsAPI
+ * @description Contains functions for managing payment methods.
+ */
+export const paymentMethodsAPI = {
+  /**
+   * Fetches payment methods for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @returns {Promise<Array<object>>} A promise that resolves to an array of payment method objects.
+   */
+  getPaymentMethods: async (businessId) => {
+    const response = await api.get(`/businesses/${businessId}/payment-methods`);
+    return response.data;
+  },
+
+  /**
+   * Creates a new payment method for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @param {object} methodData - Data for the new payment method.
+   * @returns {Promise<object>} A promise that resolves to the newly created payment method object.
+   */
+  createPaymentMethod: async (businessId, methodData) => {
+    const response = await api.post(`/businesses/${businessId}/payment-methods`, methodData);
+    return response.data;
+  },
+
+  /**
+   * Updates an existing payment method.
+   * @param {string} businessId - The ID of the business.
+   * @param {string|number} methodId - The ID of the payment method to update.
+   * @param {object} methodData - Data to update.
+   * @returns {Promise<object>} A promise that resolves to the updated payment method object.
+   */
+  updatePaymentMethod: async (businessId, methodId, methodData) => {
+    const response = await api.put(`/businesses/${businessId}/payment-methods/${methodId}`, methodData);
+    return response.data;
+  },
+
+  /**
+   * Deletes a payment method.
+   * @param {string} businessId - The ID of the business.
+   * @param {string|number} methodId - The ID of the payment method to delete.
+   * @returns {Promise<object>} A promise that resolves to the confirmation.
+   */
+  deletePaymentMethod: async (businessId, methodId) => {
+    const response = await api.delete(`/businesses/${businessId}/payment-methods/${methodId}`);
+    return response.data;
+  },
+};

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useBusinessContext } from '../contexts/BusinessContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { productAPI, customerAPI, salesAPI, serviceAPI } from '../utils/api';
+import { productAPI, customerAPI, salesAPI, serviceAPI, paymentMethodsAPI } from '../utils/api';
 import PermissionGuard from '../components/PermissionGuard';
 import Layout from '../components/Layout';
 import '../styles/responsive-overrides.css';
@@ -24,7 +24,7 @@ import {
 // Componente Button reutilizable
 const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', disabled = false, ...props }) => {
   const baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
-  
+
   const variants = {
     default: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
     outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500',
@@ -32,15 +32,15 @@ const Button = ({ children, onClick, variant = 'default', size = 'default', clas
     destructive: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
     success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500'
   };
-  
+
   const sizes = {
     sm: 'h-8 px-3 text-sm',
     default: 'h-10 px-4 py-2',
     lg: 'h-12 px-6 text-lg'
   };
-  
+
   const classes = `${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`;
-  
+
   return (
     <button className={classes} onClick={onClick} disabled={disabled} {...props}>
       {children}
@@ -81,7 +81,7 @@ const Alert = ({ children, variant = 'default', className = '' }) => {
     success: 'bg-green-50 border-green-200 text-green-800',
     warning: 'bg-yellow-50 border-yellow-200 text-yellow-800'
   };
-  
+
   return (
     <div className={`border rounded-lg p-4 ${variants[variant]} ${className}`}>
       {children}
@@ -135,12 +135,12 @@ function POS() {
   const [newCustomer, setNewCustomer] = useState({ nombre: '', apellido: '', email: '', telefono: '', direccion: '', documento_tipo: '', documento_numero: '' });
   /** @type {[string, function]} createCustomerError - Error message for creating a customer. */
   const [createCustomerError, setCreateCustomerError] = useState('');
-  
+
   /** @type {[string, function]} searchTerm - State for the search term entered by the user to filter products and services. */
   const [searchTerm, setSearchTerm] = useState('');
   /** @type {[string, function]} activeTab - State for the currently active tab (productos or servicios). */
   const [activeTab, setActiveTab] = useState('productos');
-  
+
   /** @type {[string, function]} error - State for storing general page-level error messages (e.g., initial data load failure, sale submission failure). */
   const [error, setError] = useState('');
   /** @type {[string, function]} cartError - State for storing errors specific to cart operations (e.g., insufficient stock). */
@@ -148,7 +148,8 @@ function POS() {
   /** @type {[string, function]} saleSuccessMessage - State for displaying a success message after a sale is completed. */
   const [saleSuccessMessage, setSaleSuccessMessage] = useState('');
   /** @type {[string, function]} paymentMethod - State for the selected payment method. */
-  const [paymentMethod, setPaymentMethod] = useState('efectivo');
+  const [paymentMethod, setPaymentMethod] = useState('');
+  const [paymentMethods, setPaymentMethods] = useState([]);
 
   // Mantener un carrito independiente por negocio usando sessionStorage
   useEffect(() => {
@@ -192,8 +193,8 @@ function POS() {
   }, [cart, businessId]);
 
   // ✅ OPTIMIZED: React Query for products with smart caching
-  const { 
-    data: allProducts = [], 
+  const {
+    data: allProducts = [],
     isLoading: loadingProducts,
     error: productsError
   } = useQuery({
@@ -207,8 +208,8 @@ function POS() {
   });
 
   // ✅ OPTIMIZED: React Query for services with smart caching
-  const { 
-    data: allServices = [], 
+  const {
+    data: allServices = [],
     isLoading: loadingServices,
     error: servicesError
   } = useQuery({
@@ -222,8 +223,8 @@ function POS() {
   });
 
   // ✅ OPTIMIZED: React Query for customers with smart caching
-  const { 
-    data: customers = [], 
+  const {
+    data: customers = [],
     isLoading: loadingCustomers,
     error: customersError
   } = useQuery({
@@ -235,6 +236,30 @@ function POS() {
     refetchOnWindowFocus: false,
     retry: 2,
   });
+
+  // ✅ Fetch Payment Methods
+  const {
+    data: fetchedPaymentMethods = [],
+  } = useQuery({
+    queryKey: ['paymentMethods', businessId],
+    queryFn: () => paymentMethodsAPI.getPaymentMethods(businessId),
+    enabled: !!businessId && !!currentBusiness,
+  });
+
+  useEffect(() => {
+    if (fetchedPaymentMethods.length > 0) {
+      setPaymentMethods(fetchedPaymentMethods.filter(m => m.activo));
+      // Set default if not set
+      if (!paymentMethod) {
+        // Prefer 'Efectivo' or first active
+        const defaultMethod = fetchedPaymentMethods.find(m => m.activo && m.nombre.toLowerCase() === 'efectivo') || fetchedPaymentMethods.find(m => m.activo);
+        if (defaultMethod) setPaymentMethod(defaultMethod.nombre);
+      }
+    } else {
+      // Fallback defaults if no methods configured
+      if (!paymentMethod) setPaymentMethod('Efectivo');
+    }
+  }, [fetchedPaymentMethods, paymentMethod]);
 
   // ✅ OPTIMIZED: Record sale mutation
   const recordSaleMutation = useMutation({
@@ -408,7 +433,7 @@ function POS() {
         setCartError(`Detalles del producto no encontrados para ID ${itemId}. Por favor actualiza.`);
         return;
       }
-      
+
       if (newQuantity > productInAll.stock_actual) {
         setCartError(`No se puede establecer cantidad a ${newQuantity}. Solo ${productInAll.stock_actual} disponible en stock.`);
         return;
@@ -623,14 +648,14 @@ function POS() {
                   </div>
                 </div>
                 <div className="mt-6 flex justify-end gap-2">
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     onClick={() => !createCustomerMutation.isPending && setIsCustomerModalOpen(false)}
                     disabled={createCustomerMutation.isPending}
                   >
                     Cancelar
                   </Button>
-                  <Button 
+                  <Button
                     onClick={handleCreateCustomer}
                     disabled={createCustomerMutation.isPending}
                     className="min-w-[120px]"
@@ -683,14 +708,14 @@ function POS() {
             {currentError}
           </Alert>
         )}
-        
+
         {cartError && (
           <Alert variant="warning" className="mb-6">
             <AlertTriangle className="h-4 w-4 mr-2" />
             {cartError}
           </Alert>
         )}
-        
+
         {saleSuccessMessage && (
           <Alert variant="success" className="mb-6">
             <CheckCircle className="h-4 w-4 mr-2" />
@@ -719,27 +744,25 @@ function POS() {
                     </>
                   )}
                 </CardTitle>
-                
+
                 {/* Tabs */}
                 <div className="flex flex-wrap bg-gray-100 rounded-lg p-1 gap-1">
                   <button
                     onClick={() => setActiveTab('productos')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                      activeTab === 'productos'
-                        ? 'bg-white text-blue-600 shadow-sm'
-                        : 'bg-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'productos'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'bg-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
                   >
                     <Package className="h-4 w-4 mr-2 inline" />
                     Productos
                   </button>
                   <button
                     onClick={() => setActiveTab('servicios')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                      activeTab === 'servicios'
-                        ? 'bg-white text-purple-600 shadow-sm'
-                        : 'bg-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'servicios'
+                      ? 'bg-white text-purple-600 shadow-sm'
+                      : 'bg-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
                   >
                     <Wrench className="h-4 w-4 mr-2 inline" />
                     Servicios
@@ -773,13 +796,13 @@ function POS() {
                         <span className="ml-2 text-gray-600">Cargando productos...</span>
                       </div>
                     )}
-                    
+
                     {!loadingProducts && availableProducts.length === 0 && (
                       <div className="text-center py-8 text-gray-500">
                         {searchTerm ? 'No se encontraron productos que coincidan con tu búsqueda.' : 'No hay productos disponibles.'}
                       </div>
                     )}
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {availableProducts.map(product => (
                         <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -794,8 +817,8 @@ function POS() {
                               </p>
                             </div>
                           </div>
-                          <Button 
-                            onClick={() => handleAddToCart(product, 1)} 
+                          <Button
+                            onClick={() => handleAddToCart(product, 1)}
                             disabled={product.stock_actual <= (cart.find(item => item.item_id === product.id && item.tipo === 'producto')?.quantity || 0) || product.stock_actual === 0 || isLoading}
                             className="w-full"
                             size="sm"
@@ -815,13 +838,13 @@ function POS() {
                         <span className="ml-2 text-gray-600">Cargando servicios...</span>
                       </div>
                     )}
-                    
+
                     {!loadingServices && availableServices.length === 0 && (
                       <div className="text-center py-8 text-gray-500">
                         {searchTerm ? 'No se encontraron servicios que coincidan con tu búsqueda.' : 'No hay servicios disponibles.'}
                       </div>
                     )}
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {availableServices.map(service => (
                         <div key={service.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -841,8 +864,8 @@ function POS() {
                               </p>
                             </div>
                           </div>
-                          <Button 
-                            onClick={() => handleAddServiceToCart(service, 1)} 
+                          <Button
+                            onClick={() => handleAddServiceToCart(service, 1)}
                             className="w-full bg-purple-600 hover:bg-purple-700"
                             size="sm"
                             disabled={isLoading}
@@ -876,7 +899,7 @@ function POS() {
                   Cliente (Opcional)
                 </label>
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <select 
+                  <select
                     className="w-full sm:flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                     value={selectedCustomer}
                     onChange={(e) => setSelectedCustomer(e.target.value)}
@@ -889,7 +912,7 @@ function POS() {
                       </option>
                     ))}
                   </select>
-                  <Button 
+                  <Button
                     variant="outline"
                     size="sm"
                     onClick={handleOpenNewCustomer}
@@ -910,15 +933,25 @@ function POS() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Método de Pago
                 </label>
-                <select 
+                <select
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
                   disabled={isLoading}
                 >
-                  <option value="efectivo" className="text-gray-900">💵 Efectivo</option>
-                  <option value="tarjeta" className="text-gray-900">💳 Tarjeta</option>
-                  <option value="transferencia" className="text-gray-900">🏦 Transferencia</option>
+                  {paymentMethods.length > 0 ? (
+                    paymentMethods.map(method => (
+                      <option key={method.id} value={method.nombre} className="text-gray-900">
+                        {method.nombre} {method.descuento_porcentaje > 0 ? `(-${method.descuento_porcentaje}%)` : ''}
+                      </option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="Efectivo" className="text-gray-900">💵 Efectivo</option>
+                      <option value="Tarjeta" className="text-gray-900">💳 Tarjeta</option>
+                      <option value="Transferencia" className="text-gray-900">🏦 Transferencia</option>
+                    </>
+                  )}
                 </select>
               </div>
 
@@ -943,11 +976,10 @@ function POS() {
                                 <Wrench className="h-4 w-4 text-purple-600" />
                               )}
                               <h4 className="font-medium text-gray-900 text-sm">{item.nombre}</h4>
-                              <span className={`text-xs px-2 py-1 rounded-full ${
-                                item.tipo === 'producto' 
-                                  ? 'bg-blue-100 text-blue-700' 
-                                  : 'bg-purple-100 text-purple-700'
-                              }`}>
+                              <span className={`text-xs px-2 py-1 rounded-full ${item.tipo === 'producto'
+                                ? 'bg-blue-100 text-blue-700'
+                                : 'bg-purple-100 text-purple-700'
+                                }`}>
                                 {item.tipo === 'producto' ? 'Producto' : 'Servicio'}
                               </span>
                             </div>
@@ -961,7 +993,7 @@ function POS() {
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
-                            <Button 
+                            <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleUpdateCartQuantity(item.item_id, item.tipo, item.quantity - 1)}
@@ -971,7 +1003,7 @@ function POS() {
                               <Minus className="h-4 w-4" />
                             </Button>
                             <span className="w-8 text-center font-medium">{item.quantity}</span>
-                            <Button 
+                            <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleUpdateCartQuantity(item.item_id, item.tipo, item.quantity + 1)}
@@ -981,7 +1013,7 @@ function POS() {
                               <Plus className="h-4 w-4" />
                             </Button>
                           </div>
-                          <Button 
+                          <Button
                             variant="destructive"
                             size="sm"
                             onClick={() => handleRemoveFromCart(item.item_id, item.tipo)}
@@ -996,19 +1028,40 @@ function POS() {
                   </div>
                 )}
               </div>
-              
+
               {/* Total */}
               <div className="border-t border-gray-200 pt-4 mb-6">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-semibold text-gray-900">Total:</span>
-                  <span className="text-2xl font-bold text-blue-600">
-                    ${Number(cartTotal).toFixed(2)}
-                  </span>
-                </div>
+                {(() => {
+                  const selectedMethod = paymentMethods.find(m => m.nombre === paymentMethod);
+                  const discountPct = selectedMethod ? selectedMethod.descuento_porcentaje : 0;
+                  const discountAmount = cartTotal * (discountPct / 100);
+                  const finalTotal = cartTotal - discountAmount;
+
+                  return (
+                    <>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-gray-600">Subtotal:</span>
+                        <span className="font-medium text-gray-900">${Number(cartTotal).toFixed(2)}</span>
+                      </div>
+                      {discountPct > 0 && (
+                        <div className="flex justify-between items-center mb-2 text-green-600">
+                          <span>Descuento ({paymentMethod} - {discountPct}%):</span>
+                          <span className="font-medium">-${Number(discountAmount).toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                        <span className="text-lg font-semibold text-gray-900">Total:</span>
+                        <span className="text-2xl font-bold text-blue-600">
+                          ${Number(finalTotal).toFixed(2)}
+                        </span>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
-              
+
               {/* Complete Sale Button */}
-              <Button 
+              <Button
                 onClick={handleCompleteSale}
                 disabled={cart.length === 0 || isLoading}
                 className="w-full"
