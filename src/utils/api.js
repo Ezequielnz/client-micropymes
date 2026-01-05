@@ -98,7 +98,8 @@ api.interceptors.response.use(
       case 401:
         // Handle unauthorized access
         // Avoid reloading if it's a login attempt failure
-        if (!response.config.url.includes('/auth/login')) {
+        // Avoid reloading if it's a login attempt failure
+        if (!response?.config?.url?.includes('/auth/login')) {
           localStorage.removeItem('token');
           window.location.href = '/login';
         }
