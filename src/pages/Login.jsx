@@ -383,14 +383,10 @@ function Login() {
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
                     size="lg"
                   >
-                    {loading ? (
-                      'Iniciando sesión...'
-                    ) : (
-                      <>
-                        Iniciar Sesión
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </>
-                    )}
+                    <span className="flex items-center justify-center">
+                      {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+                      {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
+                    </span>
                   </Button>
                 </form>
 
