@@ -150,10 +150,21 @@ function Login() {
       // Limpiar el token si hay error
       localStorage.removeItem('token');
 
+      // Defensive handling for "Error: A listener indicated..." which is often an extension issue
+      if (err?.message?.includes?.('message channel closed')) {
+        setError('Error de conexión navegador/servidor. Por favor intente nuevamente.');
+        return;
+      }
+
+      // Safe access to response properties
+      const status = err?.response?.status;
+      const data = err?.response?.data;
+      const detail = data?.detail;
+
       // Manejar diferentes tipos de errores
-      if (err.response?.status === 403 && err.response?.data?.detail?.error_type === 'email_not_confirmed') {
+      if (status === 403 && detail?.error_type === 'email_not_confirmed') {
         // Error específico de email no confirmado
-        const email = err.response.data.detail.email || formData.email;
+        const email = detail.email || formData.email;
         setError(
           <div className="space-y-3">
             <p className="font-medium text-erp-error">Email no confirmado</p>
@@ -192,10 +203,24 @@ function Login() {
             </div>
           </div>
         );
-      } else if (err.response?.status === 401) {
+      } else if (status === 401) {
         setError('Credenciales inválidas. Por favor verifica tu email y contraseña.');
       } else {
-        setError(err.response?.data?.detail || err.message || 'Error al iniciar sesión');
+        // Fallback robusto para el mensaje de error
+        let errorMessage = 'Error al iniciar sesión';
+
+        if (typeof detail === 'string') {
+          errorMessage = detail;
+        } else if (typeof detail === 'object' && detail !== null) {
+          // Si es un objeto (ej: errores de validación de Pydantic), lo convertimos a string legible o tomamos el primer mensaje
+          errorMessage = Array.isArray(detail)
+            ? (detail[0]?.msg || JSON.stringify(detail))
+            : (detail.message || JSON.stringify(detail));
+        } else if (err?.message) {
+          errorMessage = err.message;
+        }
+
+        setError(errorMessage);
       }
     } finally {
       setLoading(false);
