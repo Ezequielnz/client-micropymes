@@ -47,7 +47,7 @@ function Login() {
       const accessToken = hashParams.get('access_token');
       const type = hashParams.get('type');
 
-      if (accessToken && type === 'signup') {
+      if (accessToken && (type === 'signup' || type === 'recovery')) {
         setLoading(true);
         try {
           // 1. Store token temporarily
@@ -59,7 +59,26 @@ function Login() {
           // 3. Login user
           login(userData, accessToken);
 
-          // 4. Show success message
+          // 4. Show success message (Modify based on type)
+          if (type === 'recovery') {
+            setError(
+              <div className="space-y-2">
+                <p className="font-medium text-green-600 flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4" />
+                  ¡Identidad verificada!
+                </p>
+                <p className="text-sm text-gray-600">
+                  Redirigiendo para actualizar tu contraseña...
+                </p>
+              </div>
+            );
+            setTimeout(() => {
+              navigate('/update-password');
+            }, 1500);
+            return;
+          }
+
+          // 4. Show success message (Normal signup)
           setError(
             <div className="space-y-2">
               <p className="font-medium text-green-600 flex items-center gap-2">
@@ -86,6 +105,7 @@ function Login() {
         }
       }
     };
+
 
     handleConfirmation();
   }, [navigate, login]);
@@ -318,6 +338,15 @@ function Login() {
                       />
                     </div>
                   </div>
+                  <div className="flex justify-end mt-1">
+                    <Link
+                      to="/request-password-reset"
+                      className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </Link>
+                  </div>
+
 
                   <Button
                     type="submit"
@@ -351,10 +380,10 @@ function Login() {
             </Card>
           </div>
         </div>
-      </section>
+      </section >
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      < footer className="bg-gray-900 text-white py-12" >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="flex items-center justify-center mb-4 space-x-2">
@@ -366,8 +395,8 @@ function Login() {
             </p>
           </div>
         </div>
-      </footer>
-    </div>
+      </footer >
+    </div >
   );
 }
 

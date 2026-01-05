@@ -14,6 +14,8 @@ import Finanzas from './pages/Finanzas';
 import Home from './pages/Home';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
+import RequestPasswordReset from './pages/RequestPasswordReset';
+import UpdatePassword from './pages/UpdatePassword';
 
 import POS from './pages/POS';
 import PendingApproval from './pages/PendingApproval';
@@ -41,9 +43,11 @@ const App: React.FC = () => (
         <Route path="/confirm-email" element={<ConfirmEmail />} />
         <Route path="/confirm" element={<ConfirmEmail />} />
         <Route path="/email-confirmation" element={<EmailConfirmation />} />
+        <Route path="/request-password-reset" element={<RequestPasswordReset />} />
 
         {/* Protected Routes */}
         <Route element={<RequireAuth />}>
+          <Route path="/update-password" element={<UpdatePassword />} />
           <Route path="/home" element={<Home />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/pending-approval" element={<PendingApproval />} />

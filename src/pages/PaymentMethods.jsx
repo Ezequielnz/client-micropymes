@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useBusinessContext } from '../contexts/BusinessContext';
 import { paymentMethodsAPI } from '../utils/api';
 import Layout from '../components/Layout';
-import { Plus, Trash2, Edit2, Check, X, DollarSign, Percent } from 'lucide-react';
+import { Plus, Trash2, Edit2, Percent } from 'lucide-react';
 
 const PaymentMethods = () => {
     const { currentBusiness } = useBusinessContext();

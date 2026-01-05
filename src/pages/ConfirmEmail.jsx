@@ -31,7 +31,7 @@ function ConfirmEmail() {
   // Actually, let's remove the unused destructuring if we don't use it to avoid linter warnings, 
   // but if useAuth is needed for some reason (like checking if already logged in), we can keep it.
   // For now, I'll remove 'login' from destructuring since we don't use it.
-  const { } = useAuth();
+
   const [searchParams] = useSearchParams();
 
   /**

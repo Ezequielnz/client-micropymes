@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productAPI } from '../utils/api'; // Assuming this exists or I'll add the method to it
-import { Dialog } from '@headlessui/react'; // Assuming Headless UI is used or similar. If not, I'll use a simple div overlay. 
+
 // Actually, looking at ProductsAndServices.jsx, they use custom modal logic often.
 // Let's use a standard fixed overlay approach compatible with the project style.
 

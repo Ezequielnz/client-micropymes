@@ -97,8 +97,11 @@ api.interceptors.response.use(
     switch (response.status) {
       case 401:
         // Handle unauthorized access
-        localStorage.removeItem('token');
-        window.location.href = '/login';
+        // Avoid reloading if it's a login attempt failure
+        if (!response.config.url.includes('/auth/login')) {
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        }
         break;
 
       case 403:
@@ -148,6 +151,16 @@ export const authAPI = {
       },
     });
 
+    return response.data;
+  },
+
+  /**
+   * Requests a password reset email.
+   * @param {string} email - The user's email address.
+   * @returns {Promise<object>} API response.
+   */
+  requestPasswordReset: async (email) => {
+    const response = await api.post('/auth/request-password-reset', { email });
     return response.data;
   },
 
