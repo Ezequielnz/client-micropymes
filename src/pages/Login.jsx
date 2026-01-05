@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+// import { Alert, AlertDescription } from '@/components/ui/alert'; // Removed to prevent potential crashes
 import { authAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -167,8 +167,8 @@ function Login() {
         const email = detail.email || formData.email;
         setError(
           <div className="space-y-3">
-            <p className="font-medium text-erp-error">Email no confirmado</p>
-            <p className="text-sm text-erp-neutral-600">
+            <p className="font-medium text-red-600">Email no confirmado</p>
+            <p className="text-sm text-gray-600">
               Tu cuenta necesita ser verificada antes de poder iniciar sesión.
             </p>
             <div className="flex flex-col gap-2">
@@ -177,7 +177,7 @@ function Login() {
                 variant="outline"
                 size="sm"
                 onClick={() => navigate(`/email-confirmation?email=${encodeURIComponent(email)}`)}
-                className="text-erp-primary border-erp-primary-300 hover:bg-erp-primary-50"
+                className="text-blue-600 border-blue-300 hover:bg-blue-50"
               >
                 Ir a página de confirmación
               </Button>
@@ -317,12 +317,16 @@ function Login() {
               </CardHeader>
               <CardContent className="space-y-6">
                 {error && (
-                  <Alert variant={typeof error === 'string' && error.includes('activar') ? 'default' : 'destructive'}>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
+                  <div className={`p-4 rounded-lg mb-4 flex items-start space-x-3 ${typeof error === 'string' && error.includes('activar')
+                    ? 'bg-blue-50 border border-blue-200 text-blue-800'
+                    : 'bg-red-50 border border-red-200 text-red-800'
+                    }`}>
+                    <AlertCircle className={`h-5 w-5 flex-shrink-0 ${typeof error === 'string' && error.includes('activar') ? 'text-blue-500' : 'text-red-500'
+                      }`} />
+                    <div className="text-sm">
                       {error}
-                    </AlertDescription>
-                  </Alert>
+                    </div>
+                  </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
