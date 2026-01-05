@@ -40,26 +40,83 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Handle email confirmation token
+  // Handle authentication flows (PKCE code or Hash fragments)
   React.useEffect(() => {
-    const handleConfirmation = async () => {
+    const handleAuthFlow = async () => {
+      // 1. Check for PKCE Code (Query Params) - Standard Supabase Flow
+      const searchParams = new URLSearchParams(window.location.search);
+      const code = searchParams.get('code');
+
+      // 2. Check for Hash Fragment - Legacy/Implicit Flow
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get('access_token');
-      const type = hashParams.get('type');
+      const type = hashParams.get('type') || searchParams.get('type'); // Type might be in query or hash
 
+      // Priority 1: Handle PKCE Code (New Flow)
+      if (code) {
+        setLoading(true);
+        try {
+          // Exchange code for session
+          const data = await authAPI.exchangeCode(code);
+
+          // Login user with new tokens
+          login(data.user, data.access_token);
+
+          // Determine success message based on context
+          // Note: Supabase doesn't always send 'type' with code, so we infer or show generic success
+          setError(
+            <div className="space-y-2">
+              <p className="font-medium text-green-600 flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                ¡Verificación exitosa!
+              </p>
+              <p className="text-sm text-gray-600">
+                Redirigiendo...
+              </p>
+            </div>
+          );
+
+          // Redirect strategy
+          // If it was a password reset (recovery), we should go to update-password.
+          // Since we might not know for sure if it's recovery without 'type', 
+          // we can check if the user just requested it or check a flag.
+          // For now, if we have a valid session, let's look for 'next' param or default.
+          const next = searchParams.get('next');
+
+          setTimeout(() => {
+            // If known recovery flow or generic, we might want to allow user to reset password if that was the intent.
+            // Usually recovery sends type=recovery.
+            // If we can't detect type, user will go to home. 
+            // If they are here for password reset, they are now logged in and can go to profile -> change password,
+            // OR we can default to /update-password if we suspect it (but that might be annoying for normal logins).
+            // LET'S CHECK if 'type' param existed (Supabase sometimes appends it).
+
+            if (type === 'recovery') {
+              navigate('/update-password');
+            } else {
+              navigate(next || '/home');
+            }
+          }, 1500);
+
+        } catch (err) {
+          console.error('Error exchanging code:', err);
+          setError('El enlace de verificación es inválido o ha expirado.');
+        } finally {
+          setLoading(false);
+          // Clean URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        return; // Stop here if we handled code
+      }
+
+      // Priority 2: Handle Implicit/Legacy Hash Fragment
       if (accessToken && (type === 'signup' || type === 'recovery')) {
         setLoading(true);
         try {
-          // 1. Store token temporarily
           localStorage.setItem('token', accessToken);
-
-          // 2. Verify token and get user data
           const userData = await authAPI.getCurrentUser();
-
-          // 3. Login user
           login(userData, accessToken);
 
-          // 4. Show success message (Modify based on type)
           if (type === 'recovery') {
             setError(
               <div className="space-y-2">
@@ -72,13 +129,11 @@ function Login() {
                 </p>
               </div>
             );
-            setTimeout(() => {
-              navigate('/update-password');
-            }, 1500);
+            setTimeout(() => navigate('/update-password'), 1500);
             return;
           }
 
-          // 4. Show success message (Normal signup)
+          // Confirmed signup
           setError(
             <div className="space-y-2">
               <p className="font-medium text-green-600 flex items-center gap-2">
@@ -90,11 +145,7 @@ function Login() {
               </p>
             </div>
           );
-
-          // 5. Redirect after delay
-          setTimeout(() => {
-            navigate('/home');
-          }, 2000);
+          setTimeout(() => navigate('/home'), 2000);
 
         } catch (err) {
           console.error('Error confirming email:', err);
@@ -106,8 +157,7 @@ function Login() {
       }
     };
 
-
-    handleConfirmation();
+    handleAuthFlow();
   }, [navigate, login]);
   const handleChange = (e) => {
     const { name, value } = e.target;

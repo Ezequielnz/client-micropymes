@@ -254,6 +254,21 @@ export const authAPI = {
     return response.data;
   },
 
+  verifyEmail: async (tokenHash, type = 'email') => {
+    const response = await api.post('/auth/verify-email', { token_hash: tokenHash, type });
+    return response.data;
+  },
+
+  /**
+   * Exchanges an authorization code for a session (PKCE flow).
+   * @param {string} code - The authorization code from the URL.
+   * @returns {Promise<object>} API response with tokens and user data.
+   */
+  exchangeCode: async (code) => {
+    const response = await api.post('/auth/exchange', { code });
+    return response.data;
+  },
+
   checkEmailConfirmation: async (email) => {
     const response = await api.get(`/auth/check-confirmation/${encodeURIComponent(email)}`, {
       headers: {
