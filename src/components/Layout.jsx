@@ -328,19 +328,19 @@ const Header = ({
       <div className={`relative business-dropdown w-full ${wrapperClass}`}>
         <button
           onClick={() => setShowBusinessDropdown((open) => !open)}
-          className="flex w-full items-center justify-between gap-1 px-2 py-1 md:gap-2 md:px-3 md:py-1.5 border border-gray-300 rounded-lg transition-colors bg-slate-50 hover:bg-slate-100"
+          className="flex w-full items-center justify-between gap-1 px-2 py-1 md:gap-2 md:px-3 md:py-1.5 border border-gray-300 rounded-lg transition-colors bg-slate-50 hover:bg-slate-100 h-8 md:h-auto"
           aria-haspopup="true"
           aria-expanded={showBusinessDropdown}
         >
-          <span className="font-semibold text-blue-600 text-sm truncate">
+          <span className="font-semibold text-xs md:text-sm text-blue-600 truncate">
             {currentBusiness?.nombre || 'Seleccionar negocio'}
           </span>
           {currentBusiness?.tipo && (
-            <span className="hidden text-xs text-gray-500 lg:inline">
+            <span className="hidden text-[10px] md:text-xs text-gray-500 lg:inline">
               ({currentBusiness.tipo})
             </span>
           )}
-          <ChevronDown className="h-4 w-4 text-gray-500 flex-shrink-0" />
+          <ChevronDown className="h-3 w-3 md:h-4 md:w-4 text-gray-500 flex-shrink-0" />
         </button>
 
         {showBusinessDropdown && (
@@ -403,16 +403,16 @@ const Header = ({
       <div className={`relative branch-dropdown w-full ${wrapperClass}`}>
         <button
           onClick={() => setShowBranchDropdown((open) => !open)}
-          className="flex w-full items-center justify-between gap-1 px-2 py-1 md:gap-2 md:px-3 md:py-1.5 border border-gray-300 rounded-lg transition-colors bg-slate-50 hover:bg-slate-100"
+          className="flex w-full items-center justify-between gap-1 px-2 py-1 md:gap-2 md:px-3 md:py-1.5 border border-gray-300 rounded-lg transition-colors bg-slate-50 hover:bg-slate-100 h-8 md:h-auto"
           aria-haspopup="true"
           aria-expanded={showBranchDropdown}
         >
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <span className="font-semibold text-sm text-blue-600 truncate">
+            <span className="font-semibold text-xs md:text-sm text-blue-600 truncate">
               {currentBranch?.nombre || 'Seleccionar sucursal'}
             </span>
           </div>
-          <ChevronDown className="h-4 w-4 text-gray-500 flex-shrink-0" />
+          <ChevronDown className="h-3 w-3 md:h-4 md:w-4 text-gray-500 flex-shrink-0" />
         </button>
 
         {showBranchDropdown && (
@@ -458,13 +458,13 @@ const Header = ({
 
         <div className="flex flex-1 min-w-0 md:justify-end">
           <div className="w-full min-w-0 md:ml-auto md:max-w-[28rem]">
-            <div className="grid w-full min-w-0 gap-2 grid-cols-2 md:grid-cols-2 md:gap-4">
-              <div className="flex flex-col gap-1 min-w-0 md:items-end">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide md:text-right">Negocio</span>
+            <div className="flex flex-row w-full gap-2 md:grid md:grid-cols-2 md:gap-4">
+              <div className="flex flex-col gap-0.5 flex-1 w-1/2 min-w-0 md:items-end md:gap-1">
+                <span className="text-[10px] md:text-xs font-semibold text-gray-500 uppercase tracking-wide md:text-right truncate">Negocio</span>
                 {renderBusinessSelector('md:w-[13rem]')}
               </div>
-              <div className="flex flex-col gap-1 min-w-0 md:items-end">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide md:text-right">Sucursal</span>
+              <div className="flex flex-col gap-0.5 flex-1 w-1/2 min-w-0 md:items-end md:gap-1">
+                <span className="text-[10px] md:text-xs font-semibold text-gray-500 uppercase tracking-wide md:text-right truncate">Sucursal</span>
                 {renderBranchSelector('md:w-[13rem]')}
               </div>
             </div>
