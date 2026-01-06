@@ -328,7 +328,7 @@ const Header = ({
       <div className={`relative business-dropdown w-full ${wrapperClass}`}>
         <button
           onClick={() => setShowBusinessDropdown((open) => !open)}
-          className="flex w-full items-center justify-between gap-2 px-3 py-1.5 border border-gray-300 rounded-lg transition-colors bg-slate-50 hover:bg-slate-100"
+          className="flex w-full items-center justify-between gap-1 px-2 py-1 md:gap-2 md:px-3 md:py-1.5 border border-gray-300 rounded-lg transition-colors bg-slate-50 hover:bg-slate-100"
           aria-haspopup="true"
           aria-expanded={showBusinessDropdown}
         >
@@ -403,7 +403,7 @@ const Header = ({
       <div className={`relative branch-dropdown w-full ${wrapperClass}`}>
         <button
           onClick={() => setShowBranchDropdown((open) => !open)}
-          className="flex w-full items-center justify-between gap-2 px-3 py-1.5 border border-gray-300 rounded-lg transition-colors bg-slate-50 hover:bg-slate-100"
+          className="flex w-full items-center justify-between gap-1 px-2 py-1 md:gap-2 md:px-3 md:py-1.5 border border-gray-300 rounded-lg transition-colors bg-slate-50 hover:bg-slate-100"
           aria-haspopup="true"
           aria-expanded={showBranchDropdown}
         >
@@ -458,12 +458,12 @@ const Header = ({
 
         <div className="flex flex-1 min-w-0 md:justify-end">
           <div className="w-full min-w-0 md:ml-auto md:max-w-[28rem]">
-            <div className="grid w-full min-w-0 gap-3 grid-cols-2 md:grid-cols-2 md:gap-4">
-              <div className="flex flex-col gap-1 md:items-end">
+            <div className="grid w-full min-w-0 gap-2 grid-cols-2 md:grid-cols-2 md:gap-4">
+              <div className="flex flex-col gap-1 min-w-0 md:items-end">
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide md:text-right">Negocio</span>
                 {renderBusinessSelector('md:w-[13rem]')}
               </div>
-              <div className="flex flex-col gap-1 md:items-end">
+              <div className="flex flex-col gap-1 min-w-0 md:items-end">
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide md:text-right">Sucursal</span>
                 {renderBranchSelector('md:w-[13rem]')}
               </div>
