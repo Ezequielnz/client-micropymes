@@ -411,7 +411,6 @@ const Header = ({
             <span className="font-semibold text-sm text-blue-600 truncate">
               {currentBranch?.nombre || 'Seleccionar sucursal'}
             </span>
-            <BranchBadge branch={currentBranch} />
           </div>
           <ChevronDown className="h-4 w-4 text-gray-500 flex-shrink-0" />
         </button>
@@ -459,7 +458,7 @@ const Header = ({
 
         <div className="flex flex-1 min-w-0 md:justify-end">
           <div className="w-full min-w-0 md:ml-auto md:max-w-[28rem]">
-            <div className="grid w-full min-w-0 gap-3 md:grid-cols-2 md:gap-4">
+            <div className="grid w-full min-w-0 gap-3 grid-cols-2 md:grid-cols-2 md:gap-4">
               <div className="flex flex-col gap-1 md:items-end">
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide md:text-right">Negocio</span>
                 {renderBusinessSelector('md:w-[13rem]')}
