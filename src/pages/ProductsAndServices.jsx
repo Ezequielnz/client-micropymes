@@ -8,6 +8,7 @@ import '../styles/responsive-overrides.css';
 import { useBusinessContext } from '../contexts/BusinessContext';
 import CatalogUpload from '../components/CatalogUpload';
 import MassivePriceUpdateModal from '../components/MassivePriceUpdateModal';
+import PermissionGuard from '../components/PermissionGuard';
 
 // Memoized component to avoid inline component recreation
 const OptimizedTable = React.memo(({
@@ -1294,7 +1295,7 @@ const ProductsAndServices = () => {
 export default function ProtectedProductsAndServices() {
   return (
     <Layout activeSection="products">
-      <PermissionGuard requiredModule="inventario" requiredAction="ver">
+      <PermissionGuard resource="productos" action="view">
         <ProductsAndServices />
       </PermissionGuard>
     </Layout>
