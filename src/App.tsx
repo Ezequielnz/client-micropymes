@@ -14,6 +14,8 @@ import Finanzas from './pages/Finanzas';
 import Home from './pages/Home';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
+import RequestPasswordReset from './pages/RequestPasswordReset';
+import UpdatePassword from './pages/UpdatePassword';
 
 import POS from './pages/POS';
 import PendingApproval from './pages/PendingApproval';
@@ -28,6 +30,7 @@ import Tasks from './pages/Tasks';
 
 import StockTransfers from './pages/StockTransfers';
 import BranchPreferences from './pages/BranchPreferences';
+import PaymentMethods from './pages/PaymentMethods';
 
 const App: React.FC = () => (
   <ErrorBoundary>
@@ -40,9 +43,11 @@ const App: React.FC = () => (
         <Route path="/confirm-email" element={<ConfirmEmail />} />
         <Route path="/confirm" element={<ConfirmEmail />} />
         <Route path="/email-confirmation" element={<EmailConfirmation />} />
+        <Route path="/request-password-reset" element={<RequestPasswordReset />} />
 
         {/* Protected Routes */}
         <Route element={<RequireAuth />}>
+          <Route path="/update-password" element={<UpdatePassword />} />
           <Route path="/home" element={<Home />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/pending-approval" element={<PendingApproval />} />
@@ -61,6 +66,7 @@ const App: React.FC = () => (
           <Route path="/finanzas" element={<Finanzas />} />
           <Route path="/stock-transfers" element={<StockTransfers />} />
           <Route path="/settings/branch-preferences" element={<BranchPreferences />} />
+          <Route path="/settings/payment-methods" element={<PaymentMethods />} />
 
           <Route
             path="/compras"

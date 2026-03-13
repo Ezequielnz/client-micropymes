@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+// import { Alert, AlertDescription } from '@/components/ui/alert'; // Removed to prevent potential crashes
 import { authAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -40,26 +40,100 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Handle email confirmation token
+  // Handle authentication flows (PKCE code or Hash fragments)
   React.useEffect(() => {
-    const handleConfirmation = async () => {
+    const handleAuthFlow = async () => {
+      // 1. Check for PKCE Code (Query Params) - Standard Supabase Flow
+      const searchParams = new URLSearchParams(window.location.search);
+      const code = searchParams.get('code');
+
+      // 2. Check for Hash Fragment - Legacy/Implicit Flow
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get('access_token');
-      const type = hashParams.get('type');
+      const type = hashParams.get('type') || searchParams.get('type'); // Type might be in query or hash
 
-      if (accessToken && type === 'signup') {
+      // Priority 1: Handle PKCE Code (New Flow)
+      if (code) {
         setLoading(true);
         try {
-          // 1. Store token temporarily
+          // Exchange code for session
+          const data = await authAPI.exchangeCode(code);
+
+          // Login user with new tokens
+          login(data.user, data.access_token);
+
+          // Determine success message based on context
+          // Note: Supabase doesn't always send 'type' with code, so we infer or show generic success
+          setError(
+            <div className="space-y-2">
+              <p className="font-medium text-green-600 flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                ¡Verificación exitosa!
+              </p>
+              <p className="text-sm text-gray-600">
+                Redirigiendo...
+              </p>
+            </div>
+          );
+
+          // Redirect strategy
+          // If it was a password reset (recovery), we should go to update-password.
+          // Since we might not know for sure if it's recovery without 'type', 
+          // we can check if the user just requested it or check a flag.
+          // For now, if we have a valid session, let's look for 'next' param or default.
+          const next = searchParams.get('next');
+
+          setTimeout(() => {
+            // If known recovery flow or generic, we might want to allow user to reset password if that was the intent.
+            // Usually recovery sends type=recovery.
+            // If we can't detect type, user will go to home. 
+            // If they are here for password reset, they are now logged in and can go to profile -> change password,
+            // OR we can default to /update-password if we suspect it (but that might be annoying for normal logins).
+            // LET'S CHECK if 'type' param existed (Supabase sometimes appends it).
+
+            if (type === 'recovery') {
+              navigate('/update-password');
+            } else {
+              navigate(next || '/home');
+            }
+          }, 1500);
+
+        } catch (err) {
+          console.error('Error exchanging code:', err);
+          setError('El enlace de verificación es inválido o ha expirado.');
+        } finally {
+          setLoading(false);
+          // Clean URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        return; // Stop here if we handled code
+      }
+
+      // Priority 2: Handle Implicit/Legacy Hash Fragment
+      if (accessToken && (type === 'signup' || type === 'recovery')) {
+        setLoading(true);
+        try {
           localStorage.setItem('token', accessToken);
-
-          // 2. Verify token and get user data
           const userData = await authAPI.getCurrentUser();
-
-          // 3. Login user
           login(userData, accessToken);
 
-          // 4. Show success message
+          if (type === 'recovery') {
+            setError(
+              <div className="space-y-2">
+                <p className="font-medium text-green-600 flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4" />
+                  ¡Identidad verificada!
+                </p>
+                <p className="text-sm text-gray-600">
+                  Redirigiendo para actualizar tu contraseña...
+                </p>
+              </div>
+            );
+            setTimeout(() => navigate('/update-password'), 1500);
+            return;
+          }
+
+          // Confirmed signup
           setError(
             <div className="space-y-2">
               <p className="font-medium text-green-600 flex items-center gap-2">
@@ -71,11 +145,7 @@ function Login() {
               </p>
             </div>
           );
-
-          // 5. Redirect after delay
-          setTimeout(() => {
-            navigate('/home');
-          }, 2000);
+          setTimeout(() => navigate('/home'), 2000);
 
         } catch (err) {
           console.error('Error confirming email:', err);
@@ -87,7 +157,7 @@ function Login() {
       }
     };
 
-    handleConfirmation();
+    handleAuthFlow();
   }, [navigate, login]);
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -130,14 +200,25 @@ function Login() {
       // Limpiar el token si hay error
       localStorage.removeItem('token');
 
+      // Defensive handling for "Error: A listener indicated..." which is often an extension issue
+      if (err?.message?.includes?.('message channel closed')) {
+        setError('Error de conexión navegador/servidor. Por favor intente nuevamente.');
+        return;
+      }
+
+      // Safe access to response properties
+      const status = err?.response?.status;
+      const data = err?.response?.data;
+      const detail = data?.detail;
+
       // Manejar diferentes tipos de errores
-      if (err.response?.status === 403 && err.response?.data?.detail?.error_type === 'email_not_confirmed') {
+      if (status === 403 && detail?.error_type === 'email_not_confirmed') {
         // Error específico de email no confirmado
-        const email = err.response.data.detail.email || formData.email;
+        const email = detail.email || formData.email;
         setError(
           <div className="space-y-3">
-            <p className="font-medium text-erp-error">Email no confirmado</p>
-            <p className="text-sm text-erp-neutral-600">
+            <p className="font-medium text-red-600">Email no confirmado</p>
+            <p className="text-sm text-gray-600">
               Tu cuenta necesita ser verificada antes de poder iniciar sesión.
             </p>
             <div className="flex flex-col gap-2">
@@ -146,7 +227,7 @@ function Login() {
                 variant="outline"
                 size="sm"
                 onClick={() => navigate(`/email-confirmation?email=${encodeURIComponent(email)}`)}
-                className="text-erp-primary border-erp-primary-300 hover:bg-erp-primary-50"
+                className="text-blue-600 border-blue-300 hover:bg-blue-50"
               >
                 Ir a página de confirmación
               </Button>
@@ -172,10 +253,24 @@ function Login() {
             </div>
           </div>
         );
-      } else if (err.response?.status === 401) {
+      } else if (status === 401) {
         setError('Credenciales inválidas. Por favor verifica tu email y contraseña.');
       } else {
-        setError(err.response?.data?.detail || err.message || 'Error al iniciar sesión');
+        // Fallback robusto para el mensaje de error
+        let errorMessage = 'Error al iniciar sesión';
+
+        if (typeof detail === 'string') {
+          errorMessage = detail;
+        } else if (typeof detail === 'object' && detail !== null) {
+          // Si es un objeto (ej: errores de validación de Pydantic), lo convertimos a string legible o tomamos el primer mensaje
+          errorMessage = Array.isArray(detail)
+            ? (detail[0]?.msg || JSON.stringify(detail))
+            : (detail.message || JSON.stringify(detail));
+        } else if (err?.message) {
+          errorMessage = err.message;
+        }
+
+        setError(errorMessage);
       }
     } finally {
       setLoading(false);
@@ -272,12 +367,16 @@ function Login() {
               </CardHeader>
               <CardContent className="space-y-6">
                 {error && (
-                  <Alert variant={typeof error === 'string' && error.includes('activar') ? 'default' : 'destructive'}>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
+                  <div className={`p-4 rounded-lg mb-4 flex items-start space-x-3 ${typeof error === 'string' && error.includes('activar')
+                    ? 'bg-blue-50 border border-blue-200 text-blue-800'
+                    : 'bg-red-50 border border-red-200 text-red-800'
+                    }`}>
+                    <AlertCircle className={`h-5 w-5 flex-shrink-0 ${typeof error === 'string' && error.includes('activar') ? 'text-blue-500' : 'text-red-500'
+                      }`} />
+                    <div className="text-sm">
                       {error}
-                    </AlertDescription>
-                  </Alert>
+                    </div>
+                  </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -318,6 +417,15 @@ function Login() {
                       />
                     </div>
                   </div>
+                  <div className="flex justify-end mt-1">
+                    <Link
+                      to="/request-password-reset"
+                      className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </Link>
+                  </div>
+
 
                   <Button
                     type="submit"
@@ -325,14 +433,10 @@ function Login() {
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
                     size="lg"
                   >
-                    {loading ? (
-                      'Iniciando sesión...'
-                    ) : (
-                      <>
-                        Iniciar Sesión
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </>
-                    )}
+                    <span className="flex items-center justify-center">
+                      {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+                      {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
+                    </span>
                   </Button>
                 </form>
 
@@ -351,10 +455,10 @@ function Login() {
             </Card>
           </div>
         </div>
-      </section>
+      </section >
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      < footer className="bg-gray-900 text-white py-12" >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="flex items-center justify-center mb-4 space-x-2">
@@ -366,8 +470,8 @@ function Login() {
             </p>
           </div>
         </div>
-      </footer>
-    </div>
+      </footer >
+    </div >
   );
 }
 

@@ -39,25 +39,26 @@ class ErrorBoundary extends React.Component {
               Ha ocurrido un error inesperado. Por favor, recarga la página o intenta nuevamente.
             </p>
             <div className="space-y-3">
-              <button 
+              <button
                 onClick={() => window.location.reload()}
                 className="w-full inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 Recargar página
               </button>
-              <button 
+              <button
                 onClick={() => this.setState({ hasError: false, error: null, errorInfo: null })}
                 className="w-full inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 Intentar nuevamente
               </button>
             </div>
-            
+
             {/* Mostrar detalles del error en desarrollo */}
-            {isDevelopment && this.state.error && (
+            {/* Mostrar detalles del error SIEMPRE para debugging (temporarily enabled for prod) */}
+            {(this.state.error) && (
               <details className="mt-6 text-left">
                 <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
-                  Detalles del error (desarrollo)
+                  Ver detalles del error (Debug)
                 </summary>
                 <div className="mt-2 p-3 bg-gray-100 rounded text-xs text-gray-700 overflow-auto">
                   <div className="font-semibold mb-2">Error:</div>
