@@ -81,8 +81,7 @@ function Profile() {
   const [profileForm, setProfileForm] = useState({
     nombre: '',
     apellido: '',
-    email: '',
-    telefono: ''
+    email: ''
   });
 
   const [passwordForm, setPasswordForm] = useState({
@@ -100,8 +99,7 @@ function Profile() {
           setProfileForm({
             nombre: user.nombre || '',
             apellido: user.apellido || '',
-            email: user.email || '',
-            telefono: user.telefono || ''
+            email: user.email || ''
           });
         }
       } catch (error) {
@@ -232,7 +230,7 @@ function Profile() {
           <Alert
             variant={message.type}
             className={`mb-6 flex items-center space-x-2 ${message.type === 'success' ? 'border-green-200 bg-green-50 text-green-800' :
-                message.type === 'error' ? 'border-red-200 bg-red-50 text-red-800' : ''
+              message.type === 'error' ? 'border-red-200 bg-red-50 text-red-800' : ''
               }`}
           >
             {message.type === 'success' ?
@@ -295,18 +293,7 @@ function Profile() {
                   />
                 </div>
 
-                <div>
-                  <label htmlFor="telefono" className="block text-sm font-medium text-gray-700 mb-1">
-                    Teléfono
-                  </label>
-                  <input
-                    type="tel"
-                    id="telefono"
-                    value={profileForm.telefono}
-                    onChange={(e) => setProfileForm(prev => ({ ...prev, telefono: e.target.value }))}
-                    className="w-full px-3 py-2 text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
+
 
                 <Button
                   type="submit"
