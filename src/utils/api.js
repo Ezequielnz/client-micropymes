@@ -303,13 +303,16 @@ export const authAPI = {
   },
 
   /**
-   * Logs out the current user by removing the token from localStorage.
-   * This is a client-side operation that doesn't require an API call.
+   * Notifica al backend que el usuario cerró sesión.
+   * FASE 2: Llama a POST /auth/logout (best-effort).
+   * El AuthContext se encarga de limpiar localStorage por separado.
    */
-  logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.clear();
+  logout: async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      // best-effort: si falla (ej: token ya expirado), no bloquear el logout
+    }
   },
 };
 
