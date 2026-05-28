@@ -619,6 +619,47 @@ export const productAPI = {
 };
 
 /**
+ * @namespace facturacionAPI
+ * @description Contains functions for managing AFIP billing configuration and status.
+ */
+export const facturacionAPI = {
+  /**
+   * Fetches the fiscal configuration for a specific business.
+   * @param {string} businessId - The ID of the business.
+   * @returns {Promise<object>} A promise that resolves to the fiscal configuration.
+   */
+  getConfig: async (businessId) => {
+    const response = await api.get(`/businesses/${businessId}/facturacion/config`);
+    return response.data;
+  },
+
+  /**
+   * Updates or creates the fiscal configuration for a business.
+   * @param {string} businessId - The ID of the business.
+   * @param {FormData} formData - The FormData object containing configuration data and optional certificate files.
+   * @returns {Promise<object>} A promise that resolves to the updated configuration.
+   */
+  upsertConfig: async (businessId, formData) => {
+    const response = await api.post(`/businesses/${businessId}/facturacion/config`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  /**
+   * Tests the connection to AFIP servers using the configured certificates.
+   * @param {string} businessId - The ID of the business.
+   * @returns {Promise<object>} A promise that resolves to the AFIP status.
+   */
+  getStatus: async (businessId) => {
+    const response = await api.get(`/businesses/${businessId}/facturacion/status`);
+    return response.data;
+  },
+};
+
+/**
  * @namespace categoryAPI
  * @description Contains functions for managing product categories.
  */

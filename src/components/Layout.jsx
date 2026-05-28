@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -104,7 +104,7 @@ const Sidebar = ({
     { id: 'clients', label: 'Clientes', icon: Users, onClick: () => safeNavigate('/customers') },
     { id: 'finances', label: 'Finanzas', icon: BarChart3, onClick: () => safeNavigate('/finanzas') },
     { id: 'tasks', label: 'Tareas', icon: Clock, onClick: () => safeNavigate('/tasks') },
-    { id: 'billing', label: 'Facturación (próximamente)', icon: FileText, disabled: true },
+    { id: 'billing', label: 'Facturación', icon: FileText, onClick: () => safeNavigate('/settings/facturacion') },
     { id: 'settings', label: 'Configuración', icon: Settings, onClick: () => safeNavigate('/profile') },
   ];
 
