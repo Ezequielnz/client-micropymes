@@ -21,12 +21,17 @@ const MODULE_RESOURCE_MAP = {
   facturacion: 'facturacion'
 };
 
-function PermissionGuard({ children, requiredModule, requiredAction = 'ver' }) {
+function PermissionGuard({ children, requiredModule, requiredAction = 'ver', requireBranch = false }) {
   const navigate = useNavigate();
   
   // ✅ FIXED: Use BusinessContext instead of useParams
-  const { currentBusiness } = useBusinessContext();
+  const { currentBusiness, currentBranch, branches, branchesLoading } = useBusinessContext();
   const businessId = currentBusiness?.id;
+  const branchId = currentBranch?.id;
+  
+  // Check if branch selection is needed and pending
+  const branchSelectionRequired = requireBranch && !branchesLoading && (branches?.length ?? 0) > 1;
+  const missingBranch = branchSelectionRequired && !branchId;
   
   // ✅ NEW: Use the new permissions system
   const { isLoading: loading, canView, canEdit, canDelete, hasFullAccess, permissions } = useUserPermissions(businessId);
@@ -93,6 +98,38 @@ function PermissionGuard({ children, requiredModule, requiredAction = 'ver' }) {
               </h3>
               <p className="text-gray-600 mb-6">
                 Para acceder a esta página necesitas seleccionar un negocio desde el menú superior.
+              </p>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => navigate('/home')} 
+                  className="btn btn-primary flex-1"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Volver al Dashboard
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle case when a branch is required but not selected
+  if (missingBranch) {
+    return (
+      <div className="app-container">
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="card max-w-md mx-auto">
+            <div className="text-center p-8">
+              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="h-8 w-8 text-yellow-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                No hay sucursal seleccionada
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Para acceder a esta página necesitas seleccionar una sucursal desde el menú superior.
               </p>
               <div className="flex gap-2">
                 <button 

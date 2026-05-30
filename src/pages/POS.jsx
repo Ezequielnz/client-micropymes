@@ -121,9 +121,10 @@ const Alert = ({ children, variant = 'default', className = '' }) => {
  * Point of Sale (POS) component with modern design.
  */
 function POS() {
-  const { currentBusiness } = useBusinessContext();
+  const { currentBusiness, currentBranch } = useBusinessContext();
   const queryClient = useQueryClient();
   const businessId = currentBusiness?.id;
+  const branchId = currentBranch?.id;
 
   /** @type {[Array<CartItem>, function]} cart - State representing the current shopping cart, an array of CartItem objects. */
   const [cart, setCart] = useState([]);
@@ -265,7 +266,8 @@ function POS() {
   const recordSaleMutation = useMutation({
     mutationFn: async (saleData) => {
       if (!businessId) throw new Error('Business ID is missing');
-      return await salesAPI.recordSale(businessId, saleData);
+      if (!branchId) throw new Error('Branch ID is missing. Por favor selecciona una sucursal.');
+      return await salesAPI.recordSale(businessId, branchId, saleData);
     },
     onSuccess: () => {
       setSaleSuccessMessage('¡Venta registrada exitosamente!');
@@ -532,8 +534,8 @@ function POS() {
     }
   }, [newCustomer, createCustomerMutation]);
 
-  // ✅ OPTIMIZED: Early return for missing business
-  if (!currentBusiness) {
+  // ✅ OPTIMIZED: Early return for missing business or branch
+  if (!currentBusiness || !currentBranch) {
     return (
       <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-8 overflow-hidden">
         <div className="mb-8">
@@ -549,7 +551,9 @@ function POS() {
           </div>
           <Alert variant="warning" className="mb-6">
             <AlertTriangle className="h-4 w-4 mr-2" />
-            No hay negocio seleccionado. Por favor selecciona un negocio desde el menú superior.
+            {!currentBusiness 
+              ? 'No hay negocio seleccionado. Por favor selecciona un negocio desde el menú superior.'
+              : 'No hay sucursal seleccionada. Por favor selecciona una sucursal desde el menú superior.'}
           </Alert>
         </div>
         {isCustomerModalOpen && (

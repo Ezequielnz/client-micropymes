@@ -723,8 +723,9 @@ export const categoryAPI = {
  */
 export const salesAPI = {
   /**
-   * Records a new sale transaction for a specific business.
+   * Records a new sale transaction for a specific business and branch.
    * @param {string} businessId - The ID of the business.
+   * @param {string} branchId - The ID of the branch.
    * @param {object} saleData - Data for the new sale.
    * @param {(string|number|null)} saleData.cliente_id - The ID of the customer, or null if not specified (e.g., walk-in).
    * @param {string} saleData.medio_pago - Payment method: efectivo, tarjeta, transferencia.
@@ -737,11 +738,11 @@ export const salesAPI = {
    * @returns {Promise<object>} A promise that resolves to the API response with the created sale.
    * @throws {Error} If the API request fails.
    */
-  recordSale: async (businessId, saleData) => {
-    if (!businessId) {
-      throw new Error('businessId is required to record a sale.');
+  recordSale: async (businessId, branchId, saleData) => {
+    if (!businessId || !branchId) {
+      throw new Error('businessId and branchId are required to record a sale.');
     }
-    const response = await api.post(`/businesses/${businessId}/ventas/record-sale`, saleData);
+    const response = await api.post(`/businesses/${businessId}/branches/${branchId}/ventas/record-sale`, saleData);
     return response.data;
   },
 
