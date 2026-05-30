@@ -569,7 +569,7 @@ const BranchManager = ({ business, canManage }) => {
       return;
     }
     setSettings(null);
-    setSettingsError(extractErrorMessage(settingsQueryError, 'No se pudo obtener la configuraciÃ³n del negocio.'));
+    setSettingsError(extractErrorMessage(settingsQueryError, 'No se pudo obtener la configuración del negocio.'));
   }, [settingsQueryHasError, settingsQueryError]);
 
   const handleOpenManager = useCallback(() => {
@@ -706,7 +706,7 @@ const BranchManager = ({ business, canManage }) => {
       try {
         await businessAPI.updateBranch(business.id, branchId, { is_main: true });
         await queryClient.invalidateQueries({ queryKey: businessKeys.branches(business.id) });
-        setFeedbackMessage('La sucursal principal se actualizÃ³ correctamente.');
+        setFeedbackMessage('La sucursal principal se actualizó correctamente.');
       } catch (error) {
         setBranchesError(extractErrorMessage(error, 'No se pudo establecer la sucursal principal.'));
       } finally {
@@ -724,7 +724,7 @@ const BranchManager = ({ business, canManage }) => {
       try {
         const updated = await businessAPI.updateBranchSettings(business.id, changes);
         setSettings(updated);
-        setFeedbackMessage('La configuraciÃ³n del negocio se actualizÃ³ correctamente.');
+        setFeedbackMessage('La configuración del negocio se actualizó correctamente.');
         queryClient.setQueryData(businessKeys.settings(business.id), updated);
         return true;
       } catch (error) {
@@ -957,13 +957,13 @@ const BranchManager = ({ business, canManage }) => {
                   <div>
                     <h4 className="text-sm font-semibold text-gray-900">Preferencias del negocio</h4>
                     <p className="text-xs text-gray-500">
-                      Ajusta cÃ³mo operan las sucursales en inventario, servicios y transferencias.
+                      Ajusta cómo operan las sucursales en inventario, servicios y transferencias.
                     </p>
                   </div>
                   {settingsLoading && (
                     <div className="flex items-center gap-2 text-blue-600 text-sm">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Cargando configuraciÃ³n...</span>
+                      <span>Cargando configuración...</span>
                     </div>
                   )}
                   {!settingsLoading && settings && (
@@ -977,7 +977,7 @@ const BranchManager = ({ business, canManage }) => {
                   )}
                   {!settingsLoading && !settings && (
                     <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-md">
-                      {settingsError || 'No se pudo cargar la configuraciÃ³n actual de este negocio.'}
+                      {settingsError || 'No se pudo cargar la configuración actual de este negocio.'}
                     </div>
                   )}
                 </div>
@@ -1065,12 +1065,12 @@ function BusinessUsers() {
       setShowCreateForm(false);
     } catch (err) {
       console.error('Error creating business:', err);
-      alert('Error al crear el negocio: ' + extractErrorMessage(err, 'Intenta nuevamente mÃ¡s tarde.'));
+      alert('Error al crear el negocio: ' + extractErrorMessage(err, 'Intenta nuevamente más tarde.'));
     }
   };
 
   const handleDeleteBusiness = async (businessId, businessName) => {
-    if (!confirm(`Â¿EstÃ¡s seguro de que quieres eliminar el negocio "${businessName}"? Esta acciÃ³n no se puede deshacer.`)) {
+    if (!confirm(`¿Estás seguro de que quieres eliminar el negocio "${businessName}"? Esta acción no se puede deshacer.`)) {
       return;
     }
 
@@ -1081,7 +1081,7 @@ function BusinessUsers() {
       if (err?.response?.status === 403) {
         alert('No tienes permisos para eliminar este negocio. Solo los administradores pueden eliminarlo.');
       } else {
-        alert('Error al eliminar el negocio: ' + extractErrorMessage(err, 'Intenta nuevamente mÃ¡s tarde.'));
+        alert('Error al eliminar el negocio: ' + extractErrorMessage(err, 'Intenta nuevamente más tarde.'));
       }
     }
   };
