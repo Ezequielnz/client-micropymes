@@ -568,128 +568,6 @@ function POS() {
               : 'No hay sucursal seleccionada. Por favor selecciona una sucursal desde el menú superior.'}
           </Alert>
         </div>
-        {isCustomerModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/50" onClick={() => !createCustomerMutation.isPending && setIsCustomerModalOpen(false)}></div>
-            <div className="relative bg-white rounded-lg shadow-lg w-full max-w-md mx-auto z-10">
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Nuevo Cliente</h3>
-                {createCustomerError && (
-                  <Alert variant="destructive" className="mb-3">
-                    <AlertTriangle className="h-4 w-4 mr-2" />
-                    {createCustomerError}
-                  </Alert>
-                )}
-                <div className="grid grid-cols-1 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                    <input
-                      type="text"
-                      value={newCustomer.nombre}
-                      onChange={(e) => setNewCustomer({ ...newCustomer, nombre: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Nombre"
-                      required
-                      disabled={createCustomerMutation.isPending}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
-                    <input
-                      type="text"
-                      value={newCustomer.apellido}
-                      onChange={(e) => setNewCustomer({ ...newCustomer, apellido: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Apellido"
-                      required
-                      disabled={createCustomerMutation.isPending}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input
-                      type="email"
-                      value={newCustomer.email}
-                      onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="correo@ejemplo.com"
-                      disabled={createCustomerMutation.isPending}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-                    <input
-                      type="text"
-                      value={newCustomer.telefono}
-                      onChange={(e) => setNewCustomer({ ...newCustomer, telefono: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="+54 9 ..."
-                      disabled={createCustomerMutation.isPending}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
-                    <input
-                      type="text"
-                      value={newCustomer.direccion}
-                      onChange={(e) => setNewCustomer({ ...newCustomer, direccion: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Calle 123"
-                      disabled={createCustomerMutation.isPending}
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Doc. Tipo</label>
-                      <input
-                        type="text"
-                        value={newCustomer.documento_tipo}
-                        onChange={(e) => setNewCustomer({ ...newCustomer, documento_tipo: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="DNI/CUIT"
-                        disabled={createCustomerMutation.isPending}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Doc. Número</label>
-                      <input
-                        type="text"
-                        value={newCustomer.documento_numero}
-                        onChange={(e) => setNewCustomer({ ...newCustomer, documento_numero: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="12345678"
-                        disabled={createCustomerMutation.isPending}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-6 flex justify-end gap-2">
-                  <Button
-                    variant="ghost"
-                    onClick={() => !createCustomerMutation.isPending && setIsCustomerModalOpen(false)}
-                    disabled={createCustomerMutation.isPending}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    onClick={handleCreateCustomer}
-                    disabled={createCustomerMutation.isPending}
-                    className="min-w-[120px]"
-                  >
-                    {createCustomerMutation.isPending ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Guardando...
-                      </>
-                    ) : (
-                      'Guardar'
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
@@ -1141,6 +1019,129 @@ function POS() {
           </Card>
         </div>
       </div>
+
+      {isCustomerModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => !createCustomerMutation.isPending && setIsCustomerModalOpen(false)}></div>
+          <div className="relative bg-white rounded-lg shadow-lg w-full max-w-md mx-auto z-10">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Nuevo Cliente</h3>
+              {createCustomerError && (
+                <Alert variant="destructive" className="mb-3">
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  {createCustomerError}
+                </Alert>
+              )}
+              <div className="grid grid-cols-1 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                  <input
+                    type="text"
+                    value={newCustomer.nombre}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, nombre: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Nombre"
+                    required
+                    disabled={createCustomerMutation.isPending}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
+                  <input
+                    type="text"
+                    value={newCustomer.apellido}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, apellido: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Apellido"
+                    required
+                    disabled={createCustomerMutation.isPending}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={newCustomer.email}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="correo@ejemplo.com"
+                    disabled={createCustomerMutation.isPending}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                  <input
+                    type="text"
+                    value={newCustomer.telefono}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, telefono: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="+54 9 ..."
+                    disabled={createCustomerMutation.isPending}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+                  <input
+                    type="text"
+                    value={newCustomer.direccion}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, direccion: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Calle 123"
+                    disabled={createCustomerMutation.isPending}
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Doc. Tipo</label>
+                    <input
+                      type="text"
+                      value={newCustomer.documento_tipo}
+                      onChange={(e) => setNewCustomer({ ...newCustomer, documento_tipo: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="DNI/CUIT"
+                      disabled={createCustomerMutation.isPending}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Doc. Número</label>
+                    <input
+                      type="text"
+                      value={newCustomer.documento_numero}
+                      onChange={(e) => setNewCustomer({ ...newCustomer, documento_numero: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="12345678"
+                      disabled={createCustomerMutation.isPending}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => !createCustomerMutation.isPending && setIsCustomerModalOpen(false)}
+                  disabled={createCustomerMutation.isPending}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleCreateCustomer}
+                  disabled={createCustomerMutation.isPending}
+                  className="min-w-[120px]"
+                >
+                  {createCustomerMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Guardando...
+                    </>
+                  ) : (
+                    'Guardar'
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
