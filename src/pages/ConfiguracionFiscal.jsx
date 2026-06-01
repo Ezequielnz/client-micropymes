@@ -192,7 +192,7 @@ export function ConfiguracionFiscalContent() {
                   onChange={handleInputChange}
                   placeholder="Sin guiones"
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                 />
               </div>
               <div>
@@ -203,7 +203,7 @@ export function ConfiguracionFiscalContent() {
                   value={formData.razon_social}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                 />
               </div>
               <div>
@@ -212,10 +212,10 @@ export function ConfiguracionFiscalContent() {
                   name="condicion_fiscal"
                   value={formData.condicion_fiscal}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white text-black"
                 >
-                  <option value="monotributista">Monotributista</option>
-                  <option value="responsable_inscripto">Responsable Inscripto</option>
+                  <option value="monotributista" className="bg-white text-black">Monotributista</option>
+                  <option value="responsable_inscripto" className="bg-white text-black">Responsable Inscripto</option>
                 </select>
               </div>
               <div>
@@ -227,7 +227,7 @@ export function ConfiguracionFiscalContent() {
                   onChange={handleInputChange}
                   min="1"
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                 />
                 <p className="text-xs text-gray-500 mt-1">El número de punto de venta configurado en AFIP para WS.</p>
               </div>
