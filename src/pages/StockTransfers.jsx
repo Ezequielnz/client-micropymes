@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useContext, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Plus, RefreshCw, Check, X, Trash2 } from 'lucide-react';
 
@@ -949,24 +949,11 @@ const StockTransfersInner = () => {
 };
 
 const StockTransfers = () => {
-  const context = useContext(BusinessContext);
-
-  if (!context) {
-    return (
-      <Layout activeSection="stock-transfers">
-        <StockTransfersInner />
-      </Layout>
-    );
-  }
-
-  return <StockTransfersInner />;
+  return (
+    <Layout activeSection="stock-transfers">
+      <StockTransfersInner />
+    </Layout>
+  );
 };
 
 export default StockTransfers;
-
-
-
-
-
-
-

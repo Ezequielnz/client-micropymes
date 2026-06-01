@@ -33,7 +33,7 @@ const INITIAL_BRANCH_FORM = {
   is_main: false,
 };
 
-const BranchPreferences = () => {
+const BranchPreferencesContent = () => {
   const {
     currentBusiness,
     branches,
@@ -197,7 +197,7 @@ const BranchPreferences = () => {
   }, [branches]);
 
   return (
-    <Layout activeSection="settings">
+    <>
       <div className="max-w-6xl mx-auto px-4 py-8">
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900">Configuración por negocio</h1>
@@ -516,6 +516,14 @@ const BranchPreferences = () => {
           </div>
         </section>
       </div>
+    </>
+  );
+};
+
+const BranchPreferences = () => {
+  return (
+    <Layout activeSection="settings">
+      <BranchPreferencesContent />
     </Layout>
   );
 };

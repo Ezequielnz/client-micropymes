@@ -4,7 +4,7 @@ import { paymentMethodsAPI } from '../utils/api';
 import Layout from '../components/Layout';
 import { Plus, Trash2, Edit2, Percent } from 'lucide-react';
 
-const PaymentMethods = () => {
+const PaymentMethodsContent = () => {
     const { currentBusiness } = useBusinessContext();
     const businessId = currentBusiness?.id;
 
@@ -84,7 +84,7 @@ const PaymentMethods = () => {
     };
 
     return (
-        <Layout>
+        <>
             <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
                     <div>
@@ -267,6 +267,14 @@ const PaymentMethods = () => {
                     </div>
                 )}
             </div>
+        </>
+    );
+};
+
+const PaymentMethods = () => {
+    return (
+        <Layout activeSection="settings">
+            <PaymentMethodsContent />
         </Layout>
     );
 };

@@ -30,7 +30,7 @@ const Alert = ({ children, variant = 'default', className = '' }) => {
   );
 };
 
-export default function ConfiguracionFiscal() {
+export function ConfiguracionFiscalContent() {
   const { currentBusiness } = useBusinessContext();
   const businessId = currentBusiness?.id;
   const queryClient = useQueryClient();
@@ -143,16 +143,14 @@ export default function ConfiguracionFiscal() {
 
   if (!businessId) {
     return (
-      <Layout activeSection="settings">
-        <div className="px-4 py-8 max-w-4xl mx-auto">
-          <Alert variant="warning">No hay negocio seleccionado.</Alert>
-        </div>
-      </Layout>
+      <div className="px-4 py-8 max-w-4xl mx-auto">
+        <Alert variant="warning">No hay negocio seleccionado.</Alert>
+      </div>
     );
   }
 
   return (
-    <Layout activeSection="settings">
+    <>
       <div className="px-4 py-8 max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -422,6 +420,14 @@ export default function ConfiguracionFiscal() {
           </div>
         )}
       </div>
+    </>
+  );
+}
+
+export default function ConfiguracionFiscal() {
+  return (
+    <Layout activeSection="settings">
+      <ConfiguracionFiscalContent />
     </Layout>
   );
 }
