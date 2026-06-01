@@ -657,7 +657,7 @@ const Layout = ({ children, activeSection }) => {
   const loadInitialData = useCallback(async () => {
     try {
       setLoading(true);
-      // Solo cargar businesses, el usuario ya estÃ¡ disponible en AuthContext
+      // Solo cargar businesses, el usuario ya está disponible en AuthContext
       const businessesData = await businessAPI.getBusinesses();
 
       setBusinesses(businessesData);

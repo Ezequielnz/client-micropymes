@@ -48,7 +48,7 @@ const DashboardStats = ({ dashboardStats, products, customers, formatCurrency })
       value: formatCurrency(dashboardStats.total_sales || 0),
       description: 'Total acumulado este mes',
       icon: DollarSign,
-      trend: '+12.5%',
+      trend: '+0%',
       trendUp: true
     },
     {
@@ -64,7 +64,7 @@ const DashboardStats = ({ dashboardStats, products, customers, formatCurrency })
       value: products.length.toString(),
       description: 'Productos en catálogo',
       icon: Package,
-      trend: `+${products.length}`,
+      trend: '+0',
       trendUp: true
     },
     {
@@ -72,7 +72,7 @@ const DashboardStats = ({ dashboardStats, products, customers, formatCurrency })
       value: customers.length.toString(),
       description: 'Total de clientes',
       icon: Users,
-      trend: `+${customers.length}`,
+      trend: `+${dashboardStats.new_customers || 0}`,
       trendUp: true
     }
   ];

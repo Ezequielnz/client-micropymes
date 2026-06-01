@@ -202,7 +202,7 @@ const BranchFormModal = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                CÃ³digo interno
+                Código interno
               </label>
               <input
                 type="text"
@@ -215,14 +215,14 @@ const BranchFormModal = ({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                DirecciÃ³n
+                Dirección
               </label>
               <input
                 type="text"
                 value={direccion}
                 onChange={(event) => setDireccion(event.target.value)}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring focus:ring-blue-200 text-gray-900"
-                placeholder="Calle, nÃºmero y ciudad"
+                placeholder="Calle, número y ciudad"
                 disabled={saving}
               />
             </div>
@@ -236,7 +236,7 @@ const BranchFormModal = ({
                 className="h-4 w-4 text-blue-600 border-gray-300 rounded"
                 disabled={saving}
               />
-              La sucursal estÃ¡ activa
+              La sucursal está activa
             </label>
             <label className="flex items-center gap-2 text-sm text-gray-700">
               <input
@@ -382,12 +382,12 @@ const BranchSettingsPanel = ({ branches, settings, saving, error, onSave }) => {
             <option value="centralizado">Compartir entre todas las sucursales</option>
           </select>
           <p className="text-xs text-gray-500 mt-1">
-            Define si la oferta de servicios cambia segÃºn la ubicaciÃ³n.
+            Define si la oferta de servicios cambia según la ubicación.
           </p>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            CatÃ¡logo de productos
+            Catálogo de productos
           </label>
           <select
             value={formState.catalogo_producto_modo}
@@ -412,7 +412,7 @@ const BranchSettingsPanel = ({ branches, settings, saving, error, onSave }) => {
             className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring focus:ring-blue-200 text-gray-900"
             disabled={saving || branches.length === 0}
           >
-            <option value="">Seleccionar automÃ¡ticamente</option>
+            <option value="">Seleccionar automáticamente</option>
             {branches.map((branch) => (
               <option key={branch.id} value={String(branch.id)}>
                 {branch.nombre} {branch.is_main ? '(Principal)' : ''}
@@ -420,7 +420,7 @@ const BranchSettingsPanel = ({ branches, settings, saving, error, onSave }) => {
             ))}
           </select>
           <p className="text-xs text-gray-500 mt-1">
-            Se usarÃ¡ por defecto al crear nuevas operaciones.
+            Se usará por defecto al crear nuevas operaciones.
           </p>
         </div>
       </div>
@@ -448,7 +448,7 @@ const BranchSettingsPanel = ({ branches, settings, saving, error, onSave }) => {
               className="h-4 w-4 text-blue-600 border-gray-300 rounded"
               disabled={saving || !formState.permite_transferencias}
             />
-            Confirmar transferencias automÃ¡ticamente
+            Confirmar transferencias automáticamente
           </label>
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-end">
