@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useBusinessContext } from '../contexts/BusinessContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { productAPI, customerAPI, salesAPI, serviceAPI, paymentMethodsAPI } from '../utils/api';
+import { productAPI, customerAPI, salesAPI, serviceAPI, paymentMethodsAPI, facturacionAPI } from '../utils/api';
 import PermissionGuard from '../components/PermissionGuard';
 import Layout from '../components/Layout';
 import '../styles/responsive-overrides.css';
@@ -151,6 +151,17 @@ function POS() {
   /** @type {[string, function]} paymentMethod - State for the selected payment method. */
   const [paymentMethod, setPaymentMethod] = useState('');
   const [paymentMethods, setPaymentMethods] = useState([]);
+
+  /** @type {[boolean, function]} emitirFactura - State for AFIP billing checkbox. */
+  const [emitirFactura, setEmitirFactura] = useState(false);
+
+  // ✅ Fetch AFIP config
+  const { data: facturacionConfig } = useQuery({
+    queryKey: ['facturacionConfig', businessId],
+    queryFn: () => facturacionAPI.getConfig(businessId),
+    enabled: !!businessId && !!currentBusiness,
+    staleTime: 5 * 60 * 1000,
+  });
 
   // Mantener un carrito independiente por negocio usando sessionStorage
   useEffect(() => {
@@ -490,6 +501,7 @@ function POS() {
       cliente_id: selectedCustomer || null,
       metodo_pago: paymentMethod,
       observaciones: null,
+      facturar: emitirFactura,
       items: cart.map(item => ({
         id: item.item_id,
         tipo: item.tipo,
@@ -931,6 +943,48 @@ function POS() {
                   <p className="text-sm text-gray-500 mt-2">Cargando clientes...</p>
                 )}
               </div>
+
+              {/* AFIP Billing Option */}
+              {facturacionConfig && facturacionConfig.habilitada && (
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <label className="flex items-center gap-3 cursor-pointer mb-2">
+                    <input
+                      type="checkbox"
+                      checked={emitirFactura}
+                      onChange={(e) => setEmitirFactura(e.target.checked)}
+                      className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      disabled={isLoading}
+                    />
+                    <span className="font-medium text-gray-900">Emitir Factura Electrónica (AFIP)</span>
+                  </label>
+                  
+                  {emitirFactura && (
+                    <div className="mt-3 pl-8">
+                      <div className="text-sm">
+                        <span className="text-gray-600">Comprobante a emitir: </span>
+                        {(() => {
+                          if (facturacionConfig.condicion_fiscal === 'monotributista') {
+                            return <span className="font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded">Factura C</span>;
+                          } else {
+                            const customer = customers.find(c => c.id === selectedCustomer);
+                            const isFacturaA = customer && customer.documento_tipo === 'CUIT' && customer.documento_numero;
+                            if (isFacturaA) {
+                              return <span className="font-semibold text-purple-700 bg-purple-100 px-2 py-0.5 rounded">Factura A</span>;
+                            } else {
+                              return (
+                                <div className="mt-1 inline-block">
+                                  <span className="font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded">Factura B</span>
+                                  <p className="text-xs text-gray-500 mt-1">Para Factura A, selecciona un cliente con CUIT.</p>
+                                </div>
+                              );
+                            }
+                          }
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Payment Method */}
               <div className="mb-6">
