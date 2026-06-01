@@ -91,15 +91,18 @@ function Register() {
       localStorage.removeItem('token');
 
       let errorMessage = 'Error al registrar usuario';
-      if (err.response?.data?.detail) {
-        if (typeof err.response.data.detail === 'string') {
-          errorMessage = err.response.data.detail;
-        } else if (err.response.data.detail.message) {
-          errorMessage = err.response.data.detail.message;
-        }
+      const detail = err.response?.data?.detail;
+      
+      if (typeof detail === 'string') {
+        errorMessage = detail;
+      } else if (typeof detail === 'object' && detail !== null) {
+        errorMessage = Array.isArray(detail)
+          ? (detail[0]?.msg || JSON.stringify(detail))
+          : (detail.message || JSON.stringify(detail));
       } else if (err.message) {
         errorMessage = err.message;
       }
+      
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -283,6 +286,7 @@ function Register() {
                         value={formData.password}
                         onChange={handleChange}
                         required
+                        minLength={8}
                         className="pl-10 border-gray-200 focus:border-blue-600 focus:ring-blue-600"
                         placeholder="••••••••"
                       />

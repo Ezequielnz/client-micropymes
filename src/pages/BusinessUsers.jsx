@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { businessAPI } from '../utils/api';
@@ -837,9 +837,9 @@ const BranchManager = ({ business, canManage }) => {
                     )}
                   </Button>
                   {canManage && (
-                    <Button size="sm" disabled className="opacity-70 cursor-not-allowed">
+                    <Button size="sm" onClick={handleOpenCreate}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Nueva sucursal (Próximamente)
+                      Nueva sucursal
                     </Button>
                   )}
                 </div>
@@ -859,9 +859,9 @@ const BranchManager = ({ business, canManage }) => {
                     <span>No se registraron sucursales para este negocio.</span>
                   </div>
                   {canManage && (
-                    <Button disabled className="opacity-70 cursor-not-allowed">
+                    <Button onClick={handleOpenCreate}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Crear primera sucursal (Próximamente)
+                      Crear primera sucursal
                     </Button>
                   )}
                 </div>

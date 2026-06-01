@@ -134,7 +134,7 @@ const BusinessSettingsForm = ({ business, isOpen, onClose, onSave }) => {
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+            className="p-2 bg-white border border-gray-200 hover:bg-gray-100 rounded-md transition-colors shadow-sm"
           >
             <X className="h-5 w-5 text-gray-500" />
           </button>
