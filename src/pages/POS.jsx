@@ -1123,6 +1123,7 @@ function POS() {
                   variant="ghost"
                   onClick={() => !createCustomerMutation.isPending && setIsCustomerModalOpen(false)}
                   disabled={createCustomerMutation.isPending}
+                  className="text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                 >
                   Cancelar
                 </Button>
