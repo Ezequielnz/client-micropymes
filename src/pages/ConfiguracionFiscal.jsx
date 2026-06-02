@@ -81,7 +81,7 @@ export function ConfiguracionFiscalContent() {
       });
       if (certificadoFile) form.append('certificado', certificadoFile);
       if (clavePrivadaFile) form.append('clave_privada', clavePrivadaFile);
-      
+
       return await facturacionAPI.upsertConfig(businessId, form);
     },
     onSuccess: () => {
@@ -106,7 +106,7 @@ export function ConfiguracionFiscalContent() {
     },
     onError: (error) => {
       setTestResult(null);
-      setErrorMessage(error.response?.data?.detail || 'Error en la conexión a AFIP.');
+      setErrorMessage(error.response?.data?.detail || 'Error en la conexión a ARCA.');
       setSuccessMessage('');
     }
   });
@@ -155,10 +155,10 @@ export function ConfiguracionFiscalContent() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <FileText className="h-6 w-6 text-blue-600" />
-            Configuración Fiscal (AFIP)
+            Configuración Fiscal (ARCA)
           </h1>
           <p className="text-gray-600 mt-1">
-            Configura los datos y certificados para emitir facturas electrónicas a través de AFIP.
+            Configura los datos y certificados para emitir facturas electrónicas a través de ARCA.
           </p>
         </div>
 
@@ -229,14 +229,14 @@ export function ConfiguracionFiscalContent() {
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                 />
-                <p className="text-xs text-gray-500 mt-1">El número de punto de venta configurado en AFIP para WS.</p>
+                <p className="text-xs text-gray-500 mt-1">El número de punto de venta configurado en ARCA para WS.</p>
               </div>
             </div>
           </div>
 
           <div className="p-6 border-b border-gray-200 bg-gray-50">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Certificados Digitales</h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Certificado (.crt)</label>
@@ -374,11 +374,10 @@ export function ConfiguracionFiscalContent() {
                 <Server className="h-5 w-5 text-gray-500" />
                 Resultado de Conexión
               </h2>
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                testResult.app_server === 'OK' && testResult.db_server === 'OK' && testResult.auth_server === 'OK'
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${testResult.app_server === 'OK' && testResult.db_server === 'OK' && testResult.auth_server === 'OK'
                   ? 'bg-green-100 text-green-800'
                   : 'bg-red-100 text-red-800'
-              }`}>
+                }`}>
                 {testResult.app_server === 'OK' && testResult.db_server === 'OK' && testResult.auth_server === 'OK' ? 'Conectado' : 'Con Problemas'}
               </span>
             </div>
@@ -406,10 +405,10 @@ export function ConfiguracionFiscalContent() {
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h4 className="text-sm font-medium text-gray-900 mb-2">Detalles Adicionales</h4>
                 <div className="space-y-2 text-sm text-gray-600">
-                  <p><span className="font-medium text-gray-700">Entorno AFIP:</span> {testResult.entorno_afip}</p>
+                  <p><span className="font-medium text-gray-700">Entorno ARCA:</span> {testResult.entorno_afip}</p>
                   <p><span className="font-medium text-gray-700">Comprobante Configurado:</span> Factura {testResult.tipo_comprobante_default}</p>
                   {testResult.ultimo_comprobante_autorizado !== undefined && (
-                    <p><span className="font-medium text-gray-700">Último Comprobante (AFIP):</span> {testResult.ultimo_comprobante_autorizado}</p>
+                    <p><span className="font-medium text-gray-700">Último Comprobante (ARCA):</span> {testResult.ultimo_comprobante_autorizado}</p>
                   )}
                   {testResult.error && (
                     <p className="text-red-600 font-medium">Error: {testResult.error}</p>

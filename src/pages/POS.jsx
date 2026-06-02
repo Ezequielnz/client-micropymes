@@ -148,14 +148,16 @@ function POS() {
   const [cartError, setCartError] = useState('');
   /** @type {[string, function]} saleSuccessMessage - State for displaying a success message after a sale is completed. */
   const [saleSuccessMessage, setSaleSuccessMessage] = useState('');
+  /** @type {[string, function]} salePdfUrl - State for storing the invoice PDF URL. */
+  const [salePdfUrl, setSalePdfUrl] = useState('');
   /** @type {[string, function]} paymentMethod - State for the selected payment method. */
   const [paymentMethod, setPaymentMethod] = useState('');
   const [paymentMethods, setPaymentMethods] = useState([]);
 
-  /** @type {[boolean, function]} emitirFactura - State for AFIP billing checkbox. */
+  /** @type {[boolean, function]} emitirFactura - State for ARCA billing checkbox. */
   const [emitirFactura, setEmitirFactura] = useState(false);
 
-  // ✅ Fetch AFIP config
+  // ✅ Fetch ARCA config
   const { data: facturacionConfig } = useQuery({
     queryKey: ['facturacionConfig', businessId],
     queryFn: () => facturacionAPI.getConfig(businessId),
@@ -189,6 +191,7 @@ function POS() {
     setError('');
     setCartError('');
     setSaleSuccessMessage('');
+    setSalePdfUrl('');
     setSelectedCustomer('');
     setSearchTerm('');
   }, [businessId]);
@@ -280,8 +283,13 @@ function POS() {
       if (!branchId) throw new Error('Branch ID is missing. Por favor selecciona una sucursal.');
       return await salesAPI.recordSale(businessId, branchId, saleData);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       setSaleSuccessMessage('¡Venta registrada exitosamente!');
+      if (data && data.factura_pdf_url) {
+        setSalePdfUrl(data.factura_pdf_url);
+      } else {
+        setSalePdfUrl('');
+      }
       setCart([]);
       setSelectedCustomer('');
       setSearchTerm('');
@@ -294,6 +302,7 @@ function POS() {
       console.error('Error recording sale:', err);
       setError(err.response?.data?.detail || err.message || 'Error al registrar la venta.');
       setSaleSuccessMessage('');
+      setSalePdfUrl('');
     }
   });
 
@@ -495,6 +504,7 @@ function POS() {
 
     setError('');
     setSaleSuccessMessage('');
+    setSalePdfUrl('');
     setCartError('');
 
     const saleData = {
@@ -563,7 +573,7 @@ function POS() {
           </div>
           <Alert variant="warning" className="mb-6">
             <AlertTriangle className="h-4 w-4 mr-2" />
-            {!currentBusiness 
+            {!currentBusiness
               ? 'No hay negocio seleccionado. Por favor selecciona un negocio desde el menú superior.'
               : 'No hay sucursal seleccionada. Por favor selecciona una sucursal desde el menú superior.'}
           </Alert>
@@ -612,8 +622,22 @@ function POS() {
 
         {saleSuccessMessage && (
           <Alert variant="success" className="mb-6">
-            <CheckCircle className="h-4 w-4 mr-2" />
-            {saleSuccessMessage}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <CheckCircle className="h-4 w-4 mr-2" />
+                {saleSuccessMessage}
+              </div>
+              {salePdfUrl && (
+                <a
+                  href={salePdfUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 transition-colors border border-green-300"
+                >
+                  Descargar Factura PDF
+                </a>
+              )}
+            </div>
           </Alert>
         )}
       </div>
@@ -822,7 +846,7 @@ function POS() {
                 )}
               </div>
 
-              {/* AFIP Billing Option */}
+              {/* ARCA Billing Option */}
               {facturacionConfig && facturacionConfig.habilitada && (
                 <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                   <label className="flex items-center gap-3 cursor-pointer mb-2">
@@ -833,9 +857,9 @@ function POS() {
                       className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       disabled={isLoading}
                     />
-                    <span className="font-medium text-gray-900">Emitir Factura Electrónica (AFIP)</span>
+                    <span className="font-medium text-gray-900">Emitir Factura Electrónica (ARCA)</span>
                   </label>
-                  
+
                   {emitirFactura && (
                     <div className="mt-3 pl-8">
                       <div className="text-sm">

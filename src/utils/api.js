@@ -620,7 +620,7 @@ export const productAPI = {
 
 /**
  * @namespace facturacionAPI
- * @description Contains functions for managing AFIP billing configuration and status.
+ * @description Contains functions for managing ARCA billing configuration and status.
  */
 export const facturacionAPI = {
   /**
@@ -649,9 +649,9 @@ export const facturacionAPI = {
   },
 
   /**
-   * Tests the connection to AFIP servers using the configured certificates.
+   * Tests the connection to ARCA servers using the configured certificates.
    * @param {string} businessId - The ID of the business.
-   * @returns {Promise<object>} A promise that resolves to the AFIP status.
+   * @returns {Promise<object>} A promise that resolves to the ARCA status.
    */
   getStatus: async (businessId) => {
     const response = await api.get(`/businesses/${businessId}/facturacion/status`);
