@@ -470,16 +470,19 @@ function Customers() {
                   <Label htmlFor="documento_tipo" className="text-sm font-medium text-gray-700">
                     Tipo de Documento
                   </Label>
-                  <Input
+                  <select
                     id="documento_tipo"
                     name="documento_tipo"
-                    type="text"
                     value={formData.documento_tipo}
                     onChange={handleInputChange}
-                    placeholder="DNI, CUIT, etc."
-                    className="w-full"
+                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-slate-900"
                     disabled={isLoading}
-                  />
+                  >
+                    <option value="">Seleccionar...</option>
+                    <option value="DNI">DNI</option>
+                    <option value="CUIT">CUIT</option>
+                    <option value="CUIL">CUIL</option>
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="documento_numero" className="text-sm font-medium text-gray-700">
