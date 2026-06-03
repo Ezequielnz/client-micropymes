@@ -41,7 +41,7 @@ const Button = ({ children, onClick, variant = 'default', size = 'default', clas
     outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500',
     destructive: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
     success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500',
-    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-blue-500'
+    ghost: 'bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-blue-500'
   };
 
   const sizes = {
@@ -178,7 +178,7 @@ const BranchFormModal = ({
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-500 hover:text-gray-700 bg-transparent"
             disabled={saving}
             aria-label="Cerrar"
           >
@@ -787,7 +787,7 @@ const BranchManager = ({ business, canManage }) => {
                 <button
                   type="button"
                   onClick={handleCloseManager}
-                  className="rounded-md p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                  className="rounded-md p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors bg-transparent"
                   aria-label="Cerrar gestor de sucursales"
                 >
                   <XCircle className="h-5 w-5" />
