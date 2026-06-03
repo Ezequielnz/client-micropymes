@@ -22,7 +22,8 @@ const OptimizedTable = React.memo(({
   canDelete,
   selectedIds = [],
   onToggleSelect,
-  onSelectAll
+  onSelectAll,
+  serviciosModo
 }) => {
   const getCategoryName = useCallback((categoryId) => {
     const category = categories.find(cat => cat.id === categoryId);
@@ -72,6 +73,11 @@ const OptimizedTable = React.memo(({
                   <span>{getCategoryName(item.category)}</span>
                   {activeTab === 'products' && (
                     <span>Stock: {item.stock} {item.unit}</span>
+                  )}
+                  {activeTab === 'services' && serviciosModo === 'por_sucursal' && (
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${item.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      {item.activo ? 'Habilitado' : 'Deshabilitado'}
+                    </span>
                   )}
                 </div>
                 {(canEdit || canDelete) && (
@@ -138,6 +144,11 @@ const OptimizedTable = React.memo(({
               <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">
                 Categoría
               </th>
+              {activeTab === 'services' && serviciosModo === 'por_sucursal' && (
+                <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">
+                  Estado
+                </th>
+              )}
               {activeTab === 'products' && (
                 <>
                   <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">
@@ -192,6 +203,13 @@ const OptimizedTable = React.memo(({
                   <td className="px-4 py-3 text-gray-600 text-sm">
                     {getCategoryName(item.category)}
                   </td>
+                  {activeTab === 'services' && serviciosModo === 'por_sucursal' && (
+                    <td className="px-4 py-3 text-sm">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {item.activo ? 'Habilitado' : 'Deshabilitado'}
+                      </span>
+                    </td>
+                  )}
                   {activeTab === 'products' && (
                     <>
                       <td className="px-4 py-3 text-gray-600 text-sm">{item.stock}</td>
@@ -234,12 +252,13 @@ const ProductsAndServices = () => {
   const queryClient = useQueryClient();
 
   // ✅ FIXED: Use BusinessContext instead of useParams
-  const { currentBusiness, currentBranch, branches, branchesLoading } = useBusinessContext();
+  const { currentBusiness, currentBranch, branches, branchesLoading, branchSettings } = useBusinessContext();
   const businessId = currentBusiness?.id;
   const branchId = currentBranch?.id ?? null;
   const branchSelectionRequired = !branchesLoading && (branches?.length ?? 0) > 1;
   const branchReady = !branchSelectionRequired || !!branchId;
   const branchParams = branchId ? { branch_id: branchId } : undefined;
+  const serviciosModo = branchSettings?.servicios_modo || 'centralizado';
 
   // Get permissions
   const { canEdit, canDelete, canView, isLoading: permissionsLoading } = useUserPermissions(businessId);
@@ -259,7 +278,8 @@ const ProductsAndServices = () => {
     category: '',
     stock: '',
     unit: '',
-    code: ''
+    code: '',
+    activo: true
   });
   const [modalError, setModalError] = useState(null);
   const [categoryFormData, setCategoryFormData] = useState({
@@ -563,6 +583,9 @@ const ProductsAndServices = () => {
         }
       } else {
         payload.precio = parseFloat(formData.price) || 0;
+        if (serviciosModo === 'por_sucursal') {
+          payload.activo = formData.activo;
+        }
 
         if (editingItem) {
           await updateServiceMutation.mutateAsync({ id: editingItem.id, payload });
@@ -602,7 +625,8 @@ const ProductsAndServices = () => {
       category: item.category || item.categoria_id || '',
       stock: item.stock?.toString() || item.stock_actual?.toString() || '',
       unit: item.unit || item.unidades || '',
-      code: item.code || item.codigo || ''
+      code: item.code || item.codigo || '',
+      activo: item.activo !== undefined ? item.activo : true
     });
     setShowModal(true);
   }, []);
@@ -619,7 +643,8 @@ const ProductsAndServices = () => {
       category: '',
       stock: '',
       unit: '',
-      code: ''
+      code: '',
+      activo: true
     });
   }, []);
 
@@ -872,8 +897,11 @@ const ProductsAndServices = () => {
         onEdit={handleEdit}
         onDelete={handleDelete}
         loading={isLoading}
-        canEdit={canEditProducts}
         canDelete={canDeleteProducts}
+        selectedIds={selectedIds}
+        onToggleSelect={handleToggleSelect}
+        onSelectAll={handleSelectAll}
+        serviciosModo={serviciosModo}
       />
 
       {/* Modal - keeping original structure but with optimized handlers */}
@@ -1069,6 +1097,20 @@ const ProductsAndServices = () => {
                     </button>
                   </div>
                 </div>
+
+                {activeTab === 'services' && serviciosModo === 'por_sucursal' && (
+                  <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontWeight: 'bold', color: '#333' }}>
+                      <input
+                        type="checkbox"
+                        checked={formData.activo}
+                        onChange={(e) => setFormData({ ...formData, activo: e.target.checked })}
+                        style={{ marginRight: '10px', width: '18px', height: '18px', cursor: 'pointer' }}
+                      />
+                      Habilitado para esta sucursal
+                    </label>
+                  </div>
+                )}
 
                 {activeTab === 'products' && (
                   <>
