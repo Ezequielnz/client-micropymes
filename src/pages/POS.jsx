@@ -284,7 +284,7 @@ function POS() {
       return await salesAPI.recordSale(businessId, branchId, saleData);
     },
     onSuccess: (data) => {
-      setSaleSuccessMessage('¡Venta registrada exitosamente!');
+      setSaleSuccessMessage(data?.mensaje || '¡Venta registrada exitosamente!');
       if (data && data.factura_pdf_url) {
         setSalePdfUrl(data.factura_pdf_url);
       } else {
