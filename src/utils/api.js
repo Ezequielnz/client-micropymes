@@ -657,6 +657,17 @@ export const facturacionAPI = {
     const response = await api.get(`/businesses/${businessId}/facturacion/status`);
     return response.data;
   },
+
+  /**
+   * Generates a CSR and private key for AFIP integration.
+   * @param {string} businessId - The ID of the business.
+   * @param {object} data - Object containing cuit and razon_social.
+   * @returns {Promise<object>} A promise that resolves to the generated CSR content.
+   */
+  generarCsr: async (businessId, data) => {
+    const response = await api.post(`/businesses/${businessId}/facturacion/generar-csr`, data);
+    return response.data;
+  },
 };
 
 /**

@@ -12,7 +12,8 @@ import {
   Loader2,
   Upload,
   RefreshCw,
-  Server
+  Server,
+  Key
 } from 'lucide-react';
 
 const Alert = ({ children, variant = 'default', className = '' }) => {
@@ -50,6 +51,7 @@ export function ConfiguracionFiscalContent() {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [testResult, setTestResult] = useState(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const { data: config, isLoading, isError } = useQuery({
     queryKey: ['facturacionConfig', businessId],
@@ -111,6 +113,31 @@ export function ConfiguracionFiscalContent() {
     }
   });
 
+  const generarCsrMutation = useMutation({
+    mutationFn: async (data) => facturacionAPI.generarCsr(businessId, data),
+    onSuccess: (data) => {
+      setSuccessMessage(data.message || 'CSR generado correctamente.');
+      setErrorMessage('');
+      
+      // Download the CSR file
+      const blob = new Blob([data.csr_content], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `solicitud_${formData.cuit || 'afip'}.csr`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      queryClient.invalidateQueries(['facturacionConfig', businessId]);
+    },
+    onError: (error) => {
+      setErrorMessage(error.response?.data?.detail || 'Error al generar el CSR.');
+      setSuccessMessage('');
+    }
+  });
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -139,6 +166,16 @@ export function ConfiguracionFiscalContent() {
     setErrorMessage('');
     setTestResult(null);
     testConnectionMutation.mutate();
+  };
+
+  const handleGenerarCsr = () => {
+    if (!formData.cuit || !formData.razon_social) {
+      setErrorMessage('CUIT y Razón Social son requeridos para generar el CSR. Llénalos en la sección de arriba.');
+      return;
+    }
+    setSuccessMessage('');
+    setErrorMessage('');
+    generarCsrMutation.mutate({ cuit: formData.cuit, razon_social: formData.razon_social });
   };
 
   if (!businessId) {
@@ -235,7 +272,28 @@ export function ConfiguracionFiscalContent() {
           </div>
 
           <div className="p-6 border-b border-gray-200 bg-gray-50">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Certificados Digitales</h2>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+              <h2 className="text-lg font-semibold text-gray-900">Certificados Digitales</h2>
+              <button
+                type="button"
+                onClick={handleGenerarCsr}
+                disabled={generarCsrMutation.isPending || !formData.cuit || !formData.razon_social}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+              >
+                {generarCsrMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Key className="h-4 w-4 mr-2" />
+                )}
+                Generar Solicitud (CSR)
+              </button>
+            </div>
+            
+            <p className="text-sm text-gray-600 mb-6">
+              Para operar con AFIP, necesitas un Certificado Digital. Haz clic en "Generar Solicitud" para obtener tu archivo <code>.csr</code>, 
+              que deberás subir a la página de ARCA (AFIP) para obtener tu Certificado Digital (<code>.crt</code>). 
+              La clave privada será generada y almacenada de forma segura automáticamente.
+            </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -253,7 +311,9 @@ export function ConfiguracionFiscalContent() {
                         </p>
                       )}
                       {!certificadoFile && config?.cert_path && (
-                        <p className="text-xs text-blue-600 mt-2">Certificado actual guardado.</p>
+                        <p className="text-xs text-blue-600 mt-2 flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3" /> Certificado actual guardado.
+                        </p>
                       )}
                     </div>
                     <input type="file" className="hidden" accept=".crt,.pem" onChange={(e) => handleFileChange(e, setCertificadoFile)} />
@@ -262,27 +322,56 @@ export function ConfiguracionFiscalContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Clave Privada (.key)</label>
-                <div className="flex items-center justify-center w-full">
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-white hover:bg-gray-50">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-500 text-center px-4">
-                        <span className="font-semibold">Click para subir</span> o arrastrar y soltar
-                      </p>
-                      {clavePrivadaFile && (
-                        <p className="text-sm text-green-600 mt-2 font-medium truncate max-w-[200px]">
-                          {clavePrivadaFile.name}
-                        </p>
-                      )}
-                      {!clavePrivadaFile && config?.key_path && (
-                        <p className="text-xs text-blue-600 mt-2">Clave privada actual guardada.</p>
-                      )}
-                    </div>
-                    <input type="file" className="hidden" accept=".key,.pem" onChange={(e) => handleFileChange(e, setClavePrivadaFile)} />
-                  </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Clave Privada</label>
+                <div className="h-32 border-2 border-gray-200 rounded-lg bg-white flex flex-col items-center justify-center p-4">
+                  {config?.key_path ? (
+                    <>
+                      <CheckCircle className="w-8 h-8 text-green-500 mb-2" />
+                      <p className="text-sm text-green-700 font-medium text-center">Clave Privada generada y guardada correctamente.</p>
+                      <p className="text-xs text-gray-500 text-center mt-1">El sistema administra esta clave de forma segura.</p>
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="w-8 h-8 text-yellow-500 mb-2" />
+                      <p className="text-sm text-gray-600 text-center">Aún no hay Clave Privada configurada.</p>
+                      <p className="text-xs text-gray-500 text-center mt-1">Usa el botón "Generar Solicitud" para crear una automáticamente.</p>
+                    </>
+                  )}
                 </div>
               </div>
+            </div>
+
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              >
+                {showAdvanced ? 'Ocultar Opciones Avanzadas' : 'Mostrar Opciones Avanzadas'}
+              </button>
+              
+              {showAdvanced && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Subir Clave Privada Manualmente (.key)</label>
+                  <p className="text-xs text-gray-500 mb-2">Solo utiliza esta opción si ya tienes una clave privada generada previamente y no quieres generar una nueva.</p>
+                  <div className="flex items-center justify-center w-full md:w-1/2">
+                    <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-white hover:bg-gray-50">
+                      <div className="flex flex-col items-center justify-center pt-3 pb-4">
+                        <Upload className="w-6 h-6 text-gray-400 mb-1" />
+                        <p className="text-xs text-gray-500 text-center px-4">
+                          <span className="font-semibold">Click para subir</span>
+                        </p>
+                        {clavePrivadaFile && (
+                          <p className="text-xs text-green-600 mt-1 font-medium truncate max-w-[200px]">
+                            {clavePrivadaFile.name}
+                          </p>
+                        )}
+                      </div>
+                      <input type="file" className="hidden" accept=".key,.pem" onChange={(e) => handleFileChange(e, setClavePrivadaFile)} />
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
