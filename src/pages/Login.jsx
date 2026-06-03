@@ -109,6 +109,54 @@ function Login() {
         return; // Stop here if we handled code
       }
 
+      // Priority 1.5: Handle Token Hash (New direct verification flow to bypass link scanners)
+      const tokenHash = searchParams.get('token_hash');
+      if (tokenHash) {
+        setLoading(true);
+        try {
+          const data = await authAPI.verifyEmail(tokenHash, type || 'recovery');
+          
+          // Login user with verified session tokens
+          login(data.user, data.access_token);
+
+          if (type === 'recovery') {
+            setError(
+              <div className="space-y-2">
+                <p className="font-medium text-green-600 flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4" />
+                  ¡Identidad verificada!
+                </p>
+                <p className="text-sm text-gray-600">
+                  Redirigiendo para actualizar tu contraseña...
+                </p>
+              </div>
+            );
+            setTimeout(() => navigate('/update-password'), 1500);
+          } else {
+            setError(
+              <div className="space-y-2">
+                <p className="font-medium text-green-600 flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4" />
+                  ¡Verificación exitosa!
+                </p>
+                <p className="text-sm text-gray-600">
+                  Redirigiendo al inicio...
+                </p>
+              </div>
+            );
+            setTimeout(() => navigate('/home'), 1500);
+          }
+        } catch (err) {
+          console.error('Error verifying token hash:', err);
+          setError('El enlace de verificación es inválido o ha expirado.');
+        } finally {
+          setLoading(false);
+          // Clean URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        return;
+      }
+
       // Priority 2: Handle Implicit/Legacy Hash Fragment
       if (accessToken && (type === 'signup' || type === 'recovery')) {
         setLoading(true);
