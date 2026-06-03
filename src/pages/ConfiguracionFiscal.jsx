@@ -118,7 +118,7 @@ export function ConfiguracionFiscalContent() {
     onSuccess: (data) => {
       setSuccessMessage(data.message || 'CSR generado correctamente.');
       setErrorMessage('');
-      
+
       // Download the CSR file
       const blob = new Blob([data.csr_content], { type: 'text/plain' });
       const url = window.URL.createObjectURL(blob);
@@ -288,12 +288,26 @@ export function ConfiguracionFiscalContent() {
                 Generar Solicitud (CSR)
               </button>
             </div>
-            
-            <p className="text-sm text-gray-600 mb-6">
-              Para operar con AFIP, necesitas un Certificado Digital. Haz clic en "Generar Solicitud" para obtener tu archivo <code>.csr</code>, 
-              que deberás subir a la página de ARCA (AFIP) para obtener tu Certificado Digital (<code>.crt</code>). 
-              La clave privada será generada y almacenada de forma segura automáticamente.
-            </p>
+
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-5 mb-6 text-sm text-gray-700">
+              <p className="font-semibold text-blue-900 mb-3">
+                Para facturar con ARCA, necesitas un Certificado Digital. Sigue estos simples pasos para obtenerlo:
+              </p>
+              <ol className="space-y-3 list-decimal list-inside pl-1 text-gray-600">
+                <li>
+                  <strong className="text-gray-900">Generar Solicitud:</strong> Haz clic en <span className="font-medium text-blue-700">"Generar Solicitud (CSR)"</span> para descargar tu archivo <code>.csr</code>. La clave privada se guardará de forma segura en el sistema.
+                </li>
+                <li>
+                  <strong className="text-gray-900">Subir a ARCA:</strong> Ingresa con tu Clave Fiscal a la web de <a href="https://auth.afip.gob.ar" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-medium hover:text-blue-800">ARCA</a>. Dirígete a la sección <span className="font-medium text-gray-900">"Administración de Certificados Digitales"</span>, crea un nuevo alias para tu negocio y sube el archivo <code>.csr</code> generado.
+                </li>
+                <li>
+                  <strong className="text-gray-900">Descargar Certificado:</strong> Una vez procesado en la web de ARCA, descarga el archivo del certificado digital (generalmente con extensión <code>.crt</code>).
+                </li>
+                <li>
+                  <strong className="text-gray-900">Cargar aquí:</strong> Sube ese archivo <code>.crt</code> en la sección <span className="font-medium text-gray-900">"Certificado (.crt)"</span> de abajo y haz clic en <span className="font-medium text-blue-700">"Guardar Configuración"</span>.
+                </li>
+              </ol>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -345,11 +359,11 @@ export function ConfiguracionFiscalContent() {
               <button
                 type="button"
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium bg-transparent border-0 p-0 shadow-none hover:bg-transparent focus:ring-0 focus:outline-none"
               >
                 {showAdvanced ? 'Ocultar Opciones Avanzadas' : 'Mostrar Opciones Avanzadas'}
               </button>
-              
+
               {showAdvanced && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Subir Clave Privada Manualmente (.key)</label>
@@ -464,8 +478,8 @@ export function ConfiguracionFiscalContent() {
                 Resultado de Conexión
               </h2>
               <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${testResult.app_server === 'OK' && testResult.db_server === 'OK' && testResult.auth_server === 'OK'
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-red-100 text-red-800'
+                ? 'bg-green-100 text-green-800'
+                : 'bg-red-100 text-red-800'
                 }`}>
                 {testResult.app_server === 'OK' && testResult.db_server === 'OK' && testResult.auth_server === 'OK' ? 'Conectado' : 'Con Problemas'}
               </span>
