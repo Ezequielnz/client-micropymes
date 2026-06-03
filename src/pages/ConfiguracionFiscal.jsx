@@ -528,7 +528,7 @@ export function ConfiguracionFiscalContent() {
 
 export default function ConfiguracionFiscal() {
   return (
-    <Layout activeSection="settings">
+    <Layout activeSection="billing">
       <ConfiguracionFiscalContent />
     </Layout>
   );
