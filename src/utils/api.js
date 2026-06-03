@@ -1209,7 +1209,7 @@ export const businessAPI = {
     if (!businessId) {
       return null;
     }
-    const response = await api.get(`/businesses/${businessId}/branch-settings`);
+    const response = await api.get(`/businesses/${businessId}/branch-settings/`);
     return response.data;
   },
 
@@ -1223,7 +1223,7 @@ export const businessAPI = {
     if (!businessId) {
       throw new Error('businessId is required to update branch settings');
     }
-    const response = await api.put(`/businesses/${businessId}/branch-settings`, payload);
+    const response = await api.put(`/businesses/${businessId}/branch-settings/`, payload);
     return response.data;
   },
 
@@ -1291,7 +1291,7 @@ export const businessAPI = {
    * @throws {Error} If the API request fails.
    */
   getTenantSettings: async (businessId) => {
-    const response = await api.get(`/businesses/${businessId}/tenant-settings`);
+    const response = await api.get(`/businesses/${businessId}/tenant-settings/`);
     return response.data;
   },
 
@@ -1308,7 +1308,7 @@ export const businessAPI = {
    * @throws {Error} If the API request fails.
    */
   saveTenantSettings: async (businessId, settingsData) => {
-    const response = await api.post(`/businesses/${businessId}/tenant-settings`, settingsData);
+    const response = await api.post(`/businesses/${businessId}/tenant-settings/`, settingsData);
     return response.data;
   },
 
