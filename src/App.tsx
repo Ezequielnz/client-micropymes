@@ -4,7 +4,6 @@ import RequireAuth from './components/RequireAuth';
 import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/Layout';
 import BusinessUsers from './pages/BusinessUsers';
-import Categories from './pages/Categories';
 import ConfirmEmail from './pages/ConfirmEmail';
 
 import CreateBusiness from './pages/CreateBusiness';
@@ -56,7 +55,6 @@ const App: React.FC = () => (
           <Route path="/business-users" element={<BusinessUsers />} />
 
           {/* Routes that rely on BusinessContext instead of URL params */}
-          <Route path="/categories" element={<Categories />} />
           <Route path="/products-and-services" element={<ProductsAndServices />} />
           <Route path="/customers" element={<Customers />} />
 
@@ -86,7 +84,6 @@ const App: React.FC = () => (
           />
 
           {/* Legacy routes with businessId parameter for backward compatibility */}
-          <Route path="/business/:businessId/categories" element={<Categories />} />
           <Route
             path="/business/:businessId/products-and-services"
             element={<ProductsAndServices />}

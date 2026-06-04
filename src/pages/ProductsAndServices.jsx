@@ -292,6 +292,14 @@ const ProductsAndServices = () => {
   // ✅ Search State
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSearchQuery, setActiveSearchQuery] = useState('');
+  
+  // ✅ Sorting State
+  const [sortKey, setSortKey] = useState('name');
+  const [sortDirection, setSortDirection] = useState('asc');
+  
+  // ✅ Category Manager State
+  const [showManageCategoriesModal, setShowManageCategoriesModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
 
   // ✅ Search Handlers
   const handleSearch = useCallback(() => {
@@ -478,8 +486,27 @@ const ProductsAndServices = () => {
       });
     }
 
+    // Apply Sorting
+    if (sortKey) {
+      data = [...data].sort((a, b) => {
+        let aVal = a[sortKey];
+        let bVal = b[sortKey];
+        
+        if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+        if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+        
+        // Handle undefined or null
+        if (aVal === undefined || aVal === null) aVal = '';
+        if (bVal === undefined || bVal === null) bVal = '';
+
+        if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
     return data;
-  }, [activeTab, processedProducts, processedServices, activeSearchQuery]);
+  }, [activeTab, processedProducts, processedServices, activeSearchQuery, sortKey, sortDirection]);
 
   // ✅ OPTIMIZED: Computed loading state
   const isLoading = useMemo(() => {
@@ -551,6 +578,28 @@ const ProductsAndServices = () => {
       queryClient.invalidateQueries(['categories', businessId, branchId]);
       setCategoryFormData({ nombre: '', descripcion: '' });
       setShowCategoryModal(false);
+      setEditingCategory(null);
+    }
+  });
+
+  const updateCategoryMutation = useMutation({
+    mutationFn: ({ id, payload }) => categoryAPI.updateCategory(businessId, id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['categories', businessId, branchId]);
+      queryClient.invalidateQueries(['products', businessId, branchId]); // Refresh products just in case
+      setCategoryFormData({ nombre: '', descripcion: '' });
+      setEditingCategory(null);
+    }
+  });
+
+  const deleteCategoryMutation = useMutation({
+    mutationFn: (id) => categoryAPI.deleteCategory(businessId, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['categories', businessId, branchId]);
+      queryClient.invalidateQueries(['products', businessId, branchId]); // Products might change (categoria_id set to null)
+    },
+    onError: (error) => {
+      alert(error?.response?.data?.detail || "Error al eliminar categoría");
     }
   });
 
@@ -655,14 +704,42 @@ const ProductsAndServices = () => {
     if (!businessId || !categoryFormData.nombre.trim()) return;
 
     try {
-      await createCategoryMutation.mutateAsync({
-        nombre: categoryFormData.nombre.trim(),
-        descripcion: categoryFormData.descripcion.trim()
-      });
+      if (editingCategory) {
+        await updateCategoryMutation.mutateAsync({
+          id: editingCategory.id,
+          payload: {
+            nombre: categoryFormData.nombre.trim(),
+            descripcion: categoryFormData.descripcion.trim()
+          }
+        });
+      } else {
+        await createCategoryMutation.mutateAsync({
+          nombre: categoryFormData.nombre.trim(),
+          descripcion: categoryFormData.descripcion.trim()
+        });
+      }
     } catch (error) {
-      console.error('Error creating category:', error);
+      console.error('Error with category:', error);
     }
-  }, [businessId, categoryFormData, createCategoryMutation]);
+  }, [businessId, categoryFormData, createCategoryMutation, updateCategoryMutation, editingCategory]);
+
+  const handleEditCategory = (category) => {
+    setEditingCategory(category);
+    setCategoryFormData({
+      nombre: category.nombre || '',
+      descripcion: category.descripcion || ''
+    });
+  };
+
+  const handleDeleteCategory = async (id, name) => {
+    if (window.confirm(`¿Estás seguro de que quieres eliminar la categoría "${name}"? Los productos asociados se mantendrán pero sin categoría.`)) {
+      try {
+        await deleteCategoryMutation.mutateAsync(id);
+      } catch (error) {
+        console.error('Error deleting category:', error);
+      }
+    }
+  };
 
   const handleCloseCategoryModal = useCallback(() => {
     setShowCategoryModal(false);
@@ -846,6 +923,41 @@ const ProductsAndServices = () => {
             ✕
           </button>
         )}
+        <div style={{ display: 'flex', gap: '10px', marginLeft: 'auto' }}>
+          <select
+            value={sortKey}
+            onChange={(e) => setSortKey(e.target.value)}
+            style={{
+              padding: '10px',
+              border: '1px solid #ddd',
+              borderRadius: '5px',
+              fontSize: '14px',
+              backgroundColor: 'white',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="name">Ordenar por Nombre</option>
+            {activeTab === 'products' && <option value="code">Ordenar por Código</option>}
+            <option value="price">Ordenar por Precio</option>
+            {activeTab === 'products' && <option value="stock">Ordenar por Stock</option>}
+            <option value="category">Ordenar por Categoría</option>
+          </select>
+          <select
+            value={sortDirection}
+            onChange={(e) => setSortDirection(e.target.value)}
+            style={{
+              padding: '10px',
+              border: '1px solid #ddd',
+              borderRadius: '5px',
+              fontSize: '14px',
+              backgroundColor: 'white',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="asc">Ascendente</option>
+            <option value="desc">Descendente</option>
+          </select>
+        </div>
       </div>
 
       {/* Add Button & Bulk Update */}
@@ -867,6 +979,23 @@ const ProductsAndServices = () => {
               }}
             >
               + Agregar {activeTab === 'products' ? 'Producto' : 'Servicio'}
+            </button>
+
+            <button
+              onClick={() => setShowManageCategoriesModal(true)}
+              disabled={isMutating}
+              style={{
+                backgroundColor: '#6f42c1',
+                color: 'white',
+                padding: '10px 20px',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: isMutating ? 'not-allowed' : 'pointer',
+                fontSize: '16px',
+                opacity: isMutating ? 0.6 : 1
+              }}
+            >
+              Gestionar Categorías
             </button>
 
             {activeTab === 'products' && (
@@ -1240,7 +1369,7 @@ const ProductsAndServices = () => {
               overflow: 'auto'
             }}>
               <h2 style={{ marginBottom: '20px', color: '#333' }}>
-                Agregar Categoría
+                {editingCategory ? 'Editar Categoría' : 'Agregar Categoría'}
               </h2>
 
               <form onSubmit={handleCreateCategory}>
@@ -1314,10 +1443,129 @@ const ProductsAndServices = () => {
                       opacity: createCategoryMutation.isPending ? 0.6 : 1
                     }}
                   >
-                    {createCategoryMutation.isPending ? 'Guardando...' : 'Guardar'}
+                    {createCategoryMutation.isPending || updateCategoryMutation.isPending ? 'Guardando...' : 'Guardar'}
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )
+      }
+
+      {/* Manage Categories Modal */}
+      {
+        showManageCategoriesModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 999
+          }}>
+            <div style={{
+              backgroundColor: 'white',
+              padding: '20px',
+              borderRadius: '8px',
+              width: '90%',
+              maxWidth: '600px',
+              maxHeight: '90vh',
+              display: 'flex',
+              flexDirection: 'column'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ color: '#333', margin: 0 }}>Gestionar Categorías</h2>
+                <button
+                  onClick={() => setShowManageCategoriesModal(false)}
+                  style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#666' }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div style={{ marginBottom: '15px' }}>
+                <button
+                  onClick={() => {
+                    setEditingCategory(null);
+                    setCategoryFormData({ nombre: '', descripcion: '' });
+                    setShowCategoryModal(true);
+                  }}
+                  style={{
+                    backgroundColor: '#28a745',
+                    color: 'white',
+                    padding: '8px 15px',
+                    border: 'none',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  + Nueva Categoría
+                </button>
+              </div>
+
+              <div style={{ overflowY: 'auto', flex: 1 }}>
+                {categories.length === 0 ? (
+                  <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>No hay categorías registradas.</p>
+                ) : (
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
+                        <th style={{ padding: '12px 8px', textAlign: 'left', color: '#495057' }}>Nombre</th>
+                        <th style={{ padding: '12px 8px', textAlign: 'left', color: '#495057' }}>Descripción</th>
+                        <th style={{ padding: '12px 8px', textAlign: 'center', color: '#495057' }}>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {categories.map(category => (
+                        <tr key={category.id} style={{ borderBottom: '1px solid #e9ecef' }}>
+                          <td style={{ padding: '12px 8px', color: '#333' }}>{category.nombre}</td>
+                          <td style={{ padding: '12px 8px', color: '#666', fontSize: '13px' }}>{category.descripcion}</td>
+                          <td style={{ padding: '12px 8px', textAlign: 'center' }}>
+                            <div style={{ display: 'flex', gap: '5px', justifyContent: 'center' }}>
+                              <button
+                                onClick={() => {
+                                  handleEditCategory(category);
+                                  setShowCategoryModal(true);
+                                }}
+                                style={{
+                                  backgroundColor: '#17a2b8',
+                                  color: 'white',
+                                  padding: '5px 10px',
+                                  border: 'none',
+                                  borderRadius: '3px',
+                                  cursor: 'pointer',
+                                  fontSize: '12px'
+                                }}
+                              >
+                                Editar
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCategory(category.id, category.nombre)}
+                                style={{
+                                  backgroundColor: '#dc3545',
+                                  color: 'white',
+                                  padding: '5px 10px',
+                                  border: 'none',
+                                  borderRadius: '3px',
+                                  cursor: 'pointer',
+                                  fontSize: '12px'
+                                }}
+                              >
+                                Eliminar
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             </div>
           </div>
         )

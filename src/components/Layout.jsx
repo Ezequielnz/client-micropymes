@@ -90,17 +90,7 @@ const Sidebar = ({
         { id: 'suppliers', label: 'Proveedores', icon: Truck, onClick: () => safeNavigate('/proveedores') }
       ]
     },
-    {
-      id: 'inventory',
-      label: 'Inventario',
-      icon: Package,
-      hasDropdown: true,
-      subItems: [
-        { id: 'products', label: 'Productos y servicios', icon: Package, onClick: () => safeNavigate('/products-and-services') },
-        { id: 'categories', label: 'Categorías', icon: BarChart3, onClick: () => safeNavigate('/categories') },
-        { id: 'inventory', label: 'Inventario General', icon: PackageSearch, onClick: () => safeNavigate('/app/inventory') }
-      ]
-    },
+    { id: 'products', label: 'Productos y servicios', icon: Package, onClick: () => safeNavigate('/products-and-services') },
 
     { id: 'clients', label: 'Clientes', icon: Users, onClick: () => safeNavigate('/customers') },
     { id: 'finances', label: 'Finanzas', icon: BarChart3, onClick: () => safeNavigate('/finanzas') },
