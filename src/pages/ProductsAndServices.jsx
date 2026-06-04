@@ -9,6 +9,7 @@ import { useBusinessContext } from '../contexts/BusinessContext';
 import CatalogUpload from '../components/CatalogUpload';
 import MassivePriceUpdateModal from '../components/MassivePriceUpdateModal';
 import PermissionGuard from '../components/PermissionGuard';
+import StockTransferModal from '../components/StockTransferModal';
 
 // Memoized component to avoid inline component recreation
 const OptimizedTable = React.memo(({
@@ -268,6 +269,7 @@ const ProductsAndServices = () => {
   const [showMassiveUpdateModal, setShowMassiveUpdateModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({
@@ -885,6 +887,25 @@ const ProductsAndServices = () => {
                 Importar PDF
               </button>
             )}
+
+            {activeTab === 'products' && branchSettings?.permite_transferencias && (
+              <button
+                onClick={() => setShowTransferModal(true)}
+                disabled={isMutating}
+                style={{
+                  backgroundColor: '#17a2b8',
+                  color: 'white',
+                  padding: '10px 20px',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: isMutating ? 'not-allowed' : 'pointer',
+                  fontSize: '16px',
+                  opacity: isMutating ? 0.6 : 1
+                }}
+              >
+                Transferir Stock
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -1319,9 +1340,10 @@ const ProductsAndServices = () => {
           }}>
             <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto">
               <CatalogUpload
-                businessId={businessId}
+                isOpen={showUploadModal}
                 onClose={() => setShowUploadModal(false)}
-                onSuccess={() => {
+                businessId={businessId}
+                onUploadSuccess={() => {
                   queryClient.invalidateQueries(['products', businessId, branchId]);
                   setShowUploadModal(false);
                 }}
@@ -1330,6 +1352,17 @@ const ProductsAndServices = () => {
           </div>
         )
       }
+
+      <StockTransferModal
+        isOpen={showTransferModal}
+        onClose={() => setShowTransferModal(false)}
+        businessId={businessId}
+        branches={branches}
+        products={processedProducts}
+        onTransferSuccess={() => {
+          queryClient.invalidateQueries(['products', businessId, branchId]);
+        }}
+      />
     </div >
   );
 };
