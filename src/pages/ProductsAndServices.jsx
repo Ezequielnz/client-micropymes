@@ -882,7 +882,8 @@ const ProductsAndServices = () => {
             fontSize: '16px',
             outline: 'none',
             boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)',
-            backgroundColor: 'white'
+            backgroundColor: 'white',
+            color: '#333'
           }}
         />
         <button
@@ -933,14 +934,15 @@ const ProductsAndServices = () => {
               borderRadius: '5px',
               fontSize: '14px',
               backgroundColor: 'white',
+              color: '#333',
               cursor: 'pointer'
             }}
           >
-            <option value="name">Ordenar por Nombre</option>
-            {activeTab === 'products' && <option value="code">Ordenar por Código</option>}
-            <option value="price">Ordenar por Precio</option>
-            {activeTab === 'products' && <option value="stock">Ordenar por Stock</option>}
-            <option value="category">Ordenar por Categoría</option>
+            <option value="name" style={{ color: '#333' }}>Ordenar por Nombre</option>
+            {activeTab === 'products' && <option value="code" style={{ color: '#333' }}>Ordenar por Código</option>}
+            <option value="price" style={{ color: '#333' }}>Ordenar por Precio</option>
+            {activeTab === 'products' && <option value="stock" style={{ color: '#333' }}>Ordenar por Stock</option>}
+            <option value="category" style={{ color: '#333' }}>Ordenar por Categoría</option>
           </select>
           <select
             value={sortDirection}
@@ -951,11 +953,12 @@ const ProductsAndServices = () => {
               borderRadius: '5px',
               fontSize: '14px',
               backgroundColor: 'white',
+              color: '#333',
               cursor: 'pointer'
             }}
           >
-            <option value="asc">Ascendente</option>
-            <option value="desc">Descendente</option>
+            <option value="asc" style={{ color: '#333' }}>Ascendente</option>
+            <option value="desc" style={{ color: '#333' }}>Descendente</option>
           </select>
         </div>
       </div>

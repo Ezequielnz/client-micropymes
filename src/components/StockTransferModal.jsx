@@ -142,22 +142,22 @@ const StockTransferModal = ({
     <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center" aria-labelledby="modal-title" role="dialog" aria-modal="true">
       <div className="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={onClose}></div>
       
-      <div className="relative inline-block align-middle bg-[#1f2937] rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full w-[90%]">
+      <div className="relative inline-block align-middle bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full w-[90%]">
         <form onSubmit={handleSubmit}>
-          <div className="bg-[#1f2937] px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <div className="sm:flex sm:items-start">
               <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                <h3 className="text-lg leading-6 font-medium text-white" id="modal-title">
+                <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">
                     Transferir Stock Rápido
                   </h3>
                   <div className="mt-4 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-300">Origen</label>
+                        <label className="block text-sm font-medium text-gray-700">Origen</label>
                         <select
                           value={origenId}
                           onChange={(e) => setOrigenId(e.target.value)}
-                          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-600 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md bg-gray-700 text-white"
+                          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md bg-white text-gray-900"
                         >
                           <option value="">Selecciona sucursal</option>
                           {branches.map(b => (
@@ -166,11 +166,11 @@ const StockTransferModal = ({
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-300">Destino</label>
+                        <label className="block text-sm font-medium text-gray-700">Destino</label>
                         <select
                           value={destinoId}
                           onChange={(e) => setDestinoId(e.target.value)}
-                          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-600 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md bg-gray-700 text-white"
+                          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md bg-white text-gray-900"
                         >
                           <option value="">Selecciona sucursal</option>
                           {branches.map(b => (
@@ -186,7 +186,7 @@ const StockTransferModal = ({
                       </div>
                       <input
                         type="text"
-                        className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-600 rounded-md bg-gray-700 text-white placeholder-gray-400"
+                        className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-400"
                         placeholder="Buscar producto para transferir..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -195,17 +195,17 @@ const StockTransferModal = ({
                     </div>
                     
                     {searchTerm && origenId && (
-                      <div className="max-h-40 overflow-y-auto border border-gray-600 rounded-md bg-gray-700">
+                      <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-md bg-white">
                         {filteredProducts.map((product) => {
                           const maxStock = product.stock_por_sucursal?.[origenId] || 0;
                           return (
                             <div
                               key={product.id}
-                              className={`p-2 cursor-pointer hover:bg-gray-600 flex justify-between ${maxStock <= 0 ? 'opacity-50' : ''}`}
+                              className={`p-2 cursor-pointer hover:bg-gray-100 flex justify-between ${maxStock <= 0 ? 'opacity-50' : ''}`}
                               onClick={() => maxStock > 0 && handleProductSelect(product)}
                             >
-                              <span className="text-white">{product.nombre}</span>
-                              <span className="text-sm text-gray-400">Disp: {maxStock}</span>
+                              <span className="text-gray-900">{product.nombre}</span>
+                              <span className="text-sm text-gray-500">Disp: {maxStock}</span>
                             </div>
                           );
                         })}
@@ -213,14 +213,14 @@ const StockTransferModal = ({
                     )}
 
                     <div className="mt-4">
-                      <h4 className="text-sm font-medium text-white mb-2">Productos a transferir:</h4>
+                      <h4 className="text-sm font-medium text-gray-900 mb-2">Productos a transferir:</h4>
                       {selectedProducts.length === 0 ? (
-                        <p className="text-sm text-gray-400">No hay productos seleccionados.</p>
+                        <p className="text-sm text-gray-500">No hay productos seleccionados.</p>
                       ) : (
                         <div className="space-y-2">
                           {selectedProducts.map((p) => (
-                            <div key={p.producto_id} className="flex items-center justify-between bg-gray-700 p-2 rounded">
-                              <span className="text-sm text-white flex-1">{p.nombre} (Máx: {p.maxStock})</span>
+                            <div key={p.producto_id} className="flex items-center justify-between bg-gray-50 border border-gray-200 p-2 rounded">
+                              <span className="text-sm text-gray-900 flex-1">{p.nombre} (Máx: {p.maxStock})</span>
                               <div className="flex items-center space-x-2">
                                 <input
                                   type="number"
@@ -228,7 +228,7 @@ const StockTransferModal = ({
                                   max={p.maxStock}
                                   value={p.cantidad}
                                   onChange={(e) => handleQuantityChange(p.producto_id, e.target.value)}
-                                  className="w-20 p-1 text-sm border-gray-600 rounded bg-[#1f2937] text-white"
+                                  className="w-20 p-1 text-sm border border-gray-300 rounded bg-white text-gray-900"
                                 />
                                 <button
                                   type="button"
@@ -247,7 +247,7 @@ const StockTransferModal = ({
                 </div>
               </div>
             </div>
-          <div className="bg-[#1f2937] px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-700">
+          <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-200">
             <button
               type="submit"
               disabled={isLoading}
@@ -258,7 +258,7 @@ const StockTransferModal = ({
             <button
               type="button"
               onClick={onClose}
-              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-600 shadow-sm px-4 py-2 bg-gray-800 text-base font-medium text-gray-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
             >
               Cancelar
             </button>
