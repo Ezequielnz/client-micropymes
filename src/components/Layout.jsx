@@ -97,7 +97,7 @@ const Sidebar = ({
       subItems: [
         { id: 'products', label: 'Productos y servicios', icon: Package, onClick: () => safeNavigate('/products-and-services') },
         { id: 'categories', label: 'Categorías', icon: BarChart3, onClick: () => safeNavigate('/categories') },
-        { id: 'stock-transfers', label: 'Transferencias (próximamente)', icon: ArrowLeftRight, disabled: true }
+        { id: 'inventory', label: 'Inventario General', icon: PackageSearch, onClick: () => safeNavigate('/app/inventory') }
       ]
     },
 
