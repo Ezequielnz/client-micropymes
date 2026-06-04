@@ -15,7 +15,8 @@ import {
   Clock,
   BarChart3,
   Truck,
-  ArrowLeftRight
+  ArrowLeftRight,
+  PackageSearch
 } from 'lucide-react';
 import { businessAPI } from '../utils/api';
 import { BusinessContext } from '../contexts/BusinessContext';
