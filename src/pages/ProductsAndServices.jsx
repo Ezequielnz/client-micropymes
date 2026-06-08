@@ -1050,6 +1050,7 @@ const ProductsAndServices = () => {
         onEdit={handleEdit}
         onDelete={handleDelete}
         loading={isLoading}
+        canEdit={canEditProducts}
         canDelete={canDeleteProducts}
         selectedIds={selectedIds}
         onToggleSelect={handleToggleSelect}
