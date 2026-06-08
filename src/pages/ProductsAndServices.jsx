@@ -524,7 +524,7 @@ const ProductsAndServices = () => {
 
   // ✅ OPTIMIZED: Mutations with optimistic updates
   const createProductMutation = useMutation({
-    mutationFn: (payload) => productAPI.createProduct(businessId, payload),
+    mutationFn: (payload) => productAPI.createProduct(businessId, payload, branchId),
     onSuccess: () => {
       queryClient.invalidateQueries(['products', businessId, branchId]);
       handleCloseModal();
@@ -535,7 +535,7 @@ const ProductsAndServices = () => {
   });
 
   const updateProductMutation = useMutation({
-    mutationFn: ({ id, payload }) => productAPI.updateProduct(businessId, id, payload),
+    mutationFn: ({ id, payload }) => productAPI.updateProduct(businessId, id, payload, branchId),
     onSuccess: () => {
       queryClient.invalidateQueries(['products', businessId, branchId]);
       handleCloseModal();

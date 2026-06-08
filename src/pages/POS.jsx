@@ -213,9 +213,9 @@ function POS() {
     isLoading: loadingProducts,
     error: productsError
   } = useQuery({
-    queryKey: ['products', businessId],
-    queryFn: () => productAPI.getProducts(businessId),
-    enabled: !!businessId && !!currentBusiness, // Only fetch when we have a valid business
+    queryKey: ['products', businessId, branchId],
+    queryFn: () => productAPI.getProducts(businessId, branchId ? { branch_id: branchId } : undefined),
+    enabled: !!businessId && !!currentBusiness,
     staleTime: 2 * 60 * 1000, // 2 minutes (more dynamic data)
     gcTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
@@ -295,8 +295,8 @@ function POS() {
       setSearchTerm('');
       setError('');
       setCartError('');
-      // Invalidate products to update stock levels
-      queryClient.invalidateQueries(['products', businessId]);
+      // Invalidate products to update stock levels (branch-scoped)
+      queryClient.invalidateQueries(['products', businessId, branchId]);
     },
     onError: (err) => {
       console.error('Error recording sale:', err);

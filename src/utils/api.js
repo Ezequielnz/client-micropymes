@@ -441,8 +441,9 @@ export const productAPI = {
    * @returns {Promise<object>} A promise that resolves to the newly created product object.
    * @throws {Error} If the API request fails.
    */
-  createProduct: async (businessId, productData) => {
-    const response = await api.post(`/businesses/${businessId}/products`, productData);
+  createProduct: async (businessId, productData, branchId) => {
+    const params = branchId ? { branch_id: branchId } : {};
+    const response = await api.post(`/businesses/${businessId}/products`, productData, { params });
     return response.data;
   },
 
@@ -455,8 +456,9 @@ export const productAPI = {
    * @returns {Promise<object>} A promise that resolves to the updated product object.
    * @throws {Error} If the API request fails.
    */
-  updateProduct: async (businessId, productId, productData) => {
-    const response = await api.put(`/businesses/${businessId}/products/${productId}`, productData);
+  updateProduct: async (businessId, productId, productData, branchId) => {
+    const params = branchId ? { branch_id: branchId } : {};
+    const response = await api.put(`/businesses/${businessId}/products/${productId}`, productData, { params });
     return response.data;
   },
 

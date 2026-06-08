@@ -361,7 +361,7 @@ const Compras = () => {
 
   const { data: products = [] } = useQuery({
     queryKey: ['products', businessId, branchId],
-    queryFn: () => productAPI.getProducts(businessId),
+    queryFn: () => productAPI.getProducts(businessId, branchId ? { branch_id: branchId } : undefined),
     enabled: !!businessId && branchReady,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -376,6 +376,7 @@ const Compras = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['purchases', businessId, branchId]);
+      queryClient.invalidateQueries(['products', businessId, branchId]); // Stock increased
       setShowCreate(false);
     },
   });
@@ -387,6 +388,7 @@ const Compras = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['purchases', businessId, branchId]);
+      queryClient.invalidateQueries(['products', businessId, branchId]); // Stock may change
       setShowEdit(false);
       setEditingCompra(null);
     },
