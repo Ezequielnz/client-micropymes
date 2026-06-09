@@ -96,7 +96,7 @@ const StockTransferModal = ({
       const payload = {
         origen_sucursal_id: origenId,
         destino_sucursal_id: destinoId,
-        detalles: validProducts.map(p => ({
+        items: validProducts.map(p => ({
           producto_id: p.producto_id,
           cantidad: p.cantidad
         }))
