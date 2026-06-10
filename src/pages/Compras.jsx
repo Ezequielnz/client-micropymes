@@ -212,7 +212,7 @@ const CompraCreateModal = ({
                 </select>
                 <input
                   type="number"
-                  min="1"
+                  step="0.01" min="0.01"
                   value={it.cantidad}
                   onChange={(e) => updateItem(idx, 'cantidad', e.target.value)}
                   style={{ padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }}

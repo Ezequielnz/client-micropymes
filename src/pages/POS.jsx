@@ -118,6 +118,79 @@ const Alert = ({ children, variant = 'default', className = '' }) => {
  */
 
 /**
+ * Modal to input fractional quantities or monetary amounts for products sold by weight, volume, etc.
+ */
+const FractionalProductModal = ({ product, onClose, onAdd }) => {
+  const [inputType, setInputType] = useState('cantidad'); // 'cantidad' or 'monto'
+  const [inputValue, setInputValue] = useState('');
+
+  if (!product) return null;
+
+  const precio = Number(product.precio_venta) || 0;
+  
+  const calculatedCantidad = inputType === 'cantidad' ? Number(inputValue) : (precio > 0 ? Number(inputValue) / precio : 0);
+  const calculatedMonto = inputType === 'monto' ? Number(inputValue) : Number(inputValue) * precio;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (calculatedCantidad > 0) {
+      onAdd(product, calculatedCantidad);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="relative bg-white rounded-lg shadow-lg w-full max-w-md mx-auto z-10 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Agregar {product.nombre}</h3>
+        <p className="text-sm text-gray-600 mb-4">Precio: ${precio.toFixed(2)} por {product.unidades || 'unidad'}</p>
+        
+        <form onSubmit={handleSubmit}>
+          <div className="flex gap-4 mb-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="radio" checked={inputType === 'cantidad'} onChange={() => { setInputType('cantidad'); setInputValue(''); }} className="text-blue-600 focus:ring-blue-500" />
+              Por {product.unidades || 'Cantidad'}
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="radio" checked={inputType === 'monto'} onChange={() => { setInputType('monto'); setInputValue(''); }} className="text-blue-600 focus:ring-blue-500" />
+              Por Monto ($)
+            </label>
+          </div>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {inputType === 'cantidad' ? `Cantidad (${product.unidades || ''})` : 'Monto ($)'}
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0.01"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-transparent text-gray-900"
+              required
+              autoFocus
+            />
+          </div>
+          
+          <div className="bg-gray-50 p-3 rounded-lg mb-4 text-sm text-gray-700 border border-gray-200">
+            {inputType === 'cantidad' ? (
+              <p>Monto a cobrar: <strong className="text-lg">${calculatedMonto.toFixed(2)}</strong></p>
+            ) : (
+              <p>Cantidad a descontar: <strong className="text-lg">{calculatedCantidad.toFixed(3)} {product.unidades || ''}</strong></p>
+            )}
+          </div>
+          
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={onClose} type="button">Cancelar</Button>
+            <Button type="submit" disabled={!inputValue || calculatedCantidad <= 0}>Agregar</Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+/**
  * Point of Sale (POS) component with modern design.
  */
 function POS() {
@@ -136,6 +209,8 @@ function POS() {
   const [newCustomer, setNewCustomer] = useState({ nombre: '', apellido: '', email: '', telefono: '', direccion: '', documento_tipo: '', documento_numero: '' });
   /** @type {[string, function]} createCustomerError - Error message for creating a customer. */
   const [createCustomerError, setCreateCustomerError] = useState('');
+  /** @type {[object, function]} fractionalProduct - State for the product currently being added via the fractional modal. */
+  const [fractionalProduct, setFractionalProduct] = useState(null);
 
   /** @type {[string, function]} searchTerm - State for the search term entered by the user to filter products and services. */
   const [searchTerm, setSearchTerm] = useState('');
@@ -736,7 +811,14 @@ function POS() {
                             </div>
                           </div>
                           <Button
-                            onClick={() => handleAddToCart(product, 1)}
+                            onClick={() => {
+                              const fractionalUnits = ['kg', 'gramos', 'litros', 'metros', 'm2', 'm3', 'm'];
+                              if (product.unidades && fractionalUnits.includes(product.unidades.toLowerCase())) {
+                                setFractionalProduct(product);
+                              } else {
+                                handleAddToCart(product, 1);
+                              }
+                            }}
                             disabled={product.stock_actual <= (cart.find(item => item.item_id === product.id && item.tipo === 'producto')?.quantity || 0) || product.stock_actual === 0 || isLoading}
                             className="w-full"
                             size="sm"
@@ -962,7 +1044,15 @@ function POS() {
                             >
                               <Minus className="h-4 w-4" />
                             </Button>
-                            <span className="w-8 text-center font-medium">{item.quantity}</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0.01"
+                              value={item.quantity}
+                              onChange={(e) => handleUpdateCartQuantity(item.item_id, item.tipo, parseFloat(e.target.value) || 0)}
+                              className="w-16 h-8 text-center font-medium border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                              disabled={isLoading}
+                            />
                             <Button
                               variant="outline"
                               size="sm"
@@ -1170,6 +1260,15 @@ function POS() {
           </div>
         </div>
       )}
+
+      <FractionalProductModal
+        product={fractionalProduct}
+        onClose={() => setFractionalProduct(null)}
+        onAdd={(product, qty) => {
+          handleAddToCart(product, qty);
+          setFractionalProduct(null);
+        }}
+      />
     </div>
   );
 }

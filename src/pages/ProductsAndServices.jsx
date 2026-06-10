@@ -620,7 +620,7 @@ const ProductsAndServices = () => {
       setModalError(null); // Clear previous errors
       if (activeTab === 'products') {
         payload.precio_venta = parseFloat(formData.price) || 0;
-        payload.stock_actual = parseInt(formData.stock) || 0;
+        payload.stock_actual = parseFloat(formData.stock) || 0;
         payload.codigo = formData.code || '';
         payload.unidades = formData.unit || '';
         if (formData.purchasePrice !== '') {
@@ -1274,6 +1274,7 @@ const ProductsAndServices = () => {
                       </label>
                       <input
                         type="number"
+                        step="0.01"
                         value={formData.stock}
                         onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                         style={{
@@ -1293,6 +1294,7 @@ const ProductsAndServices = () => {
                       </label>
                       <input
                         type="text"
+                        list="unidades-list"
                         value={formData.unit}
                         onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
                         placeholder="ej: kg, unidades, litros"
@@ -1305,6 +1307,15 @@ const ProductsAndServices = () => {
                           color: '#333'
                         }}
                       />
+                      <datalist id="unidades-list">
+                        <option value="Unidades" />
+                        <option value="Kg" />
+                        <option value="Gramos" />
+                        <option value="Litros" />
+                        <option value="m" />
+                        <option value="m2" />
+                        <option value="m3" />
+                      </datalist>
                     </div>
                   </>
                 )}
