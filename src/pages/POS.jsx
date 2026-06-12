@@ -703,14 +703,29 @@ function POS() {
                 {saleSuccessMessage}
               </div>
               {salePdfUrl && (
-                <a
-                  href={salePdfUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 transition-colors border border-green-300"
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(salePdfUrl);
+                      if (!response.ok) throw new Error('Error al descargar');
+                      const blob = await response.blob();
+                      const blobUrl = window.URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = blobUrl;
+                      link.download = `factura_${new Date().getTime()}.pdf`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      window.URL.revokeObjectURL(blobUrl);
+                    } catch (error) {
+                      console.error("Error al descargar el PDF", error);
+                      window.open(salePdfUrl, '_blank');
+                    }
+                  }}
+                  className="inline-flex items-center px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 transition-colors border border-green-300 cursor-pointer"
                 >
                   Descargar Factura PDF
-                </a>
+                </button>
               )}
             </div>
           </Alert>
