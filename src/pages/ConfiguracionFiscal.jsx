@@ -173,6 +173,14 @@ export function ConfiguracionFiscalContent() {
       setErrorMessage('CUIT y Razón Social son requeridos para generar el CSR. Llénalos en la sección de arriba.');
       return;
     }
+
+    if (config?.key_path || config?.cert_path) {
+      const confirmMsg = 'Ya tienes un certificado o clave generados. Si generas uno nuevo, se eliminarán los archivos actuales y el sistema dejará de conectarse a AFIP hasta que subas el nuevo certificado (.crt) que obtengas.\n\n¿Estás seguro de que deseas eliminar la configuración actual y generar una nueva solicitud?';
+      if (!window.confirm(confirmMsg)) {
+        return;
+      }
+    }
+
     setSuccessMessage('');
     setErrorMessage('');
     generarCsrMutation.mutate({ cuit: formData.cuit, razon_social: formData.razon_social });
