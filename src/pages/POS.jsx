@@ -145,11 +145,11 @@ const FractionalProductModal = ({ product, onClose, onAdd }) => {
         
         <form onSubmit={handleSubmit}>
           <div className="flex gap-4 mb-4">
-            <label className="flex items-center gap-2 cursor-pointer">
+            <label className="flex items-center gap-2 cursor-pointer text-gray-700">
               <input type="radio" checked={inputType === 'cantidad'} onChange={() => { setInputType('cantidad'); setInputValue(''); }} className="text-blue-600 focus:ring-blue-500" />
               Por {product.unidades || 'Cantidad'}
             </label>
-            <label className="flex items-center gap-2 cursor-pointer">
+            <label className="flex items-center gap-2 cursor-pointer text-gray-700">
               <input type="radio" checked={inputType === 'monto'} onChange={() => { setInputType('monto'); setInputValue(''); }} className="text-blue-600 focus:ring-blue-500" />
               Por Monto ($)
             </label>
@@ -180,7 +180,14 @@ const FractionalProductModal = ({ product, onClose, onAdd }) => {
           </div>
           
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={onClose} type="button">Cancelar</Button>
+            <Button
+              variant="outline"
+              onClick={onClose}
+              type="button"
+              className="bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 border-gray-200"
+            >
+              Cancelar
+            </Button>
             <Button type="submit" disabled={!inputValue || calculatedCantidad <= 0}>Agregar</Button>
           </div>
         </form>
