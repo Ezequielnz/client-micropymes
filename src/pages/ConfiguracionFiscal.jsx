@@ -41,8 +41,8 @@ export function ConfiguracionFiscalContent() {
     razon_social: '',
     punto_venta: 1,
     condicion_fiscal: 'monotributista',
-    ambiente: 'homologacion',
-    habilitada: false
+    ambiente: 'produccion',
+    habilitada: true
   });
 
   const [certificadoFile, setCertificadoFile] = useState(null);
@@ -67,8 +67,8 @@ export function ConfiguracionFiscalContent() {
         razon_social: config.razon_social || '',
         punto_venta: config.punto_venta || 1,
         condicion_fiscal: config.condicion_fiscal || 'monotributista',
-        ambiente: config.ambiente || 'homologacion',
-        habilitada: config.habilitada || false
+        ambiente: 'produccion',
+        habilitada: true
       });
     }
   }, [config]);
@@ -297,25 +297,48 @@ export function ConfiguracionFiscalContent() {
               </button>
             </div>
 
-            <div className="bg-blue-50 border border-blue-100 rounded-lg p-5 mb-6 text-sm text-gray-700">
-              <p className="font-semibold text-blue-900 mb-3">
-                Para facturar con ARCA, necesitas un Certificado Digital. Sigue estos simples pasos para obtenerlo:
-              </p>
-              <ol className="space-y-3 list-decimal list-inside pl-1 text-gray-600">
-                <li>
-                  <strong className="text-gray-900">Generar Solicitud:</strong> Haz clic en <span className="font-medium text-blue-700">"Generar Solicitud (CSR)"</span> para descargar tu archivo <code>.csr</code>. La clave privada se guardará de forma segura en el sistema.
-                </li>
-                <li>
-                  <strong className="text-gray-900">Subir a ARCA:</strong> Ingresa con tu Clave Fiscal a la web de <a href="https://auth.afip.gob.ar" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-medium hover:text-blue-800">ARCA</a>. Dirígete a la sección <span className="font-medium text-gray-900">"Administración de Certificados Digitales"</span>, crea un nuevo alias para tu negocio y sube el archivo <code>.csr</code> generado.
-                </li>
-                <li>
-                  <strong className="text-gray-900">Descargar Certificado:</strong> Una vez procesado en la web de ARCA, descarga el archivo del certificado digital (generalmente con extensión <code>.crt</code>).
-                </li>
-                <li>
-                  <strong className="text-gray-900">Cargar aquí:</strong> Sube ese archivo <code>.crt</code> en la sección <span className="font-medium text-gray-900">"Certificado (.crt)"</span> de abajo y haz clic en <span className="font-medium text-blue-700">"Guardar Configuración"</span>.
-                </li>
-              </ol>
-            </div>
+            <details className="bg-blue-50 border border-blue-200 rounded-lg p-5 mb-6 group text-sm text-gray-700">
+              <summary className="font-semibold text-blue-900 mb-0 cursor-pointer flex items-center justify-between outline-none list-none">
+                <span className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Guía detallada para configurar la facturación (ARCA/AFIP)
+                </span>
+                <span className="transition-transform group-open:rotate-180">
+                  <svg fill="none" height="20" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="20"><path d="M19 9l-7 7-7-7"></path></svg>
+                </span>
+              </summary>
+              
+              <div className="mt-5 space-y-5 text-gray-600">
+                <p className="text-sm">Para facturar con ARCA (ex AFIP) de manera automática, necesitas seguir estos pasos con tu Clave Fiscal:</p>
+                
+                <div className="space-y-1">
+                  <h4 className="font-semibold text-gray-900 flex items-center gap-2"><span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center text-xs">1</span> Crear Punto de Venta</h4>
+                  <p className="pl-7">Ingresa al servicio <strong>"Administración de puntos de venta y domicilios"</strong> en la web de ARCA.</p>
+                  <p className="pl-7">Agrega un nuevo punto de venta. En "Sistema", debes elegir la opción que indique <strong>"Factura Electrónica - Web Service"</strong> o similar. Anota el número de este punto de venta e ingrésalo en la configuración de arriba.</p>
+                </div>
+
+                <div className="space-y-1">
+                  <h4 className="font-semibold text-gray-900 flex items-center gap-2"><span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center text-xs">2</span> Generar el CSR y crear el Computador Fiscal</h4>
+                  <p className="pl-7">Haz clic en el botón <strong>"Generar Solicitud (CSR)"</strong> aquí arriba para descargar el archivo <code>.csr</code>. La clave privada se guardará automáticamente de forma segura.</p>
+                  <p className="pl-7">En ARCA, ingresa al servicio <strong>"Administración de Certificados Digitales"</strong>.</p>
+                  <p className="pl-7">Haz clic en "Agregar alias", elige un nombre para tu Computador Fiscal (por ejemplo, "MiSistemaPOS") y sube el archivo <code>.csr</code> que acabas de descargar.</p>
+                  <p className="pl-7">Una vez creado, haz clic en "Ver" o "Descargar" para obtener el certificado (archivo <code>.crt</code>).</p>
+                </div>
+
+                <div className="space-y-1">
+                  <h4 className="font-semibold text-gray-900 flex items-center gap-2"><span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center text-xs">3</span> Delegar el Servicio (Administrador de Relaciones)</h4>
+                  <p className="pl-7">En ARCA, ingresa al servicio <strong>"Administrador de Relaciones de Clave Fiscal"</strong>.</p>
+                  <p className="pl-7">Haz clic en "Nueva Relación". En "Servicio", busca AFIP &gt; WebServices y selecciona <strong>"Facturación Electrónica" (wsfe)</strong>.</p>
+                  <p className="pl-7">En "Representante", haz clic en "Buscar" e ingresa el nombre de tu Computador Fiscal (el alias que creaste en el paso 2).</p>
+                  <p className="pl-7">Confirma la delegación. <strong>¡Importante!</strong> Este paso es obligatorio para que tu certificado tenga permisos para emitir facturas.</p>
+                </div>
+
+                <div className="space-y-1">
+                  <h4 className="font-semibold text-gray-900 flex items-center gap-2"><span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center text-xs">4</span> Subir el Certificado (.crt)</h4>
+                  <p className="pl-7">Sube el archivo <code>.crt</code> que descargaste en el paso 2 en la sección "Certificado (.crt)" aquí abajo y haz clic en <strong>"Guardar Configuración"</strong>.</p>
+                </div>
+              </div>
+            </details>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -397,57 +420,7 @@ export function ConfiguracionFiscalContent() {
             </div>
           </div>
 
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Entorno y Habilitación</h2>
-            <div className="flex flex-col gap-4">
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  name="habilitada"
-                  checked={formData.habilitada}
-                  onChange={handleInputChange}
-                  className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <div>
-                  <span className="block text-sm font-medium text-gray-900">Habilitar Facturación Automática</span>
-                  <span className="block text-sm text-gray-500">Al habilitar, el POS mostrará la opción para emitir comprobante oficial.</span>
-                </div>
-              </label>
 
-              <div className="mt-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Entorno Operativo</label>
-                <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="ambiente"
-                      value="homologacion"
-                      checked={formData.ambiente === 'homologacion'}
-                      onChange={handleInputChange}
-                      className="text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="text-sm text-gray-700 font-medium">Homologación (Pruebas)</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="ambiente"
-                      value="produccion"
-                      checked={formData.ambiente === 'produccion'}
-                      onChange={handleInputChange}
-                      className="text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="text-sm text-gray-700 font-medium text-red-600">Producción (Real)</span>
-                  </label>
-                </div>
-                {formData.ambiente === 'produccion' && (
-                  <p className="text-xs text-red-600 mt-2 font-medium">
-                    ¡Atención! Las facturas emitidas en producción tienen validez legal.
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
 
           <div className="px-6 py-4 bg-gray-50 flex justify-end gap-3">
             <button

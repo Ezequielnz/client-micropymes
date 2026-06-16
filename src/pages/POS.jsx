@@ -571,11 +571,13 @@ function POS() {
    * Handles the completion of the sale.
    * Constructs the sale data object and submits it via mutation.
    */
-  const handleCompleteSale = useCallback(async () => {
+  const handleCompleteSale = useCallback(async (facturar = false) => {
     if (cart.length === 0) {
       setError('No se puede completar una venta con carrito vacío.');
       return;
     }
+
+    setEmitirFactura(facturar);
 
     setError('');
     setSaleSuccessMessage('');
@@ -586,7 +588,7 @@ function POS() {
       cliente_id: selectedCustomer || null,
       metodo_pago: paymentMethod,
       observaciones: null,
-      facturar: emitirFactura,
+      facturar: facturar,
       items: cart.map(item => ({
         id: item.item_id,
         tipo: item.tipo,
@@ -943,47 +945,7 @@ function POS() {
                 )}
               </div>
 
-              {/* ARCA Billing Option */}
-              {facturacionConfig && facturacionConfig.habilitada && (
-                <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <label className="flex items-center gap-3 cursor-pointer mb-2">
-                    <input
-                      type="checkbox"
-                      checked={emitirFactura}
-                      onChange={(e) => setEmitirFactura(e.target.checked)}
-                      className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      disabled={isLoading}
-                    />
-                    <span className="font-medium text-gray-900">Emitir Factura Electrónica (ARCA)</span>
-                  </label>
 
-                  {emitirFactura && (
-                    <div className="mt-3 pl-8">
-                      <div className="text-sm">
-                        <span className="text-gray-600">Comprobante a emitir: </span>
-                        {(() => {
-                          if (facturacionConfig.condicion_fiscal === 'monotributista') {
-                            return <span className="font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded">Factura C</span>;
-                          } else {
-                            const customer = customers.find(c => c.id === selectedCustomer);
-                            const isFacturaA = customer && customer.documento_tipo === 'CUIT' && customer.documento_numero;
-                            if (isFacturaA) {
-                              return <span className="font-semibold text-purple-700 bg-purple-100 px-2 py-0.5 rounded">Factura A</span>;
-                            } else {
-                              return (
-                                <div className="mt-1 inline-block">
-                                  <span className="font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded">Factura B</span>
-                                  <p className="text-xs text-gray-500 mt-1">Para Factura A, selecciona un cliente con CUIT.</p>
-                                </div>
-                              );
-                            }
-                          }
-                        })()}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
 
               {/* Payment Method */}
               <div className="mb-6">
@@ -1125,25 +1087,49 @@ function POS() {
                 })()}
               </div>
 
-              {/* Complete Sale Button */}
-              <Button
-                onClick={handleCompleteSale}
-                disabled={cart.length === 0 || isLoading}
-                className="w-full"
-                size="lg"
-              >
-                {recordSaleMutation.isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Procesando...
-                  </>
-                ) : (
-                  <>
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Completar Venta
-                  </>
+              {/* Complete Sale Buttons */}
+              <div className="flex flex-col gap-3">
+                <Button
+                  onClick={() => handleCompleteSale(false)}
+                  disabled={cart.length === 0 || isLoading}
+                  className="w-full"
+                  size="lg"
+                  variant="outline"
+                >
+                  {recordSaleMutation.isPending && !emitirFactura ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Procesando...
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      Solo Registrar Venta (Interna)
+                    </>
+                  )}
+                </Button>
+
+                {facturacionConfig && facturacionConfig.cert_path && facturacionConfig.key_path && (
+                  <Button
+                    onClick={() => handleCompleteSale(true)}
+                    disabled={cart.length === 0 || isLoading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                    size="lg"
+                  >
+                    {recordSaleMutation.isPending && emitirFactura ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Facturando...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        Completar y Facturar (ARCA)
+                      </>
+                    )}
+                  </Button>
                 )}
-              </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
