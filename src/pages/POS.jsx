@@ -102,8 +102,7 @@ const Alert = ({ children, variant = 'default', className = '' }) => {
 /**
  * @typedef {object} CustomerInPOS
  * @property {string} id - The unique identifier for the customer.
- * @property {string} nombre - The customer's first name.
- * @property {string} apellido - The customer's last name.
+ * @property {string} razon_social - The customer's Razón Social (nombre y apellido).
  * @property {string} email - The customer's email address.
  */
 
@@ -206,7 +205,7 @@ function POS() {
   /** @type {[boolean, function]} isCustomerModalOpen - State to control the visibility of the new customer modal. */
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   /** @type {[object, function]} newCustomer - Form state for creating a new customer. */
-  const [newCustomer, setNewCustomer] = useState({ nombre: '', apellido: '', email: '', telefono: '', direccion: '', documento_tipo: '', documento_numero: '' });
+  const [newCustomer, setNewCustomer] = useState({ razon_social: '', email: '', telefono: '', direccion: '', documento_tipo: '', documento_numero: '' });
   /** @type {[string, function]} createCustomerError - Error message for creating a customer. */
   const [createCustomerError, setCreateCustomerError] = useState('');
   /** @type {[object, function]} fractionalProduct - State for the product currently being added via the fractional modal. */
@@ -391,7 +390,7 @@ function POS() {
       setSelectedCustomer(created.id);
       queryClient.invalidateQueries(['customers', businessId]);
       setIsCustomerModalOpen(false);
-      setNewCustomer({ nombre: '', apellido: '', email: '', telefono: '', direccion: '', documento_tipo: '', documento_numero: '' });
+      setNewCustomer({ razon_social: '', email: '', telefono: '', direccion: '', documento_tipo: '', documento_numero: '' });
       setCreateCustomerError('');
     },
     onError: (err) => {
@@ -612,16 +611,14 @@ function POS() {
 
   const handleCreateCustomer = useCallback(async () => {
     setCreateCustomerError('');
-    const nombre = (newCustomer.nombre || '').trim();
-    const apellido = (newCustomer.apellido || '').trim();
-    if (!nombre || !apellido) {
-      setCreateCustomerError('Por favor, completa nombre y apellido.');
+    const razon_social = (newCustomer.razon_social || '').trim();
+    if (!razon_social) {
+      setCreateCustomerError('Por favor, completa la Razón Social.');
       return;
     }
     try {
       await createCustomerMutation.mutateAsync({
-        nombre,
-        apellido,
+        razon_social,
         email: newCustomer.email || null,
         telefono: newCustomer.telefono || null,
         direccion: newCustomer.direccion || null,
@@ -925,7 +922,7 @@ function POS() {
                     <option value="" className="text-gray-900">Cliente ocasional</option>
                     {customers.map(customer => (
                       <option key={customer.id} value={customer.id} className="text-gray-900">
-                        {customer.nombre} {customer.apellido}
+                        {customer.razon_social}
                       </option>
                     ))}
                   </select>
@@ -1149,25 +1146,13 @@ function POS() {
               )}
               <div className="grid grid-cols-1 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Razón Social (nombre y apellido)</label>
                   <input
                     type="text"
-                    value={newCustomer.nombre}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, nombre: e.target.value })}
+                    value={newCustomer.razon_social}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, razon_social: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                    placeholder="Nombre"
-                    required
-                    disabled={createCustomerMutation.isPending}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
-                  <input
-                    type="text"
-                    value={newCustomer.apellido}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, apellido: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                    placeholder="Apellido"
+                    placeholder="Razón Social o Nombre y Apellido"
                     required
                     disabled={createCustomerMutation.isPending}
                   />

@@ -27,8 +27,7 @@ import {
 /**
  * @typedef {object} Customer
  * @property {string|number} id - The unique identifier for the customer.
- * @property {string} nombre - The customer's name.
- * @property {string} [apellido] - The customer's last name.
+ * @property {string} razon_social - The customer's Razón Social (nombre y apellido).
  * @property {string} [email] - The customer's email address.
  * @property {string} [telefono] - The customer's phone number (optional).
  * @property {string} [direccion] - The customer's physical address (optional).
@@ -38,8 +37,7 @@ import {
 
 /**
  * @typedef {object} FormDataCustomer
- * @property {string} nombre - Customer's name.
- * @property {string} apellido - Customer's last name.
+ * @property {string} razon_social - Customer's Razón Social (nombre y apellido).
  * @property {string} email - Customer's email.
  * @property {string} telefono - Customer's phone number.
  * @property {string} direccion - Customer's address.
@@ -67,8 +65,7 @@ function Customers() {
   // Form State
   /** @type {FormDataCustomer} */
   const initialFormState = useMemo(() => ({
-    nombre: '',
-    apellido: '',
+    razon_social: '',
     email: '',
     telefono: '',
     direccion: '',
@@ -220,8 +217,7 @@ function Customers() {
     setIsEditing(true);
     setCurrentCustomer(customer);
     setFormData({
-      nombre: customer.nombre || '',
-      apellido: customer.apellido || '',
+      razon_social: customer.razon_social || '',
       email: customer.email || '',
       telefono: customer.telefono || '', // Handle if phone or address can be null
       direccion: customer.direccion || '',
@@ -243,12 +239,8 @@ function Customers() {
     e.preventDefault();
     setFormError('');
 
-    if (!formData.nombre) {
-      setFormError('Name is required.');
-      return;
-    }
-    if (!formData.apellido) {
-      setFormError('Last name is required.');
+    if (!formData.razon_social) {
+      setFormError('Razón Social is required.');
       return;
     }
     // Basic email validation (only if email is provided)
@@ -260,8 +252,7 @@ function Customers() {
     try {
       // Clean the form data - convert empty strings to null for optional fields
       const cleanedData = {
-        nombre: formData.nombre.trim(),
-        apellido: formData.apellido.trim(),
+        razon_social: formData.razon_social.trim(),
         email: formData.email && formData.email.trim() ? formData.email.trim() : null,
         telefono: formData.telefono && formData.telefono.trim() ? formData.telefono.trim() : null,
         direccion: formData.direccion && formData.direccion.trim() ? formData.direccion.trim() : null,
@@ -372,7 +363,7 @@ function Customers() {
         <CardContent>
           <div className="space-y-2">
             <Label htmlFor="search" className="text-sm font-medium text-gray-700">
-              Buscar por nombre, apellido, email o documento
+              Buscar por razón social, email o documento
             </Label>
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -408,30 +399,15 @@ function Customers() {
             )}
             <form onSubmit={handleFormSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="nombre" className="text-sm font-medium text-gray-700">
-                    Nombre <span className="text-red-500">*</span>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="razon_social" className="text-sm font-medium text-gray-700">
+                    Razón Social (nombre y apellido) <span className="text-red-500">*</span>
                   </Label>
                   <Input
-                    id="nombre"
-                    name="nombre"
+                    id="razon_social"
+                    name="razon_social"
                     type="text"
-                    value={formData.nombre}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full"
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="apellido" className="text-sm font-medium text-gray-700">
-                    Apellido <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="apellido"
-                    name="apellido"
-                    type="text"
-                    value={formData.apellido}
+                    value={formData.razon_social}
                     onChange={handleInputChange}
                     required
                     className="w-full"
@@ -588,7 +564,7 @@ function Customers() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Nombre</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Razón Social</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Email</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Teléfono</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Documento</th>
@@ -601,7 +577,7 @@ function Customers() {
                     <tr key={customer.id} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-3 px-4">
                         <div className="font-medium text-gray-900">
-                          {customer.nombre} {customer.apellido}
+                          {customer.razon_social}
                         </div>
                       </td>
                       <td className="py-3 px-4 text-gray-600">
