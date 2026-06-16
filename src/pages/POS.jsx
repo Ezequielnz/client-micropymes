@@ -205,7 +205,7 @@ function POS() {
   /** @type {[boolean, function]} isCustomerModalOpen - State to control the visibility of the new customer modal. */
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   /** @type {[object, function]} newCustomer - Form state for creating a new customer. */
-  const [newCustomer, setNewCustomer] = useState({ razon_social: '', email: '', telefono: '', direccion: '', documento_tipo: '', documento_numero: '' });
+  const [newCustomer, setNewCustomer] = useState({ razon_social: '', email: '', telefono: '', direccion: '', documento_tipo: '', documento_numero: '', condicion_iva: '' });
   /** @type {[string, function]} createCustomerError - Error message for creating a customer. */
   const [createCustomerError, setCreateCustomerError] = useState('');
   /** @type {[object, function]} fractionalProduct - State for the product currently being added via the fractional modal. */
@@ -390,7 +390,7 @@ function POS() {
       setSelectedCustomer(created.id);
       queryClient.invalidateQueries(['customers', businessId]);
       setIsCustomerModalOpen(false);
-      setNewCustomer({ razon_social: '', email: '', telefono: '', direccion: '', documento_tipo: '', documento_numero: '' });
+      setNewCustomer({ razon_social: '', email: '', telefono: '', direccion: '', documento_tipo: '', documento_numero: '', condicion_iva: '' });
       setCreateCustomerError('');
     },
     onError: (err) => {
@@ -624,6 +624,7 @@ function POS() {
         direccion: newCustomer.direccion || null,
         documento_tipo: newCustomer.documento_tipo || null,
         documento_numero: newCustomer.documento_numero || null,
+        condicion_iva: newCustomer.condicion_iva || null,
       });
     } catch {
       // Error handling is done in the mutation onError callback
@@ -1216,6 +1217,21 @@ function POS() {
                       disabled={createCustomerMutation.isPending}
                     />
                   </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Condición frente al IVA</label>
+                  <select
+                    value={newCustomer.condicion_iva}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, condicion_iva: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    disabled={createCustomerMutation.isPending}
+                  >
+                    <option value="">Seleccionar...</option>
+                    <option value="Responsable Inscripto">Responsable Inscripto</option>
+                    <option value="Monotributista">Monotributista</option>
+                    <option value="Exento">Exento</option>
+                    <option value="Consumidor Final">Consumidor Final</option>
+                  </select>
                 </div>
               </div>
               <div className="mt-6 flex justify-end gap-2">

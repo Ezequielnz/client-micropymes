@@ -70,7 +70,8 @@ function Customers() {
     telefono: '',
     direccion: '',
     documento_tipo: '',
-    documento_numero: ''
+    documento_numero: '',
+    condicion_iva: ''
   }), []);
   /** @type {[FormDataCustomer, function]} formData - State for the add/edit customer form inputs. */
   const [formData, setFormData] = useState(initialFormState);
@@ -223,6 +224,7 @@ function Customers() {
       direccion: customer.direccion || '',
       documento_tipo: customer.documento_tipo || '',
       documento_numero: customer.documento_numero || '',
+      condicion_iva: customer.condicion_iva || '',
     });
     setShowForm(true);
     setFormError('');
@@ -258,6 +260,7 @@ function Customers() {
         direccion: formData.direccion && formData.direccion.trim() ? formData.direccion.trim() : null,
         documento_tipo: formData.documento_tipo && formData.documento_tipo.trim() ? formData.documento_tipo.trim() : null,
         documento_numero: formData.documento_numero && formData.documento_numero.trim() ? formData.documento_numero.trim() : null,
+        condicion_iva: formData.condicion_iva && formData.condicion_iva.trim() ? formData.condicion_iva.trim() : null,
       };
 
       // Remove null values to avoid sending them to the backend
@@ -474,6 +477,25 @@ function Customers() {
                     disabled={isLoading}
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="condicion_iva" className="text-sm font-medium text-gray-700">
+                    Condición frente al IVA
+                  </Label>
+                  <select
+                    id="condicion_iva"
+                    name="condicion_iva"
+                    value={formData.condicion_iva}
+                    onChange={handleInputChange}
+                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-slate-900"
+                    disabled={isLoading}
+                  >
+                    <option value="">Seleccionar...</option>
+                    <option value="Responsable Inscripto">Responsable Inscripto</option>
+                    <option value="Monotributista">Monotributista</option>
+                    <option value="Exento">Exento</option>
+                    <option value="Consumidor Final">Consumidor Final</option>
+                  </select>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="direccion" className="text-sm font-medium text-gray-700">
@@ -568,6 +590,7 @@ function Customers() {
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Email</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Teléfono</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Documento</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Condición IVA</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Dirección</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Acciones</th>
                   </tr>
@@ -591,6 +614,13 @@ function Customers() {
                           ? `${customer.documento_tipo}: ${customer.documento_numero}` 
                           : 'N/A'
                         }
+                      </td>
+                      <td className="py-3 px-4 text-gray-600">
+                        {customer.condicion_iva ? (
+                          <Badge variant="outline" className="text-xs bg-slate-50">
+                            {customer.condicion_iva}
+                          </Badge>
+                        ) : 'N/A'}
                       </td>
                       <td className="py-3 px-4 text-gray-600">
                         {customer.direccion || 'N/A'}
