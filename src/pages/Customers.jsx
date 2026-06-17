@@ -338,7 +338,8 @@ function Customers() {
           <div className="flex gap-3">
             <Button 
               onClick={handleShowAddForm}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="hover:opacity-90"
+              style={{ backgroundColor: '#28a745', color: 'white', border: 'none' }}
               disabled={isLoading}
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -515,7 +516,8 @@ function Customers() {
                 <Button 
                   type="submit" 
                   disabled={isLoading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="hover:opacity-90"
+                  style={{ backgroundColor: '#28a745', color: 'white', border: 'none' }}
                 >
                   {isLoading ? (
                     <>
@@ -530,12 +532,13 @@ function Customers() {
                 </Button>
                 <Button 
                   type="button" 
-                  variant="outline"
                   onClick={() => {
                     setShowForm(false);
                     setFormError('');
                   }}
                   disabled={isLoading}
+                  className="hover:opacity-90"
+                  style={{ backgroundColor: '#6c757d', color: 'white', border: 'none' }}
                 >
                   Cancelar
                 </Button>
@@ -573,7 +576,8 @@ function Customers() {
               {!searchTerm && (
                 <Button 
                   onClick={handleShowAddForm}
-                  className="mt-4 bg-blue-600 hover:bg-blue-700 text-white"
+                  className="mt-4 hover:opacity-90"
+                  style={{ backgroundColor: '#28a745', color: 'white', border: 'none' }}
                   disabled={isLoading}
                 >
                   <Plus className="h-4 w-4 mr-2" />
@@ -629,19 +633,19 @@ function Customers() {
                         <div className="flex gap-2">
                           <Button
                             size="sm"
-                            variant="outline"
                             onClick={() => handleEditClick(customer)}
                             disabled={isLoading}
-                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            className="hover:opacity-90"
+                            style={{ backgroundColor: '#17a2b8', color: 'white', border: 'none' }}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button
                             size="sm"
-                            variant="outline"
                             onClick={() => handleDelete(customer.id)}
                             disabled={isLoading}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="hover:opacity-90"
+                            style={{ backgroundColor: '#dc3545', color: 'white', border: 'none' }}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

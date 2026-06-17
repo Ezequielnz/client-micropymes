@@ -1,491 +1,709 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supplierAPI } from '../utils/api';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useBusinessContext } from '../contexts/BusinessContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { supplierAPI } from '../utils/api';
+import { getErrorMessage, isForbiddenError } from '../utils/errorHandler';
 import { useUserPermissions } from '../hooks/useUserPermissions';
-
-const SupplierCreateModal = ({ open, onClose, onSubmit, isSubmitting }) => {
-  const [form, setForm] = useState({
-    nombre: '',
-    cuit_cuil: '',
-    email: '',
-    telefono: '',
-    direccion: '',
-    ciudad: '',
-    provincia: '',
-    pais: '',
-    condiciones_pago: '',
-    observaciones: '',
-    estado: '',
-  });
-
-  useEffect(() => {
-    if (open) {
-      setForm({
-        nombre: '',
-        cuit_cuil: '',
-        email: '',
-        telefono: '',
-        direccion: '',
-        ciudad: '',
-        provincia: '',
-        pais: '',
-        condiciones_pago: '',
-        observaciones: '',
-        estado: '',
-      });
-    }
-  }, [open]);
-
-  const update = (field, value) => setForm((f) => ({ ...f, [field]: value }));
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.nombre?.trim()) {
-      alert('El nombre es obligatorio');
-      return;
-    }
-    await onSubmit({
-      nombre: form.nombre.trim(),
-      cuit_cuil: form.cuit_cuil || null,
-      email: form.email || null,
-      telefono: form.telefono || null,
-      direccion: form.direccion || null,
-      ciudad: form.ciudad || null,
-      provincia: form.provincia || null,
-      pais: form.pais || null,
-      condiciones_pago: form.condiciones_pago || null,
-      observaciones: form.observaciones || null,
-      estado: form.estado || null,
-    });
-  };
-
-  if (!open) return null;
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-      <div style={{ background: 'white', borderRadius: 8, padding: 20, width: '95%', maxWidth: 800, maxHeight: '90vh', overflow: 'auto' }}>
-        <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, color: '#000' }}>Nuevo proveedor</h2>
-        <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Nombre</label>
-              <input type="text" value={form.nombre} onChange={(e) => update('nombre', e.target.value)} required style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>CUIT/CUIL</label>
-              <input type="text" value={form.cuit_cuil} onChange={(e) => update('cuit_cuil', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Email</label>
-              <input type="email" value={form.email} onChange={(e) => update('email', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Teléfono</label>
-              <input type="text" value={form.telefono} onChange={(e) => update('telefono', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Dirección</label>
-              <input type="text" value={form.direccion} onChange={(e) => update('direccion', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Ciudad</label>
-              <input type="text" value={form.ciudad} onChange={(e) => update('ciudad', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Provincia</label>
-              <input type="text" value={form.provincia} onChange={(e) => update('provincia', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>País</label>
-              <input type="text" value={form.pais} onChange={(e) => update('pais', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Condiciones de pago</label>
-              <input type="text" value={form.condiciones_pago} onChange={(e) => update('condiciones_pago', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Estado</label>
-              <select value={form.estado} onChange={(e) => update('estado', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }}>
-                <option value="">Seleccionar...</option>
-                <option value="Activo">Activo</option>
-                <option value="Inactivo">Inactivo</option>
-              </select>
-            </div>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Observaciones</label>
-              <input type="text" value={form.observaciones} onChange={(e) => update('observaciones', e.target.value)} placeholder="Opcional" style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-            <button type="button" onClick={onClose} disabled={isSubmitting} style={{ background: '#6b7280', color: 'white', padding: '8px 16px', borderRadius: 4, border: 'none', opacity: isSubmitting ? 0.7 : 1 }}>Cancelar</button>
-            <button type="submit" disabled={isSubmitting} style={{ background: '#10b981', color: 'white', padding: '8px 16px', borderRadius: 4, border: 'none', opacity: isSubmitting ? 0.7 : 1 }}>{isSubmitting ? 'Guardando...' : 'Guardar proveedor'}</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
-const SupplierEditModal = ({ open, onClose, onSubmit, isSubmitting, supplier }) => {
-  const [form, setForm] = useState({
-    nombre: '',
-    cuit_cuil: '',
-    email: '',
-    telefono: '',
-    direccion: '',
-    ciudad: '',
-    provincia: '',
-    pais: '',
-    condiciones_pago: '',
-    observaciones: '',
-    estado: '',
-  });
-
-  useEffect(() => {
-    if (open && supplier) {
-      setForm({
-        nombre: supplier.nombre || '',
-        cuit_cuil: supplier.cuit_cuil || '',
-        email: supplier.email || '',
-        telefono: supplier.telefono || '',
-        direccion: supplier.direccion || '',
-        ciudad: supplier.ciudad || '',
-        provincia: supplier.provincia || '',
-        pais: supplier.pais || '',
-        condiciones_pago: supplier.condiciones_pago || '',
-        observaciones: supplier.observaciones || '',
-        estado: supplier.estado || '',
-      });
-    }
-  }, [open, supplier]);
-
-  const update = (field, value) => setForm((f) => ({ ...f, [field]: value }));
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const payload = {
-      nombre: form.nombre?.trim() || undefined,
-      cuit_cuil: form.cuit_cuil || undefined,
-      email: form.email || undefined,
-      telefono: form.telefono || undefined,
-      direccion: form.direccion || undefined,
-      ciudad: form.ciudad || undefined,
-      provincia: form.provincia || undefined,
-      pais: form.pais || undefined,
-      condiciones_pago: form.condiciones_pago || undefined,
-      observaciones: form.observaciones || undefined,
-      estado: form.estado || undefined,
-    };
-    await onSubmit(payload);
-  };
-
-  if (!open || !supplier) return null;
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-      <div style={{ background: 'white', borderRadius: 8, padding: 20, width: '95%', maxWidth: 800, maxHeight: '90vh', overflow: 'auto' }}>
-        <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Editar proveedor</h2>
-        <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Nombre</label>
-              <input type="text" value={form.nombre} onChange={(e) => update('nombre', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>CUIT/CUIL</label>
-              <input type="text" value={form.cuit_cuil} onChange={(e) => update('cuit_cuil', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Email</label>
-              <input type="email" value={form.email} onChange={(e) => update('email', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Teléfono</label>
-              <input type="text" value={form.telefono} onChange={(e) => update('telefono', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Dirección</label>
-              <input type="text" value={form.direccion} onChange={(e) => update('direccion', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Ciudad</label>
-              <input type="text" value={form.ciudad} onChange={(e) => update('ciudad', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Provincia</label>
-              <input type="text" value={form.provincia} onChange={(e) => update('provincia', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>País</label>
-              <input type="text" value={form.pais} onChange={(e) => update('pais', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Condiciones de pago</label>
-              <input type="text" value={form.condiciones_pago} onChange={(e) => update('condiciones_pago', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Estado</label>
-              <select value={form.estado} onChange={(e) => update('estado', e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }}>
-                <option value="">Seleccionar...</option>
-                <option value="Activo">Activo</option>
-                <option value="Inactivo">Inactivo</option>
-              </select>
-            </div>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#000' }}>Observaciones</label>
-              <input type="text" value={form.observaciones} onChange={(e) => update('observaciones', e.target.value)} placeholder="Opcional" style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, color: '#000' }} />
-            </div>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-            <button type="button" onClick={onClose} disabled={isSubmitting} style={{ background: '#6b7280', color: 'white', padding: '8px 16px', borderRadius: 4, border: 'none', opacity: isSubmitting ? 0.7 : 1 }}>Cancelar</button>
-            <button type="submit" disabled={isSubmitting} style={{ background: '#2563eb', color: 'white', padding: '8px 16px', borderRadius: 4, border: 'none', opacity: isSubmitting ? 0.7 : 1 }}>{isSubmitting ? 'Guardando...' : 'Guardar cambios'}</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
+import '../styles/responsive-overrides.css';
+import { 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Search,
+  AlertTriangle,
+  Briefcase,
+  Loader2
+} from 'lucide-react';
 
 const Proveedores = () => {
   const { currentBusiness } = useBusinessContext();
-  const businessId = currentBusiness?.id;
   const queryClient = useQueryClient();
+  const businessId = currentBusiness?.id;
 
   const { canView, canEdit, isLoading: permissionsLoading } = useUserPermissions(businessId);
   const canViewStock = useMemo(() => canView('stock'), [canView]);
   const canEditStock = useMemo(() => canEdit('stock'), [canEdit]);
 
-  const [showCreate, setShowCreate] = useState(false);
-  const [showEdit, setShowEdit] = useState(false);
-  const [editingSupplier, setEditingSupplier] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: suppliers = [], isLoading: loadingSuppliers, error: suppliersError } = useQuery({
-    queryKey: ['suppliers', businessId],
-    queryFn: () => supplierAPI.getSuppliers(businessId),
-    enabled: !!businessId && !!currentBusiness,
-    staleTime: 10 * 60 * 1000,
-    gcTime: 15 * 60 * 1000,
+  const initialFormState = useMemo(() => ({
+    razon_social: '',
+    documento_tipo: '',
+    documento_numero: '',
+    condicion_iva: '',
+    email: '',
+    telefono: '',
+    direccion: '',
+    ciudad: '',
+    provincia: '',
+    pais: '',
+    condiciones_pago: '',
+    observaciones: '',
+    estado: ''
+  }), []);
+
+  const [formData, setFormData] = useState(initialFormState);
+  const [showForm, setShowForm] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentSupplier, setCurrentSupplier] = useState(null);
+  const [formError, setFormError] = useState('');
+
+  const {
+    data: suppliers = [],
+    isLoading: loading,
+    error: queryError
+  } = useQuery({
+    queryKey: ['suppliers', businessId, searchTerm],
+    queryFn: async () => {
+      if (!businessId) return [];
+      const params = searchTerm ? { q: searchTerm } : {};
+      return await supplierAPI.getSuppliers(businessId, params);
+    },
+    enabled: !!businessId && !!currentBusiness && canViewStock,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
+    retry: 2,
   });
 
-  const createMutation = useMutation({
-    mutationFn: (payload) => supplierAPI.createSupplier(businessId, payload),
+  const createSupplierMutation = useMutation({
+    mutationFn: async (supplierData) => {
+      if (!businessId) throw new Error('Business ID is missing');
+      return await supplierAPI.createSupplier(businessId, supplierData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['suppliers', businessId]);
-      setShowCreate(false);
+      setShowForm(false);
+      setFormData(initialFormState);
+      setFormError('');
+    },
+    onError: (error) => {
+      console.error('Error creating supplier:', error);
+      setFormError(getErrorMessage(error, 'Error creating supplier.'));
     }
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, payload }) => supplierAPI.updateSupplier(businessId, id, payload),
+  const updateSupplierMutation = useMutation({
+    mutationFn: async ({ supplierId, supplierData }) => {
+      if (!businessId) throw new Error('Business ID is missing');
+      return await supplierAPI.updateSupplier(businessId, supplierId, supplierData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['suppliers', businessId]);
-      setShowEdit(false);
-      setEditingSupplier(null);
+      setShowForm(false);
+      setFormData(initialFormState);
+      setCurrentSupplier(null);
+      setIsEditing(false);
+      setFormError('');
+    },
+    onError: (error) => {
+      console.error('Error updating supplier:', error);
+      setFormError(getErrorMessage(error, 'Error updating supplier.'));
     }
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id) => supplierAPI.deleteSupplier(businessId, id),
+  const deleteSupplierMutation = useMutation({
+    mutationFn: async (supplierId) => {
+      if (!businessId) throw new Error('Business ID is missing');
+      return await supplierAPI.deleteSupplier(businessId, supplierId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['suppliers', businessId]);
+    },
+    onError: (error) => {
+      console.error('Error deleting supplier:', error);
     }
   });
 
-  const loadSupplierForEdit = useCallback(async (id) => {
-    try {
-      const data = await supplierAPI.getSupplierById(businessId, id);
-      setEditingSupplier(data);
-      setShowEdit(true);
-    } catch (e) {
-      console.error('Error loading supplier:', e);
-    }
-  }, [businessId]);
-
-  const currentErrorMessage = useMemo(() => {
-    if (suppliersError) {
-      if (suppliersError.response?.status === 401) return 'No tienes autorización para este negocio.';
-      if (suppliersError.response?.status === 404) return 'Endpoint de proveedores no encontrado. Verifica el servidor.';
-      return `Error al cargar proveedores: ${suppliersError.message}`;
+  const error = React.useMemo(() => {
+    if (queryError) {
+      if (isForbiddenError(queryError)) {
+        return 'No tienes permiso para ver proveedores.';
+      }
+      return getErrorMessage(queryError, 'Error al cargar proveedores.');
     }
     return '';
-  }, [suppliersError]);
+  }, [queryError]);
+
+  const isLoading = React.useMemo(() => {
+    return loading || permissionsLoading ||
+           createSupplierMutation.isPending || 
+           updateSupplierMutation.isPending || 
+           deleteSupplierMutation.isPending;
+  }, [loading, permissionsLoading, createSupplierMutation.isPending, updateSupplierMutation.isPending, deleteSupplierMutation.isPending]);
+
+  const handleSearchChange = useCallback((e) => {
+    setSearchQuery(e.target.value);
+    setSearchTerm(e.target.value);
+  }, []);
+
+  const handleInputChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  }, []);
+
+  const handleShowAddForm = useCallback(() => {
+    setIsEditing(false);
+    setCurrentSupplier(null);
+    setFormData(initialFormState);
+    setShowForm(true);
+    setFormError('');
+  }, [initialFormState]);
+
+  const handleEditClick = useCallback((supplier) => {
+    setIsEditing(true);
+    setCurrentSupplier(supplier);
+    setFormData({
+      razon_social: supplier.razon_social || supplier.nombre || '',
+      documento_tipo: supplier.documento_tipo || '',
+      documento_numero: supplier.documento_numero || supplier.cuit_cuil || '',
+      condicion_iva: supplier.condicion_iva || '',
+      email: supplier.email || '',
+      telefono: supplier.telefono || '',
+      direccion: supplier.direccion || '',
+      ciudad: supplier.ciudad || '',
+      provincia: supplier.provincia || '',
+      pais: supplier.pais || '',
+      condiciones_pago: supplier.condiciones_pago || '',
+      observaciones: supplier.observaciones || '',
+      estado: supplier.estado || ''
+    });
+    setShowForm(true);
+    setFormError('');
+  }, []);
+
+  const handleFormSubmit = useCallback(async (e) => {
+    e.preventDefault();
+    setFormError('');
+
+    if (!formData.razon_social) {
+      setFormError('Razón Social es requerido.');
+      return;
+    }
+    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+      setFormError('Email es inválido.');
+      return;
+    }
+
+    try {
+      const cleanedData = {
+        razon_social: formData.razon_social.trim(),
+        documento_tipo: formData.documento_tipo && formData.documento_tipo.trim() ? formData.documento_tipo.trim() : null,
+        documento_numero: formData.documento_numero && formData.documento_numero.trim() ? formData.documento_numero.trim() : null,
+        condicion_iva: formData.condicion_iva && formData.condicion_iva.trim() ? formData.condicion_iva.trim() : null,
+        email: formData.email && formData.email.trim() ? formData.email.trim() : null,
+        telefono: formData.telefono && formData.telefono.trim() ? formData.telefono.trim() : null,
+        direccion: formData.direccion && formData.direccion.trim() ? formData.direccion.trim() : null,
+        ciudad: formData.ciudad && formData.ciudad.trim() ? formData.ciudad.trim() : null,
+        provincia: formData.provincia && formData.provincia.trim() ? formData.provincia.trim() : null,
+        pais: formData.pais && formData.pais.trim() ? formData.pais.trim() : null,
+        condiciones_pago: formData.condiciones_pago && formData.condiciones_pago.trim() ? formData.condiciones_pago.trim() : null,
+        observaciones: formData.observaciones && formData.observaciones.trim() ? formData.observaciones.trim() : null,
+        estado: formData.estado && formData.estado.trim() ? formData.estado.trim() : null,
+      };
+
+      const finalData = Object.fromEntries(
+        Object.entries(cleanedData).filter(([, value]) => value !== null)
+      );
+
+      if (isEditing && currentSupplier) {
+        await updateSupplierMutation.mutateAsync({ 
+          supplierId: currentSupplier.id, 
+          supplierData: finalData 
+        });
+      } else {
+        await createSupplierMutation.mutateAsync(finalData);
+      }
+    } catch (err) {
+      console.error('Form submission error:', err);
+    }
+  }, [formData, isEditing, currentSupplier, createSupplierMutation, updateSupplierMutation]);
+
+  const handleDelete = useCallback(async (supplierId) => {
+    if (window.confirm('¿Eliminar proveedor? Si tiene compras asociadas, la operación fallará.')) {
+      try {
+        await deleteSupplierMutation.mutateAsync(supplierId);
+      } catch (err) {
+        console.error('Delete error:', err);
+      }
+    }
+  }, [deleteSupplierMutation]);
 
   if (!currentBusiness) {
     return (
-      <div style={{ padding: 20, maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', padding: '48px 0', background: '#f8f9fa', borderRadius: 8, border: '1px solid #e5e7eb' }}>
-          <h3 style={{ fontSize: 18, fontWeight: 500, color: '#111827', marginBottom: 8 }}>No hay negocio seleccionado</h3>
-          <p style={{ color: '#6b7280' }}>Selecciona un negocio para gestionar proveedores.</p>
+      <div className="p-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Gestión de Proveedores
+          </h1>
+          <p className="text-gray-600">
+            Administra los proveedores de tu negocio
+          </p>
         </div>
+        <Alert variant="warning" className="mb-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            No hay negocio seleccionado. Por favor selecciona un negocio desde el menú superior.
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
 
   if (permissionsLoading) {
     return (
-      <div style={{ padding: 20, maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', padding: '48px 0', background: '#f8f9fa', borderRadius: 8, border: '1px solid #e5e7eb' }}>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p style={{ color: '#6b7280' }}>Cargando permisos...</p>
-        </div>
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <span className="ml-2 text-gray-600">Cargando permisos...</span>
       </div>
     );
   }
 
   if (!canViewStock) {
     return (
-      <div style={{ padding: 20, maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', padding: '48px 0', background: '#fef2f2', borderRadius: 8, border: '1px solid #fecaca' }}>
-          <h3 style={{ fontSize: 18, fontWeight: 500, color: '#991b1b', marginBottom: 8 }}>Acceso denegado</h3>
-          <p style={{ color: '#7f1d1d' }}>No tienes permisos para ver proveedores.</p>
-        </div>
+      <div className="p-8">
+        <Alert variant="destructive" className="mb-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            No tienes permisos para ver proveedores.
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 20, maxWidth: 1200, margin: '0 auto' }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: 8, color: '#111827' }}>Proveedores</h1>
-        <p style={{ color: '#6b7280' }}>Administra los proveedores de tu negocio</p>
+    <div className="p-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Gestión de Proveedores
+        </h1>
+        <p className="text-gray-600">
+          Administra los proveedores de tu negocio
+        </p>
       </div>
 
-      {currentErrorMessage && (
-        <div style={{ background: '#fee', color: '#c33', padding: 10, borderRadius: 6, border: '1px solid #fcc', marginBottom: 16 }}>{currentErrorMessage}</div>
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <div></div>
+          {canEditStock && (
+            <div className="flex gap-3">
+              <Button 
+                onClick={handleShowAddForm}
+                className="hover:opacity-90"
+                style={{ backgroundColor: '#28a745', color: 'white', border: 'none' }}
+                disabled={isLoading}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Nuevo Proveedor
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+      </div>
+
+      {/* Search */}
+      <Card className="border border-gray-200 shadow-sm mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Search className="h-5 w-5 text-blue-600" />
+            Buscar Proveedores
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <Label htmlFor="search" className="text-sm font-medium text-gray-700">
+              Buscar por razón social o documento
+            </Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                id="search"
+                type="text"
+                placeholder="Buscar proveedores..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                className="pl-10"
+                disabled={isLoading}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Supplier Form */}
+      {showForm && (
+        <Card className="border border-gray-200 shadow-sm mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Briefcase className="h-5 w-5 text-blue-600" />
+              {isEditing ? 'Editar Proveedor' : 'Nuevo Proveedor'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {formError && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>{formError}</AlertDescription>
+              </Alert>
+            )}
+            <form onSubmit={handleFormSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="razon_social" className="text-sm font-medium text-gray-700">
+                    Razón Social <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="razon_social"
+                    name="razon_social"
+                    type="text"
+                    value={formData.razon_social}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full"
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full"
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="telefono" className="text-sm font-medium text-gray-700">
+                    Teléfono
+                  </Label>
+                  <Input
+                    id="telefono"
+                    name="telefono"
+                    type="tel"
+                    value={formData.telefono}
+                    onChange={handleInputChange}
+                    className="w-full"
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="documento_tipo" className="text-sm font-medium text-gray-700">
+                    Tipo de Documento
+                  </Label>
+                  <select
+                    id="documento_tipo"
+                    name="documento_tipo"
+                    value={formData.documento_tipo}
+                    onChange={handleInputChange}
+                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-slate-900"
+                    disabled={isLoading}
+                  >
+                    <option value="">Seleccionar...</option>
+                    <option value="CUIT">CUIT</option>
+                    <option value="CUIL">CUIL</option>
+                    <option value="DNI">DNI</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="documento_numero" className="text-sm font-medium text-gray-700">
+                    Número de Documento
+                  </Label>
+                  <Input
+                    id="documento_numero"
+                    name="documento_numero"
+                    type="text"
+                    value={formData.documento_numero}
+                    onChange={handleInputChange}
+                    className="w-full"
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="condicion_iva" className="text-sm font-medium text-gray-700">
+                    Condición frente al IVA
+                  </Label>
+                  <select
+                    id="condicion_iva"
+                    name="condicion_iva"
+                    value={formData.condicion_iva}
+                    onChange={handleInputChange}
+                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-slate-900"
+                    disabled={isLoading}
+                  >
+                    <option value="">Seleccionar...</option>
+                    <option value="Responsable Inscripto">Responsable Inscripto</option>
+                    <option value="Monotributista">Monotributista</option>
+                    <option value="Exento">Exento</option>
+                    <option value="Consumidor Final">Consumidor Final</option>
+                  </select>
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="direccion" className="text-sm font-medium text-gray-700">
+                    Dirección
+                  </Label>
+                  <Input
+                    id="direccion"
+                    name="direccion"
+                    type="text"
+                    value={formData.direccion}
+                    onChange={handleInputChange}
+                    className="w-full"
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ciudad" className="text-sm font-medium text-gray-700">
+                    Ciudad
+                  </Label>
+                  <Input
+                    id="ciudad"
+                    name="ciudad"
+                    type="text"
+                    value={formData.ciudad}
+                    onChange={handleInputChange}
+                    className="w-full"
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="provincia" className="text-sm font-medium text-gray-700">
+                    Provincia
+                  </Label>
+                  <Input
+                    id="provincia"
+                    name="provincia"
+                    type="text"
+                    value={formData.provincia}
+                    onChange={handleInputChange}
+                    className="w-full"
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pais" className="text-sm font-medium text-gray-700">
+                    País
+                  </Label>
+                  <Input
+                    id="pais"
+                    name="pais"
+                    type="text"
+                    value={formData.pais}
+                    onChange={handleInputChange}
+                    className="w-full"
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="condiciones_pago" className="text-sm font-medium text-gray-700">
+                    Condiciones de pago
+                  </Label>
+                  <Input
+                    id="condiciones_pago"
+                    name="condiciones_pago"
+                    type="text"
+                    value={formData.condiciones_pago}
+                    onChange={handleInputChange}
+                    className="w-full"
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="estado" className="text-sm font-medium text-gray-700">
+                    Estado
+                  </Label>
+                  <select
+                    id="estado"
+                    name="estado"
+                    value={formData.estado}
+                    onChange={handleInputChange}
+                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-slate-900"
+                    disabled={isLoading}
+                  >
+                    <option value="">Seleccionar...</option>
+                    <option value="Activo">Activo</option>
+                    <option value="Inactivo">Inactivo</option>
+                  </select>
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="observaciones" className="text-sm font-medium text-gray-700">
+                    Observaciones
+                  </Label>
+                  <Input
+                    id="observaciones"
+                    name="observaciones"
+                    type="text"
+                    value={formData.observaciones}
+                    onChange={handleInputChange}
+                    className="w-full"
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button 
+                  type="submit" 
+                  disabled={isLoading}
+                  className="hover:opacity-90"
+                  style={{ backgroundColor: '#28a745', color: 'white', border: 'none' }}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      {isEditing ? 'Actualizando...' : 'Creando...'}
+                    </>
+                  ) : (
+                    <>
+                      {isEditing ? 'Actualizar Proveedor' : 'Crear Proveedor'}
+                    </>
+                  )}
+                </Button>
+                <Button 
+                  type="button" 
+                  onClick={() => {
+                    setShowForm(false);
+                    setFormError('');
+                  }}
+                  disabled={isLoading}
+                  className="hover:opacity-90"
+                  style={{ backgroundColor: '#6c757d', color: 'white', border: 'none' }}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       )}
 
-      <div style={{ marginBottom: 16 }}>
-        {canEditStock && (
-          <button onClick={() => setShowCreate(true)} disabled={createMutation.isPending}
-            style={{ background: '#10b981', color: 'white', padding: '10px 16px', border: 'none', borderRadius: 6, cursor: createMutation.isPending ? 'not-allowed' : 'pointer', opacity: createMutation.isPending ? 0.7 : 1 }}>
-            + Nuevo proveedor
-          </button>
-        )}
-      </div>
-
-      <div className="hidden md:block overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">Nombre</th>
-              <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">Email</th>
-              <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">Teléfono</th>
-              <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">Ciudad</th>
-              <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">Provincia</th>
-              <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">País</th>
-              <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">Condiciones</th>
-              <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">Estado</th>
-              <th className="px-4 py-3 text-left border-b border-gray-200 text-gray-700 font-medium text-sm">Observaciones</th>
-              {canEditStock && (
-                <th className="px-4 py-3 text-center border-b border-gray-200 text-gray-700 font-medium text-sm">Acciones</th>
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {loadingSuppliers ? (
-              <tr><td colSpan={canEditStock ? 10 : 9} className="px-4 py-6 text-center text-gray-500">Cargando...</td></tr>
-            ) : suppliers.length === 0 ? (
-              <tr><td colSpan={canEditStock ? 10 : 9} className="px-4 py-6 text-center text-gray-500 italic">No hay proveedores cargados</td></tr>
-            ) : (
-              suppliers.map((s) => (
-                <tr key={s.id} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-900 text-sm">{s.nombre}</td>
-                  <td className="px-4 py-3 text-gray-900 text-sm">{s.email || '—'}</td>
-                  <td className="px-4 py-3 text-gray-900 text-sm">{s.telefono || '—'}</td>
-                  <td className="px-4 py-3 text-gray-900 text-sm">{s.ciudad || '—'}</td>
-                  <td className="px-4 py-3 text-gray-900 text-sm">{s.provincia || '—'}</td>
-                  <td className="px-4 py-3 text-gray-900 text-sm">{s.pais || '—'}</td>
-                  <td className="px-4 py-3 text-gray-900 text-sm truncate max-w-xs" title={s.condiciones_pago || ''}>{s.condiciones_pago || '—'}</td>
-                  <td className="px-4 py-3 text-gray-900 text-sm">{s.estado || '—'}</td>
-                  <td className="px-4 py-3 text-gray-600 text-sm truncate max-w-xs" title={s.observaciones || ''}>{s.observaciones || '—'}</td>
-                  {canEditStock && (
-                    <td className="px-4 py-3 text-center">
-                      <div className="flex gap-2 justify-center">
-                        <button onClick={() => loadSupplierForEdit(s.id)} className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">Editar</button>
-                        <button onClick={async () => {
-                          if (!window.confirm('¿Eliminar proveedor? Si tiene compras asociadas, la operación fallará.')) return;
-                          try { await deleteMutation.mutateAsync(s.id); } catch (e) { console.error(e); }
-                        }} className="px-3 py-1.5 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors">Eliminar</button>
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              ))
+      {/* Suppliers List */}
+      <Card className="border border-gray-200 shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Briefcase className="h-5 w-5 text-blue-600" />
+            Lista de Proveedores
+            {suppliers.length > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {suppliers.length}
+              </Badge>
             )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Mobile list */}
-      <div className="block md:hidden">
-        {loadingSuppliers ? (
-          <div className="p-6 text-center text-gray-500">Cargando...</div>
-        ) : suppliers.length === 0 ? (
-          <div className="p-6 text-center text-gray-500 italic">No hay proveedores cargados</div>
-        ) : (
-          <div className="divide-y divide-gray-200">
-            {suppliers.map((s) => (
-              <div key={s.id} className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-medium text-gray-900 text-sm">{s.nombre}</h3>
-                </div>
-                <div className="text-xs text-gray-700 mb-1"><span className="font-medium">Email:</span> {s.email || '—'}</div>
-                <div className="text-xs text-gray-700 mb-1"><span className="font-medium">Tel:</span> {s.telefono || '—'}</div>
-                {(s.ciudad || s.provincia || s.pais) && (
-                  <div className="text-xs text-gray-700 mb-1"><span className="font-medium">Ubicación:</span> {[s.ciudad, s.provincia, s.pais].filter(Boolean).join(', ')}</div>
-                )}
-                {s.condiciones_pago && (
-                  <div className="text-xs text-gray-700 mb-1 truncate"><span className="font-medium">Condiciones:</span> {s.condiciones_pago}</div>
-                )}
-                {s.observaciones && (
-                  <p className="text-gray-600 text-xs mb-2 line-clamp-2">{s.observaciones}</p>
-                )}
-                {canEditStock && (
-                  <div className="flex gap-2 mt-3">
-                    <button onClick={() => loadSupplierForEdit(s.id)} className="flex-1 px-3 py-1.5 text-xs bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors">Editar</button>
-                    <button onClick={async () => {
-                      if (!window.confirm('¿Eliminar proveedor? Si tiene compras asociadas, la operación fallará.')) return;
-                      try { await deleteMutation.mutateAsync(s.id); } catch (e) { console.error(e); }
-                    }} className="flex-1 px-3 py-1.5 text-xs bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors">Eliminar</button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <SupplierCreateModal
-        open={showCreate}
-        onClose={() => setShowCreate(false)}
-        onSubmit={async (payload) => {
-          try {
-            await createMutation.mutateAsync(payload);
-          } catch (e) {
-            console.error('Error creating supplier:', e);
-          }
-        }}
-        isSubmitting={createMutation.isPending}
-      />
-
-      <SupplierEditModal
-        open={showEdit}
-        onClose={() => { setShowEdit(false); setEditingSupplier(null); }}
-        onSubmit={async (payload) => {
-          try {
-            await updateMutation.mutateAsync({ id: editingSupplier.id, payload });
-          } catch (e) {
-            console.error('Error updating supplier:', e);
-          }
-        }}
-        supplier={editingSupplier}
-        isSubmitting={updateMutation.isPending}
-      />
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              <span className="ml-2 text-gray-600">Cargando proveedores...</span>
+            </div>
+          ) : suppliers.length === 0 ? (
+            <div className="text-center py-8">
+              <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">
+                {searchTerm ? 'No se encontraron proveedores que coincidan con tu búsqueda.' : 'No hay proveedores registrados aún.'}
+              </p>
+              {!searchTerm && canEditStock && (
+                <Button 
+                  onClick={handleShowAddForm}
+                  className="mt-4 hover:opacity-90"
+                  style={{ backgroundColor: '#28a745', color: 'white', border: 'none' }}
+                  disabled={isLoading}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Agregar Primer Proveedor
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Razón Social</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Email</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Teléfono</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Documento</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Ubicación</th>
+                    {canEditStock && (
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">Acciones</th>
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {suppliers.map(supplier => (
+                    <tr key={supplier.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4">
+                        <div className="font-medium text-gray-900">
+                          {supplier.razon_social || supplier.nombre}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-gray-600">
+                        {supplier.email || 'N/A'}
+                      </td>
+                      <td className="py-3 px-4 text-gray-600">
+                        {supplier.telefono || 'N/A'}
+                      </td>
+                      <td className="py-3 px-4 text-gray-600">
+                        {supplier.documento_tipo || supplier.documento_numero || supplier.cuit_cuil
+                          ? `${supplier.documento_tipo || 'CUIT'}: ${supplier.documento_numero || supplier.cuit_cuil || ''}` 
+                          : 'N/A'
+                        }
+                      </td>
+                      <td className="py-3 px-4 text-gray-600">
+                        {[supplier.ciudad, supplier.provincia, supplier.pais].filter(Boolean).join(', ') || 'N/A'}
+                      </td>
+                      {canEditStock && (
+                        <td className="py-3 px-4">
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleEditClick(supplier)}
+                              disabled={isLoading}
+                              className="hover:opacity-90"
+                              style={{ backgroundColor: '#17a2b8', color: 'white', border: 'none' }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleDelete(supplier.id)}
+                              disabled={isLoading}
+                              className="hover:opacity-90"
+                              style={{ backgroundColor: '#dc3545', color: 'white', border: 'none' }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
-};
+}
 
 export default Proveedores;
