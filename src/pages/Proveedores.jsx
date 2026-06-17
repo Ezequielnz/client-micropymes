@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { supplierAPI } from '../utils/api';
 import { getErrorMessage, isForbiddenError } from '../utils/errorHandler';
 import { useUserPermissions } from '../hooks/useUserPermissions';
+import ExcelImportModal from '../components/ExcelImportModal';
 import '../styles/responsive-overrides.css';
 import { 
   Plus, 
@@ -18,7 +19,8 @@ import {
   Search,
   AlertTriangle,
   Briefcase,
-  Loader2
+  Loader2,
+  Upload
 } from 'lucide-react';
 
 const Proveedores = () => {
@@ -54,6 +56,8 @@ const Proveedores = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentSupplier, setCurrentSupplier] = useState(null);
   const [formError, setFormError] = useState('');
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const {
     data: suppliers = [],
@@ -109,18 +113,26 @@ const Proveedores = () => {
     }
   });
 
-  const deleteSupplierMutation = useMutation({
-    mutationFn: async (supplierId) => {
-      if (!businessId) throw new Error('Business ID is missing');
-      return await supplierAPI.deleteSupplier(businessId, supplierId);
-    },
+  const deleteMutation = useMutation({
+    mutationFn: (id) => supplierAPI.delete(businessId, id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['suppliers', businessId]);
+      queryClient.invalidateQueries({ queryKey: ['proveedores', businessId] });
+      setSuccessMessage('Proveedor eliminado correctamente.');
+      setTimeout(() => setSuccessMessage(''), 3000);
     },
-    onError: (error) => {
-      console.error('Error deleting supplier:', error);
+    onError: (err) => {
+      setError(getErrorMessage(err));
+      setTimeout(() => setError(null), 5000);
     }
   });
+
+  const handleImportSuccess = (success, errors) => {
+    queryClient.invalidateQueries({ queryKey: ['proveedores', businessId] });
+    if (success > 0 || errors > 0) {
+      setSuccessMessage(`Importación finalizada: ${success} creados, ${errors} errores.`);
+      setTimeout(() => setSuccessMessage(''), 5000);
+    }
+  };
 
   const error = React.useMemo(() => {
     if (queryError) {
@@ -292,9 +304,24 @@ const Proveedores = () => {
 
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
-          <div></div>
+          <div>
+            {successMessage && (
+              <Alert className="mb-4 bg-green-50 border-green-200">
+                <AlertDescription className="text-green-800">{successMessage}</AlertDescription>
+              </Alert>
+            )}
+          </div>
           {canEditStock && (
             <div className="flex gap-3">
+              <Button 
+                onClick={() => setShowImportModal(true)}
+                variant="outline"
+                className="hover:bg-gray-100"
+                disabled={isLoading}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Importar
+              </Button>
               <Button 
                 onClick={handleShowAddForm}
                 className="hover:opacity-90"
@@ -315,6 +342,15 @@ const Proveedores = () => {
           </Alert>
         )}
       </div>
+
+      <ExcelImportModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        entityType="proveedores"
+        businessId={businessId}
+        onImportSuccess={handleImportSuccess}
+        createEntity={supplierAPI.create}
+      />
 
       {/* Search */}
       <Card className="border border-gray-200 shadow-sm mb-6">

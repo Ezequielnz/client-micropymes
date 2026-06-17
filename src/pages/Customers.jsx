@@ -12,6 +12,7 @@ import { customerAPI } from '../utils/api';
 import { getErrorMessage, isForbiddenError } from '../utils/errorHandler';
 import PermissionGuard from '../components/PermissionGuard';
 import Layout from '../components/Layout';
+import ExcelImportModal from '../components/ExcelImportModal';
 import '../styles/responsive-overrides.css';
 import { 
   Users, 
@@ -21,7 +22,8 @@ import {
   Search,
   AlertTriangle,
   User,
-  Loader2
+  Loader2,
+  Upload
 } from 'lucide-react';
 
 /**
@@ -83,6 +85,8 @@ function Customers() {
   const [currentCustomer, setCurrentCustomer] = useState(null);
   /** @type {[string, function]} formError - State for storing errors specific to the add/edit customer form (e.g., validation errors). */
   const [formError, setFormError] = useState('');
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   // ✅ OPTIMIZED: React Query for customers with smart caching
   const {
@@ -155,6 +159,14 @@ function Customers() {
       // Could add toast notification here
     }
   });
+
+  const handleImportSuccess = (success, errors) => {
+    queryClient.invalidateQueries({ queryKey: ['customers', businessId] });
+    if (success > 0 || errors > 0) {
+      setSuccessMessage(`Importación finalizada: ${success} creados, ${errors} errores.`);
+      setTimeout(() => setSuccessMessage(''), 5000);
+    }
+  };
 
   // ✅ OPTIMIZED: Memoized error handling
   const error = React.useMemo(() => {
@@ -334,8 +346,23 @@ function Customers() {
       {/* Action Button */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
-          <div></div>
+          <div>
+            {successMessage && (
+              <Alert className="mb-4 bg-green-50 border-green-200">
+                <AlertDescription className="text-green-800">{successMessage}</AlertDescription>
+              </Alert>
+            )}
+          </div>
           <div className="flex gap-3">
+            <Button 
+              onClick={() => setShowImportModal(true)}
+              variant="outline"
+              className="hover:bg-gray-100"
+              disabled={isLoading}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Importar
+            </Button>
             <Button 
               onClick={handleShowAddForm}
               className="hover:opacity-90"
@@ -355,6 +382,15 @@ function Customers() {
           </Alert>
         )}
       </div>
+
+      <ExcelImportModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        entityType="clientes"
+        businessId={businessId}
+        onImportSuccess={handleImportSuccess}
+        createEntity={customerAPI.createCustomer}
+      />
 
       {/* Search */}
       <Card className="border border-gray-200 shadow-sm mb-6">
