@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Upload, X, Check, AlertCircle, FileText } from 'lucide-react';
 import { Button } from './ui/button';
-import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { api } from '../utils/api';
+import { Alert, AlertDescription } from './ui/alert';
+import api from '../utils/api';
 
 /**
  * ExcelImportModal component for importing entities from an Excel file.
@@ -132,7 +132,6 @@ const ExcelImportModal = ({ isOpen, onClose, entityType, businessId, onImportSuc
           {error && (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
