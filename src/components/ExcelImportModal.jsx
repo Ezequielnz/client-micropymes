@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, X, Check, AlertCircle, FileText } from 'lucide-react';
+import { Upload, Check, AlertCircle, FileText } from 'lucide-react';
 import { Button } from './ui/button';
 import { Alert, AlertDescription } from './ui/alert';
 import api from '../utils/api';
@@ -122,10 +122,7 @@ const ExcelImportModal = ({ isOpen, onClose, entityType, businessId, onImportSuc
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-xl font-semibold">Importar {entityName} desde Excel</h2>
-          <button onClick={resetModal} className="text-gray-500 hover:bg-gray-100 p-1 rounded-md transition-colors">
-            <X size={20} />
-          </button>
+          <h2 className="text-xl font-semibold text-black" style={{ color: 'black' }}>Importar {entityName} desde Excel</h2>
         </div>
 
         <div className="p-6 overflow-y-auto flex-1">
