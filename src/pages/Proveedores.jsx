@@ -113,7 +113,7 @@ const Proveedores = () => {
     }
   });
 
-  const deleteMutation = useMutation({
+  const deleteSupplierMutation = useMutation({
     mutationFn: (id) => supplierAPI.delete(businessId, id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proveedores', businessId] });
