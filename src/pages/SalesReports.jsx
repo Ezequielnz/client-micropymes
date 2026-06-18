@@ -321,7 +321,7 @@ function SalesReportsComponent() {
                   <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <input 
                     type="date" 
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white" style={{ colorScheme: 'light' }}
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                   />
@@ -335,7 +335,7 @@ function SalesReportsComponent() {
                   <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <input 
                     type="date" 
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white" style={{ colorScheme: 'light' }}
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                   />
@@ -368,7 +368,7 @@ function SalesReportsComponent() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Ventas</p>
-                    <p className="text-3xl font-bold text-gray-900">{reportData.total_ventas}</p>
+                    <p className="text-2xl font-semibold text-gray-800">{reportData.total_ventas}</p>
                     <p className="text-sm text-blue-600 mt-1">Transacciones</p>
                   </div>
                   <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -383,7 +383,7 @@ function SalesReportsComponent() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Ingresos Totales</p>
-                    <p className="text-3xl font-bold text-gray-900">
+                    <p className="text-2xl font-semibold text-gray-800">
                       ${Number(reportData.total_ingresos || 0).toFixed(2)}
                     </p>
                     <p className="text-sm text-green-600 mt-1">Bruto</p>
@@ -400,7 +400,7 @@ function SalesReportsComponent() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Ganancias Netas</p>
-                    <p className="text-3xl font-bold text-gray-900">
+                    <p className="text-2xl font-semibold text-gray-800">
                       ${Number(reportData.ganancias_netas || 0).toFixed(2)}
                     </p>
                     <p className="text-sm text-purple-600 mt-1">Después de costos</p>
@@ -417,7 +417,7 @@ function SalesReportsComponent() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Promedio por Venta</p>
-                    <p className="text-3xl font-bold text-gray-900">
+                    <p className="text-2xl font-semibold text-gray-800">
                       ${reportData.total_ventas > 0 ? Number(reportData.total_ingresos / reportData.total_ventas).toFixed(2) : '0.00'}
                     </p>
                     <p className="text-sm text-orange-600 mt-1">Ticket promedio</p>
