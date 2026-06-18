@@ -6,6 +6,10 @@ interface BusinessStatusAlertProps {
 }
 
 const BusinessStatusAlert: React.FC<BusinessStatusAlertProps> = ({ status }) => {
+  if (status === 'healthy') {
+    return null;
+  }
+
   const statusConfig = {
     healthy: {
       color: 'bg-green-50 border-green-200 text-green-800',
