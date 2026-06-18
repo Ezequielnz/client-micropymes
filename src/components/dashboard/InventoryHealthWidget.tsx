@@ -59,7 +59,7 @@ const InventoryHealthWidget: React.FC<InventoryHealthWidgetProps> = ({ health })
             <PackageX className="w-5 h-5 text-rose-500" />
             <h3 className="font-bold text-gray-800">Stock Crítico</h3>
           </div>
-          <Link to="/productos" className="text-sm text-rose-600 font-medium hover:text-rose-800 transition-colors">
+          <Link to="/products-and-services" className="text-sm text-rose-600 font-medium hover:text-rose-800 transition-colors">
             Ir a Inventario
           </Link>
         </div>
