@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Zap, ShoppingCart, Package, Users, Upload } from 'lucide-react';
+import { Zap, ShoppingCart, Package, Users, Wallet } from 'lucide-react';
 
 const Card = ({ children, className = '' }) => (
   <div className={`bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ${className}`}>
@@ -105,13 +105,13 @@ const QuickActions = ({ currentBusiness }) => {
           </Button>
 
           <Button
-            onClick={() => navigate(`/business/${currentBusiness?.id}/products-and-services`)}
+            onClick={() => navigate(`/business/${currentBusiness?.id}/finanzas`)}
             variant="outline"
             size="sm"
             className="bg-white hover:bg-purple-50 border-purple-200 text-purple-600 hover:text-purple-700 min-w-0 flex-col sm:flex-row h-auto sm:h-10 p-3 sm:p-2"
           >
-            <Upload className="h-4 w-4 sm:mr-2 mb-1 sm:mb-0" />
-            <span className="text-xs sm:text-sm">Importar</span>
+            <Wallet className="h-4 w-4 sm:mr-2 mb-1 sm:mb-0" />
+            <span className="text-xs sm:text-sm">Registrar Gasto</span>
           </Button>
         </div>
       </CardContent>

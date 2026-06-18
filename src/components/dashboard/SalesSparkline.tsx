@@ -8,11 +8,7 @@ interface SalesSparklineProps {
 const SalesSparkline: React.FC<SalesSparklineProps> = ({ data }) => {
   if (!data || data.length === 0) return null;
 
-  // Formatting date for tooltip
-  const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr + "T00:00:00");
-    return d.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric' });
-  };
+
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(val);
@@ -26,7 +22,7 @@ const SalesSparkline: React.FC<SalesSparklineProps> = ({ data }) => {
   const lastVal = data[data.length - 1].amount;
   const isUp = lastVal >= firstVal;
   const colorClass = isUp ? 'text-emerald-500' : 'text-rose-500';
-  const fillClass = isUp ? 'fill-emerald-100' : 'fill-rose-100';
+
   const strokeColor = isUp ? '#10b981' : '#f43f5e';
 
   // Chart dimensions
