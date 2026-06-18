@@ -1930,3 +1930,22 @@ export const paymentMethodsAPI = {
     return response.data;
   },
 };
+
+/**
+ * @namespace dashboardAPI
+ * @description Contains functions for retrieving the new centralized dashboard summary.
+ */
+export const dashboardAPI = {
+  /**
+   * Fetches the dashboard summary (status, alerts, today's summary, trends, inventory health).
+   * @param {string} businessId - The ID of the business.
+   * @returns {Promise<object>} A promise that resolves to the dashboard summary data.
+   */
+  getSummary: async (businessId) => {
+    if (!businessId) {
+      throw new Error('businessId is required to fetch dashboard summary.');
+    }
+    const response = await api.get(`/businesses/${businessId}/dashboard/summary`);
+    return response.data;
+  }
+};

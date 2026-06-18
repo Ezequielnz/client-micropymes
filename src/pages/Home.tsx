@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, Suspense, lazy, useCallback, useMemo } from 'react';
+import React, { useEffect, Suspense, lazy, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useBusinessesQuery } from '../hooks/useBusinesses';
@@ -12,16 +12,16 @@ import {
   RefreshCw
 } from 'lucide-react';
 
-// Lazy load dashboard components for better performance
-const DashboardStats = lazy(() => import('../components/dashboard/DashboardStats'));
+// Lazy load new dashboard components
+const BusinessStatusAlert = lazy(() => import('../components/dashboard/BusinessStatusAlert'));
+const AttentionRequired = lazy(() => import('../components/dashboard/AttentionRequired'));
+const TodaySummaryCards = lazy(() => import('../components/dashboard/TodaySummaryCards'));
+const SalesSparkline = lazy(() => import('../components/dashboard/SalesSparkline'));
+const InventoryHealthWidget = lazy(() => import('../components/dashboard/InventoryHealthWidget'));
 const QuickActions = lazy(() => import('../components/dashboard/QuickActions'));
-const TopProducts = lazy(() => import('../components/dashboard/TopProducts'));
-const RecentSales = lazy(() => import('../components/dashboard/RecentSales'));
-// const MonitoringDashboard = lazy(() => import('../components/dashboard/MonitoringDashboard'));
 
 // Internal component that uses BusinessContext
 const HomeContent: React.FC = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState('month');
   const navigate = useNavigate();
 
   // Get current business from context
@@ -34,37 +34,16 @@ const HomeContent: React.FC = () => {
     refetch: refetchBusinesses,
   } = useBusinessesQuery(true);
 
-  // âœ… OPTIMIZED: Usar el hook personalizado para datos del dashboard con React Query
+  // Usa el nuevo hook con React Query
   const {
+    data: dashboardData,
     loading: dataLoading,
     error: dataError,
     refreshData,
-    lastUpdate,
-    stats,
-    topItems,
-    recentSales,
-    products,
-    customers
-  } = useDashboardData(currentBusiness, selectedPeriod);
+    lastUpdate
+  } = useDashboardData(currentBusiness);
 
-  // âœ… OPTIMIZED: Memoized format functions to prevent recreation on every render
-  const formatCurrency = useCallback((amount: number) => {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS'
-    }).format(amount);
-  }, []);
-
-  const formatDate = useCallback((dateString: string) => {
-    return new Date(dateString).toLocaleString('es-AR', {
-      day: '2-digit',
-      month: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  }, []);
-
-  // âœ… OPTIMIZED: Memoized computed states
+  // Memoized computed states
   const shouldShowError = useMemo(() => {
     if (!businessesQueryError) {
       return false;
@@ -109,14 +88,7 @@ const HomeContent: React.FC = () => {
     }
   }, [businessesQueryError, navigate]);
 
-
-
-  // âœ… OPTIMIZED: Memoized handlePeriodChange function
-  const handlePeriodChange = useCallback((period: string) => {
-    setSelectedPeriod(period);
-  }, []);
-
-  // âœ… OPTIMIZED: Memoized navigation handlers
+  // Navigation handlers
   const handleCreateBusiness = useCallback(() => {
     navigate('/business-users');
   }, [navigate]);
@@ -129,16 +101,8 @@ const HomeContent: React.FC = () => {
     navigate('/login');
   }, [navigate]);
 
-  // âœ… OPTIMIZED: Memoized period buttons data
-  const periodButtons = useMemo(() => [
-    { key: 'today', label: 'Hoy' },
-    { key: 'week', label: 'Semana' },
-    { key: 'month', label: 'Mes' }
-  ], []);
-
-  // âœ… OPTIMIZED: Memoized current date string
+  // Memoized current date string
   const currentDateString = useMemo(() => {
-    // Solo dÃ­a, mes y dÃ­a de la semana (sin aÃ±o)
     return new Date().toLocaleDateString('es-AR', {
       weekday: 'long',
       month: 'long',
@@ -146,7 +110,7 @@ const HomeContent: React.FC = () => {
     });
   }, []);
 
-  // âœ… OPTIMIZED: Memoized last update time string
+  // Memoized last update time string
   const lastUpdateString = useMemo(() => {
     return lastUpdate ? lastUpdate.toLocaleTimeString('es-AR') : '';
   }, [lastUpdate]);
@@ -182,6 +146,7 @@ const HomeContent: React.FC = () => {
       </div>
     );
   }
+
   // Loading state
   if (isLoading) {
     return (
@@ -194,18 +159,17 @@ const HomeContent: React.FC = () => {
   // Dashboard content
   return (
     <div className="flex-1 bg-gray-50 min-h-screen">
-      {/* Page Header - Optimizado para mÃ³vil */}
+      {/* Page Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="max-w-full md:max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 md:h-16">
             <div className="min-w-0 flex-1">
               <h1 className="text-lg md:text-xl font-semibold text-gray-900">Dashboard</h1>
               <p className="text-xs md:text-sm text-gray-600 truncate w-full max-w-[180px] sm:max-w-xs md:max-w-full">
-                {currentBusiness?.nombre || 'tu negocio'} {/* Nombre del negocio siempre visible */}
-                <span className="hidden sm:inline"> | {currentDateString}</span> {/* Fecha oculta en mÃ³vil muy pequeÃ±o */}
+                {currentBusiness?.nombre || 'tu negocio'} 
+                <span className="hidden sm:inline"> | {currentDateString}</span>
               </p>
             </div>
-            {/* Refresh button - Visible solo en tablet/desktop */}
             {hasCurrentBusiness && (
               <div className="flex items-center ml-2">
                 <span className="hidden sm:inline-block text-xs text-gray-500 mr-2">
@@ -226,10 +190,9 @@ const HomeContent: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Content - Optimizado para mÃ³vil */}
+      {/* Main Content */}
       <div className="max-w-full md:max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-8 overflow-hidden">
         {!hasBusinesses ? (
-          // No businesses state
           <div className="text-center py-12">
             <Building2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">¡Bienvenido/a a OperixML!</h3>
@@ -243,18 +206,16 @@ const HomeContent: React.FC = () => {
             </button>
           </div>
         ) : !hasCurrentBusiness ? (
-          // No business selected state
           <div className="text-center py-12">
             <Building2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Selecciona un negocio</h3>
             <p className="text-gray-500 mb-6">Elige un negocio del menú superior para ver su dashboard</p>
           </div>
         ) : (
-          // Dashboard with selected business
-          <div className="space-y-6">
+          <div className="space-y-2">
             {/* Error handling for dashboard data */}
             {dataError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                 <div className="flex items-center gap-2 text-red-800">
                   <span className="font-medium">Error al cargar datos:</span>
                   <span>{dataError}</span>
@@ -268,77 +229,37 @@ const HomeContent: React.FC = () => {
               </div>
             )}
 
-            {/* Period Controls - Optimizado para mÃ³vil */}
-            <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-              <span className="text-xs sm:text-sm font-medium text-gray-700">Período:</span>
-              <div className="flex items-center gap-1 sm:gap-2 flex-1 max-w-[220px] sm:max-w-none">
-                {periodButtons.map((period) => (
-                  <button
-                    key={period.key}
-                    onClick={() => handlePeriodChange(period.key)}
-                    disabled={dataLoading}
-                    className={`px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-md sm:rounded-lg text-xs sm:text-sm font-medium transition-colors disabled:opacity-50 flex-1 ${selectedPeriod === period.key
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                      }`}
-                  >
-                    {period.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Loading indicator for data refresh */}
-            {dataLoading && (
-              <div className="flex items-center justify-center py-4">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
-                  Actualizando datos del dashboard...
-                </div>
+            {dataLoading && !dashboardData && (
+              <div className="flex items-center justify-center py-12">
+                <PageLoader message="Cargando resumen del negocio..." variant="primary" />
               </div>
             )}
 
-            {/* Stats Cards */}
-            <Suspense fallback={<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"><div className="h-32 bg-gray-100 animate-pulse rounded-lg"></div><div className="h-32 bg-gray-100 animate-pulse rounded-lg"></div><div className="h-32 bg-gray-100 animate-pulse rounded-lg"></div><div className="h-32 bg-gray-100 animate-pulse rounded-lg"></div></div>}>
-              <DashboardStats
-                dashboardStats={stats}
-                products={products}
-                customers={customers}
-                formatCurrency={formatCurrency}
-              />
-            </Suspense>
+            {/* Render Dashboard Components when data is available */}
+            {dashboardData && (
+              <Suspense fallback={<div className="h-40 bg-gray-100 animate-pulse rounded-lg mb-6"></div>}>
+                <BusinessStatusAlert status={dashboardData.status} />
+                
+                <AttentionRequired alerts={dashboardData.alerts} />
+                
+                <TodaySummaryCards summary={dashboardData.today_summary} />
 
-            {/* Quick Actions */}
-            <Suspense fallback={<div className="h-48 bg-gray-100 animate-pulse rounded-lg"></div>}>
-              <QuickActions currentBusiness={currentBusiness} />
-            </Suspense>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                  {/* Left Column: Trend (Takes 1/3) */}
+                  <div className="lg:col-span-1">
+                    <SalesSparkline data={dashboardData.sales_trend} />
+                  </div>
+                  
+                  {/* Right Column: Quick Actions (Takes 2/3) */}
+                  <div className="lg:col-span-2">
+                    <QuickActions currentBusiness={currentBusiness} />
+                  </div>
+                </div>
 
-            {/* Top Products and Recent Sales - Optimizado para mÃ³vil */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              <Suspense fallback={<div className="h-96 bg-gray-100 animate-pulse rounded-lg"></div>}>
-                <TopProducts
-                  topItems={topItems}
-                  selectedPeriod={selectedPeriod}
-                  formatCurrency={formatCurrency}
-                />
+                <InventoryHealthWidget health={dashboardData.inventory_health} />
               </Suspense>
-
-              <Suspense fallback={<div className="h-96 bg-gray-100 animate-pulse rounded-lg"></div>}>
-                <RecentSales
-                  recentSales={recentSales}
-                  formatCurrency={formatCurrency}
-                  formatDate={formatDate}
-                />
-              </Suspense>
-            </div>
-
-            {/* AI/ML Monitoring Dashboard - Phase 5 */}
-            {/* AI/ML Monitoring Dashboard - Phase 5 - Hidden by user request (still in dev) */}
-            {/* {currentBusiness?.id && (
-              <Suspense fallback={<div className="h-96 bg-gray-100 animate-pulse rounded-lg"></div>}>
-                <MonitoringDashboard tenantId={currentBusiness.id} />
-              </Suspense>
-            )} */}
+            )}
           </div>
         )}
       </div>
@@ -356,10 +277,3 @@ const Home: React.FC = () => {
 };
 
 export default Home;
-
-
-
-
-
-
-
