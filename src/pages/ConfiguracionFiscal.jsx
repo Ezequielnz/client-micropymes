@@ -68,7 +68,7 @@ export function ConfiguracionFiscalContent() {
         punto_venta: config.punto_venta || 1,
         condicion_fiscal: config.condicion_fiscal || 'monotributista',
         ambiente: 'produccion',
-        habilitada: true
+        habilitada: config.habilitada !== undefined ? config.habilitada : false
       });
     }
   }, [config]);
@@ -275,6 +275,23 @@ export function ConfiguracionFiscalContent() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                 />
                 <p className="text-xs text-gray-500 mt-1">El número de punto de venta configurado en ARCA para WS.</p>
+              </div>
+            </div>
+            
+            <div className="mt-6 flex items-center bg-blue-50 p-4 rounded-lg border border-blue-100">
+              <input
+                type="checkbox"
+                id="habilitada"
+                name="habilitada"
+                checked={formData.habilitada}
+                onChange={handleInputChange}
+                className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+              />
+              <div className="ml-3">
+                <label htmlFor="habilitada" className="block text-sm font-medium text-gray-900 cursor-pointer">
+                  Habilitar facturación electrónica con ARCA
+                </label>
+                <p className="text-xs text-gray-500 mt-0.5">Si marcas esta opción, el sistema enviará automáticamente las facturas a ARCA al registrar una venta.</p>
               </div>
             </div>
           </div>

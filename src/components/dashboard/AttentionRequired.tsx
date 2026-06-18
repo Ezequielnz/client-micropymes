@@ -8,7 +8,7 @@ interface AttentionRequiredProps {
 }
 
 const AttentionRequired: React.FC<AttentionRequiredProps> = ({ alerts }) => {
-  if (!alerts || alerts.length === 0) return null;
+  if (!alerts || alerts.length === 0) return <div className="hidden"></div>;
 
   const getIcon = (type: string) => {
     switch (type) {
