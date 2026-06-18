@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { supplierAPI } from '../utils/api';
 import { getErrorMessage, isForbiddenError } from '../utils/errorHandler';
 import { useUserPermissions } from '../hooks/useUserPermissions';
-import ExcelImportModal from '../components/ExcelImportModal';
+import UniversalImportModal from '../components/UniversalImportModal';
 import '../styles/responsive-overrides.css';
 import { 
   Plus, 
@@ -343,13 +343,12 @@ const Proveedores = () => {
         )}
       </div>
 
-      <ExcelImportModal
+      <UniversalImportModal
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
         entityType="proveedores"
         businessId={businessId}
         onImportSuccess={handleImportSuccess}
-        createEntity={supplierAPI.create}
       />
 
       {/* Search */}

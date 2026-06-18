@@ -6,7 +6,7 @@ import { useUserPermissions } from '../hooks/useUserPermissions';
 import Layout from '../components/Layout';
 import '../styles/responsive-overrides.css';
 import { useBusinessContext } from '../contexts/BusinessContext';
-import CatalogUpload from '../components/CatalogUpload';
+import UniversalImportModal from '../components/UniversalImportModal';
 import MassivePriceUpdateModal from '../components/MassivePriceUpdateModal';
 import PermissionGuard from '../components/PermissionGuard';
 import StockTransferModal from '../components/StockTransferModal';
@@ -1016,7 +1016,7 @@ const ProductsAndServices = () => {
                   opacity: isMutating ? 0.6 : 1
                 }}
               >
-                Importar PDF
+                Importar
               </button>
             )}
 
@@ -1587,34 +1587,16 @@ const ProductsAndServices = () => {
       }
 
       {/* Upload Modal */}
-      {
-        showUploadModal && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000
-          }}>
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto">
-              <CatalogUpload
-                isOpen={showUploadModal}
-                onClose={() => setShowUploadModal(false)}
-                businessId={businessId}
-                onUploadSuccess={() => {
-                  queryClient.invalidateQueries(['products', businessId, branchId]);
-                  setShowUploadModal(false);
-                }}
-              />
-            </div>
-          </div>
-        )
-      }
+      <UniversalImportModal
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        entityType="productos"
+        businessId={businessId}
+        onImportSuccess={() => {
+          queryClient.invalidateQueries(['products', businessId, branchId]);
+          setShowUploadModal(false);
+        }}
+      />
 
       <StockTransferModal
         isOpen={showTransferModal}

@@ -12,7 +12,7 @@ import { customerAPI } from '../utils/api';
 import { getErrorMessage, isForbiddenError } from '../utils/errorHandler';
 import PermissionGuard from '../components/PermissionGuard';
 import Layout from '../components/Layout';
-import ExcelImportModal from '../components/ExcelImportModal';
+import UniversalImportModal from '../components/UniversalImportModal';
 import '../styles/responsive-overrides.css';
 import { 
   Users, 
@@ -383,13 +383,12 @@ function Customers() {
         )}
       </div>
 
-      <ExcelImportModal
+      <UniversalImportModal
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
         entityType="clientes"
         businessId={businessId}
         onImportSuccess={handleImportSuccess}
-        createEntity={customerAPI.createCustomer}
       />
 
       {/* Search */}
