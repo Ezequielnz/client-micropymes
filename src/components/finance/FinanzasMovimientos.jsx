@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, useMemo } from 'react';
 import { 
   Plus, 
   Search, 
@@ -17,7 +17,7 @@ import { PageLoader } from '../LoadingSpinner';
 import PermissionGuard from '../PermissionGuard';
  import { customerAPI } from '../../utils/api';
 
-const FinanzasMovimientos = ({ movimientoAction, onActionProcessed }) => {
+const FinanzasMovimientos = ({ movimientoAction, onActionProcessed, fechaDesde, fechaHasta }) => {
   const { currentBusiness, currentBranch, branches, branchesLoading } = useBusinessContext();
   const branchId = currentBranch?.id ?? null;
   const branchSelectionRequired = !branchesLoading && (branches?.length ?? 0) > 1;
@@ -28,8 +28,8 @@ const FinanzasMovimientos = ({ movimientoAction, onActionProcessed }) => {
   const [filters, setFilters] = useState({
     tipo: '',
     categoria_id: '',
-    fecha_desde: '',
-    fecha_hasta: ''
+    fecha_desde: fechaDesde || '',
+    fecha_hasta: fechaHasta || ''
   });
 
   // ✅ OPTIMIZED: Usar el hook personalizado para datos de finanzas con React Query
@@ -41,7 +41,31 @@ const FinanzasMovimientos = ({ movimientoAction, onActionProcessed }) => {
     createMovimiento,
     updateMovimiento,
     deleteMovimiento
-  } = useFinanceData(currentBusiness, { branchId, branchReady });
+  } = useFinanceData(currentBusiness, { 
+    branchId, 
+    branchReady,
+    fecha_desde: filters.fecha_desde,
+    fecha_hasta: filters.fecha_hasta
+  });
+
+  // Sincronizar filtros de fecha con los props
+  useEffect(() => {
+    setFilters(prev => ({
+      ...prev,
+      fecha_desde: fechaDesde || '',
+      fecha_hasta: fechaHasta || ''
+    }));
+  }, [fechaDesde, fechaHasta]);
+
+  // Filtrar los movimientos por tipo y categoria en memoria
+  const filteredMovimientos = useMemo(() => {
+    if (!movimientos) return [];
+    return movimientos.filter(mov => {
+      if (filters.tipo && mov.tipo !== filters.tipo) return false;
+      if (filters.categoria_id && mov.categoria_id !== parseInt(filters.categoria_id)) return false;
+      return true;
+    });
+  }, [movimientos, filters.tipo, filters.categoria_id]);
 
   const [formData, setFormData] = useState({
     tipo: 'ingreso',
@@ -280,12 +304,12 @@ const FinanzasMovimientos = ({ movimientoAction, onActionProcessed }) => {
       {/* Movements Table */}
       <div className="bg-white shadow overflow-hidden rounded-md">
         <ul className="divide-y divide-gray-200">
-          {movimientos.length === 0 ? (
+          {filteredMovimientos.length === 0 ? (
             <li className="px-3 sm:px-6 py-6 sm:py-8 text-center text-gray-500 text-sm sm:text-base">
               No hay movimientos registrados
             </li>
           ) : (
-            movimientos.map((movimiento) => (
+            filteredMovimientos.map((movimiento) => (
               <li key={movimiento.id} className="px-3 sm:px-6 py-3 sm:py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">

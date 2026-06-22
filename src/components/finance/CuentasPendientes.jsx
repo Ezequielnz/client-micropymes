@@ -46,7 +46,7 @@ const CuentasPendientes = () => {
   const [formData, setFormData] = useState({
     tipo: 'por_cobrar',
     cliente_id: '',
-    proveedor_nombre: '',
+    proveedor_razon_social: '',
     monto: '',
     fecha_vencimiento: '',
     fecha_emision: new Date().toISOString().split('T')[0],
@@ -106,7 +106,7 @@ const CuentasPendientes = () => {
         ...formData,
         monto: parseFloat(formData.monto),
         cliente_id: formData.cliente_id || null,
-        proveedor_nombre: formData.proveedor_nombre || null
+        proveedor_razon_social: formData.proveedor_razon_social || null
       };
       if (editingCuenta) {
         await updateCuentaPendiente.mutateAsync({ id: editingCuenta.id, data: cuentaData });
@@ -138,7 +138,7 @@ const CuentasPendientes = () => {
     setFormData({
       tipo: activeTab === 'cobrar' ? 'por_cobrar' : 'por_pagar',
       cliente_id: '',
-      proveedor_nombre: '',
+      proveedor_razon_social: '',
       monto: '',
       fecha_vencimiento: '',
       fecha_emision: new Date().toISOString().split('T')[0],
@@ -153,7 +153,7 @@ const CuentasPendientes = () => {
     setFormData({
       tipo: cuenta.tipo,
       cliente_id: cuenta.cliente_id || '',
-      proveedor_nombre: cuenta.proveedor_nombre || '',
+      proveedor_razon_social: cuenta.proveedor_razon_social || '',
       monto: cuenta.monto.toString(),
       fecha_vencimiento: cuenta.fecha_vencimiento,
       fecha_emision: cuenta.fecha_emision,
@@ -334,7 +334,7 @@ const CuentasPendientes = () => {
                     <div className="ml-4">
                       <div className="flex items-center">
                         <p className="text-sm font-medium text-gray-900">
-                          {cuenta.cliente_nombre || cuenta.proveedor_nombre || 'Sin nombre'}
+                          {cuenta.cliente_nombre || cuenta.proveedor_razon_social || 'Sin nombre'}
                         </p>
                         <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(cuenta.estado, cuenta.dias_vencimiento)}`}>
                           {getStatusText(cuenta.estado, cuenta.dias_vencimiento)}
@@ -448,8 +448,8 @@ const CuentasPendientes = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Proveedor *</label>
                   <input
                     type="text"
-                    value={formData.proveedor_nombre}
-                    onChange={(e) => setFormData({...formData, proveedor_nombre: e.target.value})}
+                    value={formData.proveedor_razon_social}
+                    onChange={(e) => setFormData({...formData, proveedor_razon_social: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Nombre del proveedor"
                     required={formData.tipo === 'por_pagar'}

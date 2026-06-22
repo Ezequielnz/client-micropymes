@@ -88,6 +88,8 @@ interface UseFinanceDataReturn {
 interface FinanceScopeOptions {
   branchId?: string | null;
   branchReady?: boolean;
+  fecha_desde?: string;
+  fecha_hasta?: string;
 }
 
 // Using axios interceptors for error handling; no local response parser required.
@@ -105,9 +107,27 @@ export const useFinanceData = (
 ): UseFinanceDataReturn => {
   const queryClient = useQueryClient();
   const businessId = currentBusiness?.id;
-  const { branchId = null, branchReady = true } = options;
+  const { branchId = null, branchReady = true, fecha_desde, fecha_hasta } = options;
   const branchKey = branchId ?? null;
-  const branchParams: Record<string, string> | undefined = branchId ? { branch_id: branchId } : undefined;
+  const currentDate = useMemo(() => new Date(), []);
+  const currentMonth = useMemo(() => currentDate.getMonth() + 1, [currentDate]);
+  
+  // Base query params (e.g. branch ID)
+  const branchParams = useMemo(() => {
+    const params: Record<string, string> = {};
+    if (branchId) params.branch_id = branchId;
+    return params;
+  }, [branchId]);
+
+  // Query params including date range filters
+  const financeParams = useMemo(() => {
+    const params: Record<string, string> = {};
+    if (branchId) params.branch_id = branchId;
+    if (fecha_desde) params.fecha_desde = fecha_desde;
+    if (fecha_hasta) params.fecha_hasta = fecha_hasta;
+    return params;
+  }, [branchId, fecha_desde, fecha_hasta]);
+
   const baseEnabled = !!businessId && branchReady;
 
   // ✅ OPTIMIZED: Finance stats query with caching
@@ -117,8 +137,8 @@ export const useFinanceData = (
     isLoading: statsLoading,
     dataUpdatedAt: statsUpdatedAt
   } = useQuery({
-    queryKey: ['finance-stats', businessId, branchKey],
-    queryFn: () => financeAPI.getStats(businessId!, branchParams ?? {}),
+    queryKey: ['finance-stats', businessId, branchKey, fecha_desde, fecha_hasta],
+    queryFn: () => financeAPI.getStats(businessId!, financeParams),
     enabled: baseEnabled,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
@@ -133,8 +153,8 @@ export const useFinanceData = (
     isLoading: movimientosLoading,
     dataUpdatedAt: movimientosUpdatedAt
   } = useQuery({
-    queryKey: ['finance-movimientos', businessId, branchKey],
-    queryFn: () => financeAPI.getMovimientos(businessId!, branchParams ?? {}),
+    queryKey: ['finance-movimientos', businessId, branchKey, fecha_desde, fecha_hasta],
+    queryFn: () => financeAPI.getMovimientos(businessId!, financeParams),
     enabled: baseEnabled,
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
@@ -150,7 +170,7 @@ export const useFinanceData = (
     dataUpdatedAt: categoriasUpdatedAt
   } = useQuery({
     queryKey: ['finance-categorias', businessId, branchKey],
-    queryFn: () => financeAPI.getCategorias(businessId!, branchParams ?? {}),
+    queryFn: () => financeAPI.getCategorias(businessId!, branchParams),
     enabled: baseEnabled,
     staleTime: 10 * 60 * 1000, // 10 minutes (categories change less frequently)
     gcTime: 15 * 60 * 1000, // 15 minutes
@@ -166,17 +186,13 @@ export const useFinanceData = (
     dataUpdatedAt: cuentasPendientesUpdatedAt
   } = useQuery({
     queryKey: ['finance-cuentas-pendientes', businessId, branchKey],
-    queryFn: () => financeAPI.getCuentasPendientes(businessId!, branchParams ?? {}),
+    queryFn: () => financeAPI.getCuentasPendientes(businessId!, branchParams),
     enabled: baseEnabled,
     staleTime: 3 * 60 * 1000, // 3 minutes
     gcTime: 8 * 60 * 1000, // 8 minutes
     refetchOnWindowFocus: false,
     retry: 2
   });
-
-  // ✅ OPTIMIZED: Flujo de caja query with caching (current month/year)
-  const currentDate = new Date();
-  const currentMonth = currentDate.getMonth() + 1;
   const currentYear = currentDate.getFullYear();
 
   const {

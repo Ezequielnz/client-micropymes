@@ -45,12 +45,72 @@ const FinanzasContent = () => {
     hasPermission
   } = useUserPermissions(currentBusiness?.id);
 
+  const getTodayStr = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
+  const getFirstDayOfMonthStr = () => {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
+  };
+
+  const [period, setPeriod] = useState('mes'); // 'mes', 'trimestre', 'año', 'personalizado'
+  const [customDates, setCustomDates] = useState({
+    desde: getFirstDayOfMonthStr(),
+    hasta: getTodayStr()
+  });
+
+  const getPeriodDates = useCallback((periodType) => {
+    const now = new Date();
+    let desde = '';
+    let hasta = '';
+
+    if (periodType === 'mes') {
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const lastDay = new Date(year, month + 1, 0);
+      
+      desde = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+      hasta = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay.getDate()).padStart(2, '0')}`;
+    } else if (periodType === 'trimestre') {
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const quarterStartMonth = Math.floor(month / 3) * 3;
+      const lastMonthOfQuarter = quarterStartMonth + 2;
+      const lastDay = new Date(year, lastMonthOfQuarter + 1, 0);
+
+      desde = `${year}-${String(quarterStartMonth + 1).padStart(2, '0')}-01`;
+      hasta = `${year}-${String(lastMonthOfQuarter + 1).padStart(2, '0')}-${String(lastDay.getDate()).padStart(2, '0')}`;
+    } else if (periodType === 'año') {
+      const year = now.getFullYear();
+      desde = `${year}-01-01`;
+      hasta = `${year}-12-31`;
+    }
+    return { desde, hasta };
+  }, []);
+
+  const dateRange = useMemo(() => {
+    if (period === 'personalizado') {
+      return {
+        desde: customDates.desde,
+        hasta: customDates.hasta
+      };
+    }
+    return getPeriodDates(period);
+  }, [period, customDates, getPeriodDates]);
+
   // Estado y hooks para datos de finanzas
   const {
     stats, movimientos, cuentasPendientes,
     loading: isLoading, error: dataError, lastUpdate,
     refreshData
-  } = useFinanceData(currentBusiness, { branchId, branchReady });
+  } = useFinanceData(currentBusiness, { 
+    branchId, 
+    branchReady,
+    fecha_desde: dateRange.desde,
+    fecha_hasta: dateRange.hasta
+  });
 
   // ✅ OPTIMIZED: Memoized format functions to prevent recreation on every render
   const formatCurrency = useCallback((amount) => {
@@ -61,6 +121,15 @@ const FinanzasContent = () => {
   }, []);
 
   const formatDate = useCallback((dateString) => {
+    if (!dateString) return '';
+    if (typeof dateString === 'string' && dateString.length === 10) {
+      const [year, month, day] = dateString.split('-').map(Number);
+      return new Date(year, month - 1, day).toLocaleDateString('es-AR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    }
     return new Date(dateString).toLocaleDateString('es-AR', {
       day: '2-digit',
       month: '2-digit',
@@ -211,6 +280,64 @@ const FinanzasContent = () => {
           </div>
         </div>
 
+        {/* Period Selector Card */}
+        <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex flex-wrap gap-2">
+            {[
+              { id: 'mes', label: 'Mes Actual' },
+              { id: 'trimestre', label: 'Trimestre' },
+              { id: 'año', label: 'Año' },
+              { id: 'personalizado', label: 'Rango Personalizado' }
+            ].map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setPeriod(p.id)}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 ${
+                  period === p.id
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          
+          {period === 'personalizado' && (
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-gray-500 uppercase font-semibold">Desde:</span>
+                <input
+                  type="date"
+                  value={customDates.desde}
+                  onChange={(e) => setCustomDates(prev => ({ ...prev, desde: e.target.value }))}
+                  className="px-3 py-1.5 border border-gray-300 rounded-md text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-gray-500 uppercase font-semibold">Hasta:</span>
+                <input
+                  type="date"
+                  value={customDates.hasta}
+                  onChange={(e) => setCustomDates(prev => ({ ...prev, hasta: e.target.value }))}
+                  className="px-3 py-1.5 border border-gray-300 rounded-md text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                />
+              </div>
+            </div>
+          )}
+          
+          <div className="text-xs text-gray-500 bg-gray-50 px-3 py-1.5 rounded border border-gray-200">
+            <span className="font-medium">Período: </span>
+            <span className="font-semibold text-gray-700">
+              {dateRange.desde ? formatDate(dateRange.desde) : 'Inicio'}
+            </span>
+            <span> al </span>
+            <span className="font-semibold text-gray-700">
+              {dateRange.hasta ? formatDate(dateRange.hasta) : 'Fin'}
+            </span>
+          </div>
+        </div>
+
         {/* Content */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           {shouldShowError && (
@@ -254,6 +381,8 @@ const FinanzasContent = () => {
                 isAdmin={isAdmin}
                 isCreator={isCreator}
                 hasPermission={hasPermission}
+                fechaDesde={dateRange.desde}
+                fechaHasta={dateRange.hasta}
               />
             ) : activeTab === 'flujo-caja' ? (
               <FlujoCajaChart 
@@ -264,6 +393,8 @@ const FinanzasContent = () => {
                 canEdit={canEdit}
                 canDelete={canDelete}
                 hasFullAccess={hasFullAccess}
+                fechaDesde={dateRange.desde}
+                fechaHasta={dateRange.hasta}
               />
             ) : activeTab === 'movimientos' ? (
               <FinanzasMovimientos 
@@ -278,6 +409,8 @@ const FinanzasContent = () => {
                 isAdmin={isAdmin}
                 isCreator={isCreator}
                 hasPermission={hasPermission}
+                fechaDesde={dateRange.desde}
+                fechaHasta={dateRange.hasta}
               />
             ) : (
               <ActiveComponent 
@@ -290,6 +423,8 @@ const FinanzasContent = () => {
                 isAdmin={isAdmin}
                 isCreator={isCreator}
                 hasPermission={hasPermission}
+                fechaDesde={dateRange.desde}
+                fechaHasta={dateRange.hasta}
               />
             )}
           </Suspense>

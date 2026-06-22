@@ -279,7 +279,7 @@ const FinanceDashboard = ({
                   <div key={cuenta.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
                     <div className="flex items-center">
                       <div className={`flex-shrink-0 w-2 h-2 rounded-full mr-3 ${
-                        cuenta.tipo === 'cobrar' ? 'bg-green-400' : 'bg-yellow-400'
+                        (cuenta.tipo === 'cobrar' || cuenta.tipo === 'por_cobrar') ? 'bg-green-400' : 'bg-yellow-400'
                       }`}></div>
                       <div>
                         <p className="text-sm font-medium text-gray-900 truncate max-w-48">
@@ -291,7 +291,7 @@ const FinanceDashboard = ({
                       </div>
                     </div>
                     <div className={`text-sm font-medium ${
-                      cuenta.tipo === 'cobrar' ? 'text-green-600' : 'text-yellow-600'
+                      (cuenta.tipo === 'cobrar' || cuenta.tipo === 'por_cobrar') ? 'text-green-600' : 'text-yellow-600'
                     }`}>
                       {formatCurrency(cuenta.monto)}
                     </div>
