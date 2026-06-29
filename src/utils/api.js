@@ -98,10 +98,17 @@ api.interceptors.response.use(
       case 401:
         // Handle unauthorized access
         // Avoid reloading if it's a login attempt failure
-        // Avoid reloading if it's a login attempt failure
         if (!response?.config?.url?.includes('/auth/login')) {
           localStorage.removeItem('token');
           window.location.href = '/login';
+        }
+        break;
+
+      case 402:
+        // Handle subscription required
+        console.warn('Subscription required: redirecting to /subscription');
+        if (!response?.config?.url?.includes('/saas/')) {
+          window.location.href = '/subscription';
         }
         break;
 
@@ -1946,6 +1953,50 @@ export const dashboardAPI = {
       throw new Error('businessId is required to fetch dashboard summary.');
     }
     const response = await api.get(`/businesses/${businessId}/dashboard/summary`);
+    return response.data;
+  }
+};
+
+/**
+ * @namespace saasSubscriptionAPI
+ * @description Contains functions for managing the micro_pymes application SaaS subscription.
+ */
+export const saasSubscriptionAPI = {
+  /**
+   * Fetches the current SaaS subscription status from the backend.
+   * @returns {Promise<object>}
+   */
+  getStatus: async () => {
+    const response = await api.get('/saas/status');
+    return response.data;
+  },
+
+  /**
+   * Creates a Mercado Pago checkout link for SaaS subscription.
+   * @param {string} [referralCode] - Optional referral code.
+   * @returns {Promise<object>}
+   */
+  createCheckout: async (referralCode = null) => {
+    const response = await api.post('/saas/checkout', { referral_code: referralCode });
+    return response.data;
+  },
+
+  /**
+   * Fetches the user's SaaS referral code details and history.
+   * @returns {Promise<object>}
+   */
+  getReferralDetails: async () => {
+    const response = await api.get('/saas/referral-code');
+    return response.data;
+  },
+
+  /**
+   * Validates if a referral code exists.
+   * @param {string} code - The referral code to validate.
+   * @returns {Promise<object>}
+   */
+  validateReferralCode: async (code) => {
+    const response = await api.get(`/saas/validate-referral/${code}`);
     return response.data;
   }
 };
