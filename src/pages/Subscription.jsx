@@ -184,8 +184,8 @@ function Subscription() {
         )}
       </div>
 
-      {/* Grid: Pricing Card and Referrals */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      {/* Centered Pricing Card */}
+      <div className="max-w-md mx-auto">
         
         {/* Pricing Plan */}
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
@@ -284,84 +284,6 @@ function Subscription() {
                 )}
               </button>
             )}
-          </div>
-        </div>
-
-        {/* Referrals Block */}
-        <div className="space-y-8">
-          
-          {/* Share Referral Link */}
-          <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 bg-indigo-50 text-indigo-700 rounded-2xl">
-                <Gift className="h-6 w-6" />
-              </div>
-              <div>
-                <h4 className="text-lg font-bold text-slate-800">Programa de Referidos</h4>
-                <p className="text-slate-500 text-xs mt-0.5">Invita y obtén meses de suscripción gratis</p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-between">
-                <div>
-                  <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
-                    Tu Código Único
-                  </span>
-                  <span className="text-2xl font-black text-slate-800 tracking-wider">
-                    {referralDetails?.referral_code || '---'}
-                  </span>
-                </div>
-                <button
-                  onClick={handleCopyLink}
-                  disabled={!referralDetails?.referral_code}
-                  className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-50"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="h-4 w-4 text-emerald-600" />
-                      <span className="text-emerald-600">¡Copiado!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-4 w-4" />
-                      <span>Copiar Enlace</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              <div className="p-4 border border-indigo-100 bg-indigo-50/50 rounded-2xl flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <Gift className="h-5 w-5 text-indigo-600 flex-shrink-0" />
-                  <span className="text-sm font-medium text-indigo-900">
-                    Meses gratis pendientes por aplicar
-                  </span>
-                </div>
-                <span className="text-3xl font-extrabold text-indigo-700">
-                  {referralDetails?.free_months_pending ?? 0}
-                </span>
-              </div>
-
-              <div className="p-4 border border-emerald-100 bg-emerald-50/50 rounded-2xl flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <Sparkles className="h-5 w-5 text-emerald-600 flex-shrink-0" />
-                  <span className="text-sm font-medium text-emerald-900">
-                    Total comisiones acumuladas (20%)
-                  </span>
-                </div>
-                <span className="text-2xl font-black text-emerald-700">
-                  ${(referralDetails?.total_comision_ganada ?? 0).toLocaleString('es-ES')}
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6 pt-6 border-t border-slate-100 text-slate-500 text-xs space-y-2">
-              <p className="font-semibold text-slate-700">¿Cómo funciona?</p>
-              <p>1. Comparte tu código o enlace de referidos con otras micro pymes.</p>
-              <p>2. Si se registran con tu enlace, obtendrán 1 mes gratis.</p>
-              <p>3. Cuando realicen su primer pago mensual, ¡tú también recibirás 1 mes de suscripción gratis y un 20% de comisión!</p>
-            </div>
           </div>
         </div>
       </div>
