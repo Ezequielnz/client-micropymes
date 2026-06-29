@@ -118,7 +118,10 @@ function Subscription() {
     );
   }
 
-  const isExpired = subStatus?.subscription_status === 'trial_expired' || subStatus?.subscription_status === 'cancelled' || subStatus?.subscription_status === 'past_due';
+  // Also treat 'trial' with past trial_end as expired (backend may not have updated yet)
+  const trialEndDate = subStatus?.trial_end ? new Date(subStatus.trial_end) : null;
+  const trialActuallyExpired = subStatus?.subscription_status === 'trial' && trialEndDate && trialEndDate <= new Date();
+  const isExpired = trialActuallyExpired || subStatus?.subscription_status === 'trial_expired' || subStatus?.subscription_status === 'cancelled' || subStatus?.subscription_status === 'past_due';
   const isActive = subStatus?.subscription_status === 'active' || subStatus?.is_exempt;
   const isTrial = subStatus?.subscription_status === 'trial' && !isExpired;
 
@@ -290,7 +293,7 @@ function Subscription() {
     </div>
   );
 
-  if (!isExpired && subStatus) {
+  if (!isExpired && subStatus && (isActive || isTrial)) {
     // Active/trial users: Show nested inside navigation layout
     return (
       <Layout activeSection="subscription">
