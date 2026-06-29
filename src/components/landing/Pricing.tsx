@@ -30,7 +30,7 @@ const Pricing = () => {
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Plan Completo</h3>
               <p className="text-gray-600 mb-4">La solución integral para tu negocio</p>
               <div className="mb-4">
-                <span className="text-4xl font-bold text-gray-900">$15.000</span>
+                <span className="text-4xl font-bold text-gray-900">$35.000</span>
                 <span className="text-gray-600">/mes</span>
               </div>
             </div>
