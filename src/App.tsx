@@ -31,6 +31,7 @@ import BranchPreferences from './pages/BranchPreferences';
 import PaymentMethods from './pages/PaymentMethods';
 import ConfiguracionFiscal from './pages/ConfiguracionFiscal';
 import Subscription from './pages/Subscription';
+import Referidos from './pages/Referidos';
 
 const App: React.FC = () => (
   <ErrorBoundary>
@@ -51,6 +52,7 @@ const App: React.FC = () => (
           <Route path="/home" element={<Home />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/subscription" element={<Subscription />} />
+          <Route path="/referidos" element={<Referidos />} />
           <Route path="/pending-approval" element={<PendingApproval />} />
 
           <Route path="/create-business" element={<CreateBusiness />} />

@@ -63,7 +63,7 @@ function Subscription() {
       const res = await saasSubscriptionAPI.validateReferralCode(referralCodeInput.trim());
       if (res.valid) {
         setReferralSuccessMsg(
-          `¡Código válido! Referido por: ${res.referrer_name} (${res.type === 'contador' ? 'Contador - 2 meses gratis' : 'OperiXML - 1 mes gratis'})`
+          `¡Código válido! Referido por: ${res.referrer_name} (1 mes gratis)`
         );
       } else {
         setReferralError('El código no es válido.');
@@ -196,7 +196,7 @@ function Subscription() {
             <h3 className="text-2xl font-bold mb-2">Plan Premium</h3>
             <p className="text-slate-400 text-sm mb-6">Todo lo que necesitas para gestionar tu micro pyme</p>
             <div className="flex items-baseline gap-1">
-              <span className="text-5xl font-extrabold tracking-tight">$15.000</span>
+              <span className="text-5xl font-extrabold tracking-tight">$35.000</span>
               <span className="text-slate-400 text-lg">/ mes</span>
             </div>
           </div>
@@ -343,31 +343,24 @@ function Subscription() {
                 </span>
               </div>
 
-              {referralDetails?.es_contador && (
-                <div className="p-4 border border-emerald-100 bg-emerald-50/50 rounded-2xl flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <Sparkles className="h-5 w-5 text-emerald-600 flex-shrink-0" />
-                    <span className="text-sm font-medium text-emerald-900">
-                      Total comisiones acumuladas (20%)
-                    </span>
-                  </div>
-                  <span className="text-2xl font-black text-emerald-700">
-                    ${(referralDetails?.total_comision_ganada ?? 0).toLocaleString('es-ES')}
+              <div className="p-4 border border-emerald-100 bg-emerald-50/50 rounded-2xl flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Sparkles className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+                  <span className="text-sm font-medium text-emerald-900">
+                    Total comisiones acumuladas (20%)
                   </span>
                 </div>
-              )}
+                <span className="text-2xl font-black text-emerald-700">
+                  ${(referralDetails?.total_comision_ganada ?? 0).toLocaleString('es-ES')}
+                </span>
+              </div>
             </div>
 
             <div className="mt-6 pt-6 border-t border-slate-100 text-slate-500 text-xs space-y-2">
               <p className="font-semibold text-slate-700">¿Cómo funciona?</p>
               <p>1. Comparte tu código o enlace de referidos con otras micro pymes.</p>
-              <p>2. Si se registran con tu enlace, obtendrán 1 mes gratis (o 2 meses si eres Contador).</p>
-              <p>3. Cuando realicen su primer pago mensual, ¡tú también recibirás 1 mes de suscripción gratis!</p>
-              {referralDetails?.es_contador && (
-                <p className="text-emerald-700 font-semibold">
-                  * Como Contador certificado, además del mes gratis, ganas un 20% de comisión en efectivo de todas las suscripciones pagadas por tus clientes referidos.
-                </p>
-              )}
+              <p>2. Si se registran con tu enlace, obtendrán 1 mes gratis.</p>
+              <p>3. Cuando realicen su primer pago mensual, ¡tú también recibirás 1 mes de suscripción gratis y un 20% de comisión!</p>
             </div>
           </div>
         </div>

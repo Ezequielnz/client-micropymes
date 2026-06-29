@@ -97,6 +97,7 @@ const Sidebar = ({
     { id: 'tasks', label: 'Tareas', icon: Clock, onClick: () => safeNavigate('/tasks') },
     { id: 'billing', label: 'Facturación', icon: FileText, onClick: () => safeNavigate('/settings/facturacion') },
     { id: 'subscription', label: 'Suscripción', icon: FileText, onClick: () => navigate('/subscription') },
+    { id: 'referrals', label: 'Referidos', icon: Users, onClick: () => navigate('/referidos') },
     { id: 'settings', label: 'Configuración', icon: Settings, onClick: () => safeNavigate('/profile') },
   ];
 

@@ -1998,5 +1998,14 @@ export const saasSubscriptionAPI = {
   validateReferralCode: async (code) => {
     const response = await api.get(`/saas/validate-referral/${code}`);
     return response.data;
+  },
+
+  /**
+   * Fetches the list of users referred by the current user.
+   * @returns {Promise<Array>}
+   */
+  getReferrals: async () => {
+    const response = await api.get('/saas/referrals');
+    return response.data;
   }
 };

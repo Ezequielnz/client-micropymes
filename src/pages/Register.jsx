@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -27,13 +27,16 @@ import {
 function Register() {
   const { login } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+  const refCode = searchParams.get('ref') || '';
 
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     nombre: '',
     apellido: '',
-    rol: 'usuario'
+    rol: 'usuario',
+    referral_code: refCode
   });
 
   const [error, setError] = useState('');
@@ -289,6 +292,24 @@ function Register() {
                         minLength={8}
                         className="pl-10 border-gray-200 focus:border-blue-600 focus:ring-blue-600"
                         placeholder="••••••••"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="referral_code" className="text-sm font-medium text-gray-700">
+                      Código de Referido (Opcional)
+                    </Label>
+                    <div className="relative">
+                      <Sparkles className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        type="text"
+                        id="referral_code"
+                        name="referral_code"
+                        value={formData.referral_code}
+                        onChange={handleChange}
+                        className="pl-10 border-gray-200 focus:border-blue-600 focus:ring-blue-600 uppercase"
+                        placeholder="CÓDIGO (OPCIONAL)"
                       />
                     </div>
                   </div>
