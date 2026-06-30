@@ -6,13 +6,8 @@ import {
   Check, 
   AlertTriangle, 
   CreditCard, 
-  Users, 
-  Share2, 
-  Copy, 
   LogOut, 
   ArrowRight, 
-  Lock, 
-  Gift, 
   Sparkles, 
   Clock 
 } from 'lucide-react';
@@ -28,7 +23,6 @@ function Subscription() {
   const [referralSuccessMsg, setReferralSuccessMsg] = useState('');
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState('');
-  const [copied, setCopied] = useState(false);
 
   // Load status and referral info
   const loadData = async () => {
@@ -93,15 +87,6 @@ function Subscription() {
     }
   };
 
-  const handleCopyLink = () => {
-    if (!referralDetails?.referral_code) return;
-    const origin = window.location.origin;
-    const link = `${origin}/register?ref=${referralDetails.referral_code}`;
-    navigator.clipboard.writeText(link);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   const handleLogout = () => {
     logout();
     window.location.href = '/login';
@@ -109,10 +94,10 @@ function Subscription() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600 font-medium">Cargando detalles de suscripción...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-500 font-medium text-sm">Cargando detalles de suscripción...</p>
         </div>
       </div>
     );
@@ -136,52 +121,48 @@ function Subscription() {
   };
 
   const subscriptionContent = (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-2xl mx-auto space-y-6">
       {/* Upper Status Banner */}
-      <div className={`mb-8 p-6 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+      <div className={`p-4 border rounded-xl flex items-start gap-4 shadow-sm transition-all duration-300 ${
         isActive 
-          ? 'bg-emerald-50 border-emerald-200 text-emerald-900' 
+          ? 'bg-emerald-50 border-emerald-100 text-emerald-800' 
           : isTrial 
-            ? 'bg-blue-50 border-blue-200 text-blue-900' 
-            : 'bg-amber-50 border-amber-200 text-amber-900'
+            ? 'bg-blue-50 border-blue-100 text-blue-800' 
+            : 'bg-amber-50 border-amber-100 text-amber-800'
       }`}>
-        <div className="flex items-start gap-4">
-          <div className={`p-3 rounded-xl ${
-            isActive ? 'bg-emerald-100' : isTrial ? 'bg-blue-100' : 'bg-amber-100'
-          }`}>
-            {isActive ? (
-              <Sparkles className={`h-6 w-6 ${isActive ? 'text-emerald-700' : 'text-amber-700'}`} />
-            ) : isTrial ? (
-              <Clock className="h-6 w-6 text-blue-700" />
-            ) : (
-              <AlertTriangle className="h-6 w-6 text-amber-700" />
-            )}
-          </div>
-          <div>
-            <h2 className="text-xl font-bold">
-              {isActive 
-                ? 'Suscripción Activa' 
+        <div className="p-2 bg-white rounded-lg shadow-sm flex-shrink-0">
+          {isActive ? (
+            <Sparkles className="h-5 w-5 text-emerald-600" />
+          ) : isTrial ? (
+            <Clock className="h-5 w-5 text-blue-600" />
+          ) : (
+            <AlertTriangle className="h-5 w-5 text-amber-600" />
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h2 className="text-base font-semibold text-gray-900">
+            {isActive 
+              ? 'Suscripción Activa' 
+              : isTrial 
+                ? 'Período de Prueba Activo' 
+                : 'Suscripción Requerida'}
+          </h2>
+          <p className="text-sm mt-0.5 text-gray-600 leading-relaxed">
+            {subStatus?.is_exempt 
+              ? 'Tu cuenta cuenta con una exención especial de suscripción.'
+              : isActive 
+                ? '¡Gracias por usar nuestro servicio! Tu cuenta está completamente activa.' 
                 : isTrial 
-                  ? 'Período de Prueba Activo' 
-                  : 'Suscripción Requerida'}
-            </h2>
-            <p className="text-sm mt-1 opacity-90">
-              {subStatus?.is_exempt 
-                ? 'Tu cuenta cuenta con una exención especial de suscripción.'
-                : isActive 
-                  ? '¡Gracias por usar nuestro servicio! Tu cuenta está completamente activa.' 
-                  : isTrial 
-                    ? `Tienes acceso total de prueba hasta el ${formatDate(subStatus?.trial_end)}.` 
-                    : 'Tu período de prueba ha expirado. Por favor, selecciona un método de pago para continuar.'}
-            </p>
-          </div>
+                  ? `Tienes acceso total de prueba hasta el ${formatDate(subStatus?.trial_end)}.` 
+                  : 'Tu período de prueba ha expirado. Por favor, selecciona un método de pago para continuar.'}
+          </p>
         </div>
         {!isActive && !isTrial && (
           <button
             onClick={handleLogout}
-            className="flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
+            className="flex items-center gap-1.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-colors self-center flex-shrink-0"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-3.5 w-3.5 text-gray-500" />
             Cerrar Sesión
           </button>
         )}
@@ -189,24 +170,23 @@ function Subscription() {
 
       {/* Centered Pricing Card */}
       <div className="max-w-md mx-auto">
-        
-        {/* Pricing Plan */}
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-          <div className="p-8 bg-slate-900 text-white relative">
-            <div className="absolute top-4 right-4 bg-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md">
+          {/* Header */}
+          <div className="p-6 bg-gray-50/50 border-b border-gray-100 relative">
+            <div className="absolute top-4 right-4 bg-blue-50 text-blue-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-blue-100">
               Popular
             </div>
-            <h3 className="text-2xl font-bold mb-2">Plan Premium</h3>
-            <p className="text-slate-400 text-sm mb-6">Todo lo que necesitas para gestionar tu micro pyme</p>
+            <h3 className="text-lg font-bold text-gray-900 mb-0.5">Plan Premium</h3>
+            <p className="text-gray-500 text-xs mb-4">Todo lo que necesitas para gestionar tu micro pyme</p>
             <div className="flex items-baseline gap-1">
-              <span className="text-5xl font-extrabold tracking-tight">$35.000</span>
-              <span className="text-slate-400 text-lg">/ mes</span>
+              <span className="text-3xl font-extrabold text-gray-900 tracking-tight">$35.000</span>
+              <span className="text-gray-500 text-xs font-medium">/ mes</span>
             </div>
           </div>
           
-          <div className="p-8">
-            <h4 className="font-bold text-slate-800 mb-4">Incluye todas las funcionalidades:</h4>
-            <ul className="space-y-4 mb-8">
+          <div className="p-6">
+            <h4 className="font-semibold text-gray-800 text-xs uppercase tracking-wider mb-4">Incluye todas las funcionalidades:</h4>
+            <ul className="space-y-3 mb-6">
               {[
                 'Ventas POS sin límites y reportes diarios',
                 'Control de inventario y stock automatizado',
@@ -215,39 +195,41 @@ function Subscription() {
                 'Panel centralizado de finanzas y analítica',
                 'Soporte prioritario por WhatsApp'
               ].map((feat, idx) => (
-                <li key={idx} className="flex items-start gap-3 text-slate-600 text-sm">
-                  <Check className="h-5 w-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                  <span>{feat}</span>
+                <li key={idx} className="flex items-start gap-2.5 text-gray-600 text-sm">
+                  <div className="p-0.5 bg-emerald-50 rounded text-emerald-600 mt-0.5 flex-shrink-0">
+                    <Check className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="leading-tight">{feat}</span>
                 </li>
               ))}
             </ul>
 
             {/* Referral input for checkout */}
             {!isActive && (
-              <div className="mb-6 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              <div className="mb-6 p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
                   ¿Tienes un código de referido?
                 </label>
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="Código de referido"
+                    placeholder="CÓDIGO DE REFERIDO"
                     value={referralCodeInput}
                     onChange={(e) => setReferralCodeInput(e.target.value)}
                     disabled={checkoutLoading || !!referralSuccessMsg}
-                    className="flex-1 px-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
+                    className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase text-gray-800 bg-white"
                   />
                   <button
                     type="button"
                     onClick={handleValidateReferral}
                     disabled={referralLoading || !referralCodeInput || !!referralSuccessMsg}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-3.5 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {referralLoading ? '...' : 'Validar'}
                   </button>
                 </div>
                 {referralError && (
-                  <p className="text-xs text-rose-600 font-semibold mt-2">{referralError}</p>
+                  <p className="text-xs text-red-600 font-semibold mt-2">{referralError}</p>
                 )}
                 {referralSuccessMsg && (
                   <p className="text-xs text-emerald-600 font-semibold mt-2">{referralSuccessMsg}</p>
@@ -256,33 +238,33 @@ function Subscription() {
             )}
 
             {checkoutError && (
-              <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-sm flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-800 rounded-lg text-xs flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
                 <span>{checkoutError}</span>
               </div>
             )}
 
             {isActive ? (
-              <div className="w-full bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold py-3 px-4 rounded-2xl text-center flex items-center justify-center gap-2">
-                <Check className="h-5 w-5" />
+              <div className="w-full bg-emerald-50 border border-emerald-100 text-emerald-800 font-semibold py-3 px-4 rounded-xl text-center flex items-center justify-center gap-2 text-sm">
+                <Check className="h-4 w-4 text-emerald-600" />
                 Suscripción Activa
               </div>
             ) : (
               <button
                 onClick={handleCheckout}
                 disabled={checkoutLoading}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-blue-200 hover:shadow-xl transition-all flex items-center justify-center gap-3 disabled:opacity-70"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-70 text-sm shadow-sm"
               >
                 {checkoutLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                     <span>Procesando pago...</span>
                   </>
                 ) : (
                   <>
-                    <CreditCard className="h-5 w-5" />
+                    <CreditCard className="h-4 w-4" />
                     <span>Suscribirse con Mercado Pago</span>
-                    <ArrowRight className="h-5 w-5 ml-1" />
+                    <ArrowRight className="h-4 w-4" />
                   </>
                 )}
               </button>
@@ -297,12 +279,25 @@ function Subscription() {
     // Active/trial users: Show nested inside navigation layout
     return (
       <Layout activeSection="subscription">
-        <div className="min-h-screen bg-slate-50">
-          <div className="border-b bg-white border-slate-200 px-8 py-6">
-            <h1 className="text-3xl font-black text-slate-900">Gestión de Suscripción</h1>
-            <p className="text-slate-500 text-sm mt-1">Configuración del plan y programa de referidos de OperixML.</p>
+        <div className="flex-1 bg-gray-50 min-h-screen">
+          {/* Page Header */}
+          <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div className="max-w-full md:max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+              <div className="flex items-center justify-between h-14 md:h-16">
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-lg md:text-xl font-semibold text-gray-900">Suscripción</h1>
+                  <p className="text-xs md:text-sm text-gray-500 truncate w-full">
+                    Configuración del plan y programa de referidos de OperixML
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-          {subscriptionContent}
+          
+          {/* Page Content */}
+          <div className="max-w-full md:max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 md:py-8">
+            {subscriptionContent}
+          </div>
         </div>
       </Layout>
     );
@@ -310,24 +305,24 @@ function Subscription() {
 
   // Expired / Standalone mode
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Visual background decorations */}
-      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Subtle decorative elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[300px] h-[300px] bg-indigo-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="w-full max-w-5xl z-10">
+      <div className="w-full max-w-xl z-10">
         <div className="text-center mb-8">
-          <img src="/operix_logo.png" alt="Logo" className="w-16 h-16 mx-auto mb-4 object-contain" />
-          <h1 className="text-4xl font-extrabold text-white tracking-tight">OperixML</h1>
-          <p className="text-slate-400 mt-2 text-lg">Tu plataforma de gestión inteligente de micro pymes</p>
+          <img src="/operix_logo.png" alt="Logo" className="w-12 h-12 mx-auto mb-3 object-contain" />
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">OperixML</h1>
+          <p className="text-gray-500 mt-1 text-sm">Tu plataforma de gestión inteligente de micro pymes</p>
         </div>
 
-        <div className="bg-slate-50 rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-800">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
           {subscriptionContent}
         </div>
 
-        <p className="text-center text-slate-500 text-xs mt-8">
-          ¿Necesitas asistencia técnica? Contacta a soporte a través de info@operixml.com
+        <p className="text-center text-gray-400 text-[11px] mt-8">
+          ¿Necesitas asistencia técnica? Contacta a soporte a través de <a href="mailto:info@operixml.com" className="text-blue-600 hover:underline">info@operixml.com</a>
         </p>
       </div>
     </div>
