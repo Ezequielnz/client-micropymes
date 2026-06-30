@@ -57,6 +57,7 @@ const SubscriptionBanner = () => {
       ),
       btnLabel: 'Activar suscripción',
       btnClass: 'bg-amber-600 hover:bg-amber-700 text-white',
+      btnDismissClass: 'hover:bg-amber-200 text-amber-700',
     };
   } else if (status === 'past_due') {
     config = {
@@ -69,6 +70,7 @@ const SubscriptionBanner = () => {
       ),
       btnLabel: 'Actualizar pago',
       btnClass: 'bg-red-600 hover:bg-red-700 text-white',
+      btnDismissClass: 'hover:bg-red-200 text-red-700',
     };
   } else if (status === 'cancelled') {
     config = {
@@ -81,6 +83,7 @@ const SubscriptionBanner = () => {
       ),
       btnLabel: 'Reactivar plan',
       btnClass: 'bg-gray-800 hover:bg-gray-900 text-white',
+      btnDismissClass: 'hover:bg-gray-300 text-gray-600',
     };
   }
 
@@ -101,10 +104,10 @@ const SubscriptionBanner = () => {
         </button>
         <button
           onClick={() => setDismissed(true)}
-          className="p-1 rounded hover:bg-black/10 transition-colors"
+          className={`p-1 rounded transition-colors ${config.btnDismissClass ?? 'hover:bg-black/10 text-gray-500'}`}
           aria-label="Cerrar notificación"
         >
-          <X className="h-3.5 w-3.5 text-gray-500" />
+          <X className="h-3.5 w-3.5" />
         </button>
       </div>
     </div>
