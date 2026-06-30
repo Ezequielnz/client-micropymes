@@ -2007,5 +2007,14 @@ export const saasSubscriptionAPI = {
   getReferrals: async () => {
     const response = await api.get('/saas/referrals');
     return response.data;
+  },
+
+  /**
+   * Cancels the user's Mercado Pago subscription.
+   * @returns {Promise<object>}
+   */
+  cancelSubscription: async () => {
+    const response = await api.post('/saas/cancel');
+    return response.data;
   }
 };

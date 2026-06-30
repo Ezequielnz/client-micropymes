@@ -1,42 +1,40 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { saasSubscriptionAPI } from '../utils/api';
 import Layout from '../components/Layout';
-import { 
-  Check, 
-  AlertTriangle, 
-  CreditCard, 
-  LogOut, 
-  ArrowRight, 
-  Sparkles, 
-  Clock 
+import {
+  Check,
+  AlertTriangle,
+  CreditCard,
+  LogOut,
+  ArrowRight,
+  Sparkles,
+  Clock,
+  XCircle,
+  Loader2,
 } from 'lucide-react';
 
 function Subscription() {
   const { logout } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [subStatus, setSubStatus] = useState(null);
-  const [referralDetails, setReferralDetails] = useState(null);
   const [referralCodeInput, setReferralCodeInput] = useState('');
   const [referralLoading, setReferralLoading] = useState(false);
   const [referralError, setReferralError] = useState('');
   const [referralSuccessMsg, setReferralSuccessMsg] = useState('');
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState('');
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [cancelError, setCancelError] = useState('');
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
-  // Load status and referral info
   const loadData = async () => {
     try {
       setLoading(true);
       const statusRes = await saasSubscriptionAPI.getStatus();
       setSubStatus(statusRes);
-      
-      try {
-        const refRes = await saasSubscriptionAPI.getReferralDetails();
-        setReferralDetails(refRes);
-      } catch (e) {
-        console.warn('Could not load referral details:', e);
-      }
     } catch (err) {
       console.error('Error loading subscription status:', err);
     } finally {
@@ -56,9 +54,7 @@ function Subscription() {
     try {
       const res = await saasSubscriptionAPI.validateReferralCode(referralCodeInput.trim());
       if (res.valid) {
-        setReferralSuccessMsg(
-          `¡Código válido! Referido por: ${res.referrer_name} (1 mes gratis)`
-        );
+        setReferralSuccessMsg(`¡Código válido! Referido por: ${res.referrer_name} (1 mes gratis)`);
       } else {
         setReferralError('El código no es válido.');
       }
@@ -87,9 +83,24 @@ function Subscription() {
     }
   };
 
+  const handleCancelSubscription = async () => {
+    setCancelLoading(true);
+    setCancelError('');
+    try {
+      await saasSubscriptionAPI.cancelSubscription();
+      // Reload status after cancellation
+      await loadData();
+      setShowCancelConfirm(false);
+    } catch (err) {
+      setCancelError(err.response?.data?.detail || 'Error al cancelar la suscripción.');
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     logout();
-    window.location.href = '/login';
+    navigate('/login');
   };
 
   if (loading) {
@@ -103,72 +114,167 @@ function Subscription() {
     );
   }
 
-  // Also treat 'trial' with past trial_end as expired (backend may not have updated yet)
   const trialEndDate = subStatus?.trial_end ? new Date(subStatus.trial_end) : null;
-  const trialActuallyExpired = subStatus?.subscription_status === 'trial' && trialEndDate && trialEndDate <= new Date();
-  const isExpired = trialActuallyExpired || subStatus?.subscription_status === 'trial_expired' || subStatus?.subscription_status === 'cancelled' || subStatus?.subscription_status === 'past_due';
+  const trialActuallyExpired =
+    subStatus?.subscription_status === 'trial' && trialEndDate && trialEndDate <= new Date();
+  const isExpired =
+    trialActuallyExpired ||
+    ['trial_expired', 'cancelled'].includes(subStatus?.subscription_status);
+  const isPastDue = subStatus?.subscription_status === 'past_due';
   const isActive = subStatus?.subscription_status === 'active' || subStatus?.is_exempt;
-  const isTrial = subStatus?.subscription_status === 'trial' && !isExpired;
+  const isTrial = subStatus?.subscription_status === 'trial' && !trialActuallyExpired;
+  // Users who need payment action (can still navigate the app but are prompted)
+  const needsAction = isExpired || isPastDue;
 
   const formatDate = (isoString) => {
     if (!isoString) return '';
     try {
       const d = new Date(isoString);
       return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
-    } catch (e) {
+    } catch {
       return isoString;
     }
   };
 
-  const subscriptionContent = (
-    <div className="max-w-2xl mx-auto space-y-6">
-      {/* Upper Status Banner */}
-      <div className={`p-4 border rounded-xl flex items-start gap-4 shadow-sm transition-all duration-300 ${
-        isActive 
-          ? 'bg-emerald-50 border-emerald-100 text-emerald-800' 
-          : isTrial 
-            ? 'bg-blue-50 border-blue-100 text-blue-800' 
-            : 'bg-amber-50 border-amber-100 text-amber-800'
-      }`}>
-        <div className="p-2 bg-white rounded-lg shadow-sm flex-shrink-0">
-          {isActive ? (
+  // Status banner at top of the subscription card
+  const StatusBanner = () => {
+    if (subStatus?.is_exempt) {
+      return (
+        <div className="p-4 border rounded-xl flex items-start gap-4 shadow-sm bg-emerald-50 border-emerald-100 text-emerald-800">
+          <div className="p-2 bg-white rounded-lg shadow-sm flex-shrink-0">
             <Sparkles className="h-5 w-5 text-emerald-600" />
-          ) : isTrial ? (
-            <Clock className="h-5 w-5 text-blue-600" />
-          ) : (
-            <AlertTriangle className="h-5 w-5 text-amber-600" />
-          )}
+          </div>
+          <div className="flex-1">
+            <h2 className="text-base font-semibold text-gray-900">Cuenta Exenta</h2>
+            <p className="text-sm mt-0.5 text-gray-600">Tu cuenta tiene acceso especial sin requerir suscripción.</p>
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
+      );
+    }
+    if (isActive) {
+      return (
+        <div className="p-4 border rounded-xl flex items-start gap-4 shadow-sm bg-emerald-50 border-emerald-100 text-emerald-800">
+          <div className="p-2 bg-white rounded-lg shadow-sm flex-shrink-0">
+            <Sparkles className="h-5 w-5 text-emerald-600" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-base font-semibold text-gray-900">Suscripción Activa</h2>
+            <p className="text-sm mt-0.5 text-gray-600">¡Gracias por usar nuestro servicio! Tu cuenta está completamente activa.</p>
+          </div>
+        </div>
+      );
+    }
+    if (isTrial) {
+      return (
+        <div className="p-4 border rounded-xl flex items-start gap-4 shadow-sm bg-blue-50 border-blue-100 text-blue-800">
+          <div className="p-2 bg-white rounded-lg shadow-sm flex-shrink-0">
+            <Clock className="h-5 w-5 text-blue-600" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-base font-semibold text-gray-900">Período de Prueba Activo</h2>
+            <p className="text-sm mt-0.5 text-gray-600">
+              Tenés acceso total de prueba hasta el <strong>{formatDate(subStatus?.trial_end)}</strong>.
+            </p>
+          </div>
+        </div>
+      );
+    }
+    if (isPastDue) {
+      return (
+        <div className="p-4 border rounded-xl flex items-start gap-4 shadow-sm bg-red-50 border-red-200">
+          <div className="p-2 bg-white rounded-lg shadow-sm flex-shrink-0">
+            <CreditCard className="h-5 w-5 text-red-600" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-base font-semibold text-gray-900">Pago Rechazado</h2>
+            <p className="text-sm mt-0.5 text-gray-600">
+              Tu tarjeta o cuenta de Mercado Pago no pudo ser debitada. Por favor actualizá tu método de pago para continuar.
+              Mercado Pago reintentará el cobro automáticamente. Podés también iniciar una nueva suscripción abajo.
+            </p>
+          </div>
+        </div>
+      );
+    }
+    // Expired / cancelled
+    return (
+      <div className="p-4 border rounded-xl flex items-start gap-4 shadow-sm bg-amber-50 border-amber-100 text-amber-800">
+        <div className="p-2 bg-white rounded-lg shadow-sm flex-shrink-0">
+          <AlertTriangle className="h-5 w-5 text-amber-600" />
+        </div>
+        <div className="flex-1">
           <h2 className="text-base font-semibold text-gray-900">
-            {isActive 
-              ? 'Suscripción Activa' 
-              : isTrial 
-                ? 'Período de Prueba Activo' 
-                : 'Suscripción Requerida'}
+            {subStatus?.subscription_status === 'cancelled' ? 'Suscripción Cancelada' : 'Suscripción Requerida'}
           </h2>
-          <p className="text-sm mt-0.5 text-gray-600 leading-relaxed">
-            {subStatus?.is_exempt 
-              ? 'Tu cuenta cuenta con una exención especial de suscripción.'
-              : isActive 
-                ? '¡Gracias por usar nuestro servicio! Tu cuenta está completamente activa.' 
-                : isTrial 
-                  ? `Tienes acceso total de prueba hasta el ${formatDate(subStatus?.trial_end)}.` 
-                  : 'Tu período de prueba ha expirado. Por favor, selecciona un método de pago para continuar.'}
+          <p className="text-sm mt-0.5 text-gray-600">
+            {subStatus?.subscription_status === 'cancelled'
+              ? 'Tu suscripción fue cancelada. Podés reactivar tu plan en cualquier momento.'
+              : 'Tu período de prueba ha expirado. Por favor seleccioná un método de pago para continuar.'}
           </p>
         </div>
-        {!isActive && !isTrial && (
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-colors self-center flex-shrink-0"
-          >
-            <LogOut className="h-3.5 w-3.5 text-gray-500" />
-            Cerrar Sesión
-          </button>
-        )}
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-1.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-colors self-center flex-shrink-0"
+        >
+          <LogOut className="h-3.5 w-3.5 text-gray-500" />
+          Cerrar sesión
+        </button>
       </div>
+    );
+  };
 
-      {/* Centered Pricing Card */}
+  // Cancel confirmation modal
+  const CancelModal = () => (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-red-50 rounded-lg">
+            <XCircle className="h-5 w-5 text-red-600" />
+          </div>
+          <h2 className="text-lg font-bold text-gray-900">Cancelar suscripción</h2>
+        </div>
+        <p className="text-gray-600 text-sm mb-2">
+          ¿Estás seguro que querés cancelar tu suscripción de OperixML?
+        </p>
+        <ul className="text-sm text-gray-500 space-y-1 mb-5 list-disc list-inside">
+          <li>Perderás acceso a todas las funciones premium al vencer el ciclo actual.</li>
+          <li>Podés volver a suscribirte en cualquier momento.</li>
+          <li>El cobro automático de Mercado Pago quedará detenido.</li>
+        </ul>
+        {cancelError && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+            {cancelError}
+          </div>
+        )}
+        <div className="flex gap-3">
+          <button
+            onClick={() => { setShowCancelConfirm(false); setCancelError(''); }}
+            className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors"
+          >
+            Mantener suscripción
+          </button>
+          <button
+            onClick={handleCancelSubscription}
+            disabled={cancelLoading}
+            className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+          >
+            {cancelLoading ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Cancelando...</>
+            ) : (
+              'Sí, cancelar'
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const subscriptionContent = (
+    <div className="max-w-2xl mx-auto space-y-6">
+      {/* Status Banner */}
+      <StatusBanner />
+
+      {/* Pricing Card */}
       <div className="max-w-md mx-auto">
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md">
           {/* Header */}
@@ -177,15 +283,17 @@ function Subscription() {
               Popular
             </div>
             <h3 className="text-lg font-bold text-gray-900 mb-0.5">Plan Premium</h3>
-            <p className="text-gray-500 text-xs mb-4">Todo lo que necesitas para gestionar tu micro pyme</p>
+            <p className="text-gray-500 text-xs mb-4">Todo lo que necesitás para gestionar tu micro pyme</p>
             <div className="flex items-baseline gap-1">
               <span className="text-3xl font-extrabold text-gray-900 tracking-tight">$35.000</span>
               <span className="text-gray-500 text-xs font-medium">/ mes</span>
             </div>
           </div>
-          
+
           <div className="p-6">
-            <h4 className="font-semibold text-gray-800 text-xs uppercase tracking-wider mb-4">Incluye todas las funcionalidades:</h4>
+            <h4 className="font-semibold text-gray-800 text-xs uppercase tracking-wider mb-4">
+              Incluye todas las funcionalidades:
+            </h4>
             <ul className="space-y-3 mb-6">
               {[
                 'Ventas POS sin límites y reportes diarios',
@@ -193,7 +301,7 @@ function Subscription() {
                 'Órdenes de compra y gestión de proveedores',
                 'Facturación fiscal integrada',
                 'Panel centralizado de finanzas y analítica',
-                'Soporte prioritario por WhatsApp'
+                'Soporte prioritario por WhatsApp',
               ].map((feat, idx) => (
                 <li key={idx} className="flex items-start gap-2.5 text-gray-600 text-sm">
                   <div className="p-0.5 bg-emerald-50 rounded text-emerald-600 mt-0.5 flex-shrink-0">
@@ -204,11 +312,11 @@ function Subscription() {
               ))}
             </ul>
 
-            {/* Referral input for checkout */}
-            {!isActive && (
+            {/* Referral input (only for non-active users) */}
+            {!isActive && !isPastDue && (
               <div className="mb-6 p-4 bg-gray-50 border border-gray-100 rounded-xl">
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
-                  ¿Tienes un código de referido?
+                  ¿Tenés un código de referido?
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -228,12 +336,8 @@ function Subscription() {
                     {referralLoading ? '...' : 'Validar'}
                   </button>
                 </div>
-                {referralError && (
-                  <p className="text-xs text-red-600 font-semibold mt-2">{referralError}</p>
-                )}
-                {referralSuccessMsg && (
-                  <p className="text-xs text-emerald-600 font-semibold mt-2">{referralSuccessMsg}</p>
-                )}
+                {referralError && <p className="text-xs text-red-600 font-semibold mt-2">{referralError}</p>}
+                {referralSuccessMsg && <p className="text-xs text-emerald-600 font-semibold mt-2">{referralSuccessMsg}</p>}
               </div>
             )}
 
@@ -244,6 +348,7 @@ function Subscription() {
               </div>
             )}
 
+            {/* CTA Button */}
             {isActive ? (
               <div className="w-full bg-emerald-50 border border-emerald-100 text-emerald-800 font-semibold py-3 px-4 rounded-xl text-center flex items-center justify-center gap-2 text-sm">
                 <Check className="h-4 w-4 text-emerald-600" />
@@ -256,76 +361,67 @@ function Subscription() {
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-70 text-sm shadow-sm"
               >
                 {checkoutLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Procesando pago...</span>
-                  </>
+                  <><Loader2 className="h-4 w-4 animate-spin" /><span>Procesando...</span></>
                 ) : (
-                  <>
-                    <CreditCard className="h-4 w-4" />
-                    <span>Suscribirse con Mercado Pago</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </>
+                  <><CreditCard className="h-4 w-4" /><span>Suscribirse con Mercado Pago</span><ArrowRight className="h-4 w-4" /></>
                 )}
               </button>
             )}
           </div>
         </div>
       </div>
+
+      {/* Cancel subscription section (only for active subscribers or past_due — not for expired/cancelled) */}
+      {(isActive || isPastDue) && !subStatus?.is_exempt && (
+        <div className="max-w-md mx-auto">
+          <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-gray-800 mb-1">Darse de baja</h3>
+            <p className="text-xs text-gray-500 mb-4">
+              Podés cancelar tu suscripción en cualquier momento. El acceso continuará hasta el fin del ciclo de facturación actual.
+            </p>
+            <button
+              onClick={() => setShowCancelConfirm(true)}
+              className="px-4 py-2 text-sm font-semibold text-red-600 border border-red-200 rounded-xl hover:bg-red-50 transition-colors"
+            >
+              Cancelar suscripción
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 
-  if (!isExpired && subStatus && (isActive || isTrial)) {
-    // Active/trial users: Show nested inside navigation layout
-    return (
-      <Layout activeSection="subscription">
-        <div className="flex-1 bg-gray-50 min-h-screen">
-          {/* Page Header */}
-          <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
-            <div className="max-w-full md:max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-              <div className="flex items-center justify-between h-14 md:h-16">
-                <div className="min-w-0 flex-1">
-                  <h1 className="text-lg md:text-xl font-semibold text-gray-900">Suscripción</h1>
-                  <p className="text-xs md:text-sm text-gray-500 truncate w-full">
-                    Configuración del plan y programa de referidos de OperixML
-                  </p>
-                </div>
-              </div>
+  const pageContent = (
+    <div className="flex-1 bg-gray-50 min-h-screen">
+      {/* Page Header */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
+        <div className="max-w-full md:max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 md:h-16">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg md:text-xl font-semibold text-gray-900">Suscripción</h1>
+              <p className="text-xs md:text-sm text-gray-500 truncate w-full">
+                Configuración del plan y programa de referidos de OperixML
+              </p>
             </div>
           </div>
-          
-          {/* Page Content */}
-          <div className="max-w-full md:max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 md:py-8">
-            {subscriptionContent}
-          </div>
         </div>
-      </Layout>
-    );
-  }
+      </div>
 
-  // Expired / Standalone mode
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Subtle decorative elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[300px] h-[300px] bg-indigo-500/5 rounded-full blur-3xl pointer-events-none"></div>
-
-      <div className="w-full max-w-xl z-10">
-        <div className="text-center mb-8">
-          <img src="/operix_logo.png" alt="Logo" className="w-12 h-12 mx-auto mb-3 object-contain" />
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">OperixML</h1>
-          <p className="text-gray-500 mt-1 text-sm">Tu plataforma de gestión inteligente de micro pymes</p>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
-          {subscriptionContent}
-        </div>
-
-        <p className="text-center text-gray-400 text-[11px] mt-8">
-          ¿Necesitas asistencia técnica? Contacta a soporte a través de <a href="mailto:info@operixml.com" className="text-blue-600 hover:underline">info@operixml.com</a>
-        </p>
+      {/* Page Content */}
+      <div className="max-w-full md:max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 md:py-8">
+        {subscriptionContent}
       </div>
     </div>
+  );
+
+  // Always show inside Layout so users can navigate even when expired
+  return (
+    <>
+      {showCancelConfirm && <CancelModal />}
+      <Layout activeSection="subscription">
+        {pageContent}
+      </Layout>
+    </>
   );
 }
 

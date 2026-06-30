@@ -21,6 +21,7 @@ import {
 import { businessAPI } from '../utils/api';
 import { BusinessContext } from '../contexts/BusinessContext';
 import { useAuth } from '../contexts/AuthContext';
+import SubscriptionBanner from './SubscriptionBanner';
 
 
 const BranchBadge = ({ branch }) => {
@@ -809,6 +810,7 @@ const Layout = ({ children, activeSection }) => {
             onBranchChange={handleBranchChange}
             setSidebarOpen={setSidebarOpen}
           />
+          <SubscriptionBanner />
           <main className="flex-1 min-w-0">
             {children}
           </main>
