@@ -283,7 +283,7 @@ function Subscription() {
               Popular
             </div>
             <h3 className="text-lg font-bold text-gray-900 mb-0.5">Plan Premium</h3>
-            <p className="text-gray-500 text-xs mb-4">Todo lo que necesitás para gestionar tu micro pyme</p>
+            <p className="text-gray-500 text-xs mb-4">Todo lo que necesitás para gestionar tu pyme</p>
             <div className="flex items-baseline gap-1">
               <span className="text-3xl font-extrabold text-gray-900 tracking-tight">$35.000</span>
               <span className="text-gray-500 text-xs font-medium">/ mes</span>

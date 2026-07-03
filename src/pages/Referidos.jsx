@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { saasSubscriptionAPI } from '../utils/api';
 import Layout from '../components/Layout';
-import { 
-  Users, 
-  Gift, 
-  Copy, 
-  Check, 
-  Share2, 
-  TrendingUp, 
-  Calendar, 
-  UserCheck, 
+import {
+  Users,
+  Gift,
+  Copy,
+  Check,
+  Share2,
+  TrendingUp,
+  Calendar,
+  UserCheck,
   AlertCircle,
   HelpCircle
 } from 'lucide-react';
@@ -25,7 +25,7 @@ function Referidos() {
     try {
       setLoading(true);
       setError('');
-      
+
       // Load referral details (code, months pending, commission)
       try {
         const details = await saasSubscriptionAPI.getReferralDetails();
@@ -306,7 +306,7 @@ function Referidos() {
                 <div>
                   <h5 className="font-bold mb-1">2. Obtienen 1 mes gratis</h5>
                   <p className="opacity-90">
-                    Cualquier micro pyme que se registre usando tu código recibirá automáticamente 30 días de prueba gratuita.
+                    Cualquier pyme que se registre usando tu código recibirá automáticamente 30 días de prueba gratuita.
                   </p>
                 </div>
                 <div>
