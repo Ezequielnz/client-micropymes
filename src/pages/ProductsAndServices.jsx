@@ -1292,30 +1292,31 @@ const ProductsAndServices = () => {
                       <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#333' }}>
                         Unidad
                       </label>
-                      <input
-                        type="text"
-                        list="unidades-list"
+                      <select
                         value={formData.unit}
                         onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                        placeholder="ej: kg, unidades, litros"
                         style={{
                           width: '100%',
                           padding: '8px',
                           border: '1px solid #ddd',
                           borderRadius: '4px',
                           fontSize: '14px',
-                          color: '#333'
+                          color: '#333',
+                          backgroundColor: 'white'
                         }}
-                      />
-                      <datalist id="unidades-list">
-                        <option value="Unidades" />
-                        <option value="Kg" />
-                        <option value="Gramos" />
-                        <option value="Litros" />
-                        <option value="m" />
-                        <option value="m2" />
-                        <option value="m3" />
-                      </datalist>
+                      >
+                        <option value="">Seleccionar unidad...</option>
+                        <option value="Unidades">Unidades</option>
+                        <option value="Kg">Kg</option>
+                        <option value="Gramos">Gramos</option>
+                        <option value="Litros">Litros</option>
+                        <option value="m">m</option>
+                        <option value="m2">m2</option>
+                        <option value="m3">m3</option>
+                        {formData.unit && !['Unidades', 'Kg', 'Gramos', 'Litros', 'm', 'm2', 'm3'].includes(formData.unit) && (
+                          <option value={formData.unit}>{formData.unit}</option>
+                        )}
+                      </select>
                     </div>
                   </>
                 )}
